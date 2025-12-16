@@ -1,11 +1,13 @@
 /*
- * Programma per convertire file HTML in PDF formato A4
+ * Programma per convertire file HTML in PDF formato A4 con AcroForm compilabile
  */
 package fdf_builder;
 
 import com.itextpdf.html2pdf.HtmlConverter;
+import com.itextpdf.html2pdf.ConverterProperties;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.forms.PdfAcroForm;
+import com.itextpdf.kernel.pdf.PdfDocument;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,7 +16,7 @@ import java.io.FileOutputStream;
 public class App {
     
     /**
-     * Converte un file HTML in PDF formato A4
+     * Converte un file HTML in PDF formato A4 con AcroForm compilabile
      * @param htmlFilePath percorso del file HTML da convertire
      * @param pdfFilePath percorso del file PDF di output
      */
@@ -32,18 +34,29 @@ public class App {
             
             // Creare il writer PDF
             PdfWriter writer = new PdfWriter(new FileOutputStream(pdfFilePath));
+            PdfDocument pdfDoc = new PdfDocument(writer);
             
-            // Convertire HTML a PDF con pagina A4
+            // Configurare le proprietà di conversione per supportare i form
+            ConverterProperties converterProperties = new ConverterProperties();
+            
+            // Abilitare la conversione dei tag form in AcroForm
+            converterProperties.setCreateAcroForm(true);
+            
+            // Convertire HTML a PDF con pagina A4 e AcroForm
             HtmlConverter.convertToPdf(
                 htmlInput,
-                writer,
-                null  // ConverterProperties con null usa i default
+                pdfDoc,
+                converterProperties
             );
             
+            // Assicurare che l'AcroForm sia creato correttamente
+            PdfAcroForm acroForm = PdfAcroForm.getAcroForm(pdfDoc, true);
+            
+            pdfDoc.close();
             htmlInput.close();
             
             System.out.println("✓ Conversione completata con successo!");
-            System.out.println("  File PDF: " + pdfFilePath);
+            System.out.println("  File PDF compilabile (AcroForm): " + pdfFilePath);
             
         } catch (Exception e) {
             System.err.println("Errore durante la conversione: " + e.getMessage());
@@ -66,6 +79,8 @@ public class App {
             System.out.println("Utilizzo: java -jar app.jar <html_file> <pdf_file>");
             System.out.println("Usando default: " + htmlFilePath + " -> " + pdfFilePath);
         }
+
+       
         
         htmlToPdf(htmlFilePath, pdfFilePath);
     }
