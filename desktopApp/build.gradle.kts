@@ -16,14 +16,20 @@ kotlin {
     
     sourceSets {
         val desktopMain by getting {
+
             dependencies {
                 implementation(project(":common"))
                 implementation(compose.desktop.currentOs)
-                
-                // iText7 dependencies
+
+                // iText7 Core (già presente tramite i tuoi alias libs.itext)
                 implementation(libs.itext.kernel)
                 implementation(libs.itext.layout)
                 implementation(libs.itext.forms)
+
+                // HTML to PDF: Usiamo questa sintassi esplicita
+                // Assicurati che queste due righe siano esattamente così:
+                implementation("com.itextpdf:html2pdf:6.3.0")
+                implementation(platform("com.itextpdf:itext-core:9.4.0"))
             }
         }
     }
