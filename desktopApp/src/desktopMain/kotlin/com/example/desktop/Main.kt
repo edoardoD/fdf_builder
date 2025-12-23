@@ -30,9 +30,10 @@ fun main() = application {
                     try {
                         val home = System.getProperty("user.home")
                         // Ensure the path exists or use a safer one
-                        val path = "$home/FleetDemo/sample.pdf"
-                        pdfService.sampleCreatePdf(path)
-                        status = "PDF generato in: $path"
+                        val output = "output.pdf"
+                        val path = "scheletro"
+                        pdfService.htmlToPdf(path,output)
+                        status = "PDF generato in: $output"
                     } catch (e: Exception) {
                         status = "Errore: ${e.message}"
                         e.printStackTrace()
