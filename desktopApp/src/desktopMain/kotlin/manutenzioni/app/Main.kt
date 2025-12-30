@@ -1,4 +1,4 @@
-package com.example.desktop
+package manutenzioni.app
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -10,13 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.example.desktop.pdf.DesktopPdfService
-import java.io.File
+import manutenzioni.app.service.Pdf
 
 fun main() = application {
     Window(onCloseRequest = ::exitApplication, title = "FDF Builder") {
         var status by remember { mutableStateOf("Pronto per generare PDF") }
-        val pdfService = DesktopPdfService()
+        val pdf = Pdf()
 
         MaterialTheme {
             Column(
@@ -32,7 +31,7 @@ fun main() = application {
                         // Ensure the path exists or use a safer one
                         val output = "output.pdf"
                         val path = "scheletro"
-                        pdfService.htmlToPdf(path,output)
+                        pdf.buildPdf(path,output)
                         status = "PDF generato in: $output"
                     } catch (e: Exception) {
                         status = "Errore: ${e.message}"
