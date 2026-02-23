@@ -1,0 +1,473 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="it">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Scheda di Verifica e Manutenzione Impianti Elettrici</title>
+    <meta name="author" content="Edoardo Desiderio" />
+    <meta name="description"
+        content="Scheda per verifica e manutenzione periodica programmata di impianti elettrici/elettronici" />
+    <meta name="modified" content="2025-12-11" />
+
+    <style>
+        /* ============ Reset e Base ============ */
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            font-family: Calibri, Arial, sans-serif;
+            color: #000000;
+        }
+
+        body {
+            margin: 1cm;
+            direction: ltr;
+        }
+
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+            empty-cells: show;
+            width: 100%;
+        }
+
+        td {
+            vertical-align: top;
+            font-size: 11pt;
+            padding: 0.05cm;
+            border: 0.0133cm solid #000000;
+            font-family: Calibri;
+        }
+
+        p {
+            white-space: nowrap;
+            margin: 0;
+            font-size: inherit;
+        }
+
+        /* ============ Colori e sfondi ============ */
+        :root {
+            --color-title-bg: #3366ff;
+            --color-title-text: #ffffff;
+            --color-header-light: #b4c6e7;
+            --color-header-medium: #d9e1f2;
+            --color-text-dark: #000000;
+            --color-text-gray: #808080;
+            --border-color: #000000;
+            --border-width: 0.0133cm;
+        }
+
+        /* ============ Classi di cella - Raggruppate per categoria ============ */
+
+        /* Titolo principale */
+        .cell--title {
+            background-color: var(--color-title-bg);
+            color: var(--color-title-text);
+            font-size: 11pt;
+            vertical-align: middle;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Intestazioni sezione 1 (info azienda) */
+        .cell--header-section {
+            background-color: var(--color-header-light);
+            color: var(--color-text-dark);
+            font-size: 5pt;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        /* Intestazioni sezione 2 (azienda) */
+        .cell--header-form {
+            background-color: var(--color-header-light);
+            color: var(--color-text-dark);
+            font-size: 6pt;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        /* Intestazioni colonne tabella risultati */
+        .cell--header-column {
+            background-color: var(--color-header-medium);
+            color: var(--color-text-dark);
+            font-size: 6pt;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        /* Intestazioni bold per esiti (P, PI, NA, ecc.) */
+        .cell--header-outcome {
+            background-color: var(--color-header-medium);
+            color: var(--color-text-dark);
+            font-size: 6pt;
+            vertical-align: middle;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Celle dati vuote */
+        .cell--data-empty {
+            background-color: transparent;
+            color: var(--color-text-dark);
+            font-size: 6pt;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        /* Celle dati standard */
+        .cell--data-standard {
+            background-color: transparent;
+            color: var(--color-text-dark);
+            font-size: 11pt;
+            vertical-align: top;
+        }
+
+        /* Celle per input form */
+        .cell--form-input {
+            background-color: transparent;
+            color: var(--color-text-dark);
+            font-size: 5pt;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        /* Celle per note con stilizzazione */
+        .cell--form-note {
+            background-color: transparent;
+            color: var(--color-text-gray);
+            font-size: 11pt;
+            font-style: italic;
+            vertical-align: top;
+        }
+
+        /* Celle per etichette */
+        .cell--label {
+            background-color: transparent;
+            color: var(--color-text-dark);
+            font-size: 6pt;
+            vertical-align: top;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        /* Celle per legenda */
+        .cell--legend {
+            background-color: transparent;
+            color: var(--color-text-dark);
+            font-size: 11pt;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        /* Celle spacer (non visibili) */
+        .cell--spacer {
+            background-color: transparent;
+            border: none;
+        }
+
+        .visually-hidden {
+            position: absolute !important;
+            height: 1px;
+            width: 1px;
+            overflow: hidden;
+            clip: rect(1px, 1px, 1px, 1px);
+            white-space: nowrap;
+        }
+
+        /* ============ Larghezze colonne ============ */
+        .col--w1 {
+            width: 0.956cm;
+        }
+
+        .col--w2 {
+            width: 0.938cm;
+        }
+
+        .col--w3 {
+            width: 1.09cm;
+        }
+
+        .col--w4 {
+            width: 7.999cm;
+        }
+
+        .col--w5 {
+            width: 0.605cm;
+        }
+
+        .col--w6 {
+            width: 0.554cm;
+        }
+
+        .col--w7 {
+            width: 0.54cm;
+        }
+
+        .col--w8 {
+            width: 0.529cm;
+        }
+
+        .col--w9 {
+            width: 0.547cm;
+        }
+
+        .col--w10 {
+            width: 0.4cm;
+        }
+
+        .col--w11 {
+            width: 4.307cm;
+        }
+
+        .col--w12 {
+            width: 1.413cm;
+        }
+
+        /* ============ Altezze righe ============ */
+        .row--title {
+            height: 0.801cm;
+        }
+
+        .row--standard {
+            height: 0.487cm;
+        }
+
+        .row--data {
+            height: 0.487cm;
+        }
+
+        .row--section {
+            height: 0.501cm;
+        }
+
+        .row--legend {
+            height: 0.76cm;
+        }
+
+        /* ============ Stili testo ============ */
+        .text--bold {
+            font-weight: bold;
+            font-size: 7pt;
+        }
+
+        .text--normal {
+            font-weight: normal;
+            font-size: 7pt;
+        }
+    </style>
+</head>
+
+<body>
+
+    <form>
+        <!-- Tabella principale: Scheda di Verifica e Manutenzione -->
+        <table class="table--main">
+            <colgroup>
+                <col class="col--w1" />
+                <col class="col--w2" />
+                <col class="col--w3" />
+                <col class="col--w4" />
+                <col class="col--w5" />
+                <col class="col--w6" />
+                <col class="col--w7" />
+                <col class="col--w8" />
+                <col class="col--w9" />
+                <col class="col--w10" />
+                <col class="col--w11" />
+                <col class="col--w12" />
+            </colgroup>
+
+            <tbody>
+                <!-- ========== SEZIONE 1: INTESTAZIONE ========== -->
+                <tr class="row--title">
+                    <td colspan="11" class="cell--title">
+                        <p>SCHEDA DI VERIFICA E MANUTENZIONE PERIODICA PROGRAMMATA</p>
+                        <p>IMPIANTI ELETTRICI/ELETTRONICI</p>
+                    </td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <!-- ========== SEZIONE 2: INFO SCHEDA ========== -->
+                <tr class="row--standard">
+                    <td colspan="2" class="cell--header-section">
+                        <p>Codice Scheda:</p>
+                        <p><!-- COD_SCHEDA --></p>
+                    </td>
+                    <td class="cell--spacer"></td>
+                    <td colspan="7" class="cell--header-section">
+                        <p>Oggetto</p>
+                        <p><!-- OGGETTO --></p>
+                    </td>
+                    <td class="cell--form-input">
+                        <p>Periodicità:</p>
+                        <p><!-- PERIODICITA --></p>
+                    </td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <!-- Riga per compilazione periodicità -->
+                <tr class="row--standard">
+                    <td colspan="10" class="cell--data-standard"></td>
+                    <td class="cell--data-standard"></td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <!-- ========== SEZIONE 3: DATI AZIENDA ========== -->
+                <tr class="row--section">
+                    <td colspan="2" class="cell--header-form">
+                        <p>Azienda Appaltatrice</p>
+                    </td>
+                    <td class="cell--header-form">
+                        <p>Sito</p>
+                    </td>
+                    <td colspan="7" class="cell--header-form">
+                        <p>Cliente</p>
+                    </td>
+                    <td class="cell--form-input">
+                        <p>Data inizio periodo Attività:</p>
+                        <input type="text" name="starting_date" id="starting-date" placeholder="gg/mm/aaaa" />
+                        <label for="starting-date" class="visually-hidden">Data inizio periodo Attività</label>
+                    </td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <!-- Riga premessa -->
+                <tr class="row--standard">
+                    <td colspan="10" class="cell--label">
+                        <p>Premessa e/o informazioni:</p>
+                        <p style="font-weight: normal; font-size: 5pt;"><!-- PREMESSA --></p>
+                    </td>
+                    <td class="cell--form-input">
+                        <p>Data precedente</p>
+                    </td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <!-- ========== SEZIONE 4: FORM PRINCIPALE ========== -->
+                <tr class="row--standard">
+                    <td colspan="10" rowspan="4" class="cell--data-empty"></td>
+                    <td class="cell--form-input">
+                        <p>Attività V&amp;M</p>
+                        <input type="text" name="actual_date" id="today-date" placeholder="gg/mm/aaaa" />
+                        <label for="today-date" class="visually-hidden">Data attuale Attività V&amp;M</label>
+                    </td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <tr class="row--standard">
+                    <td class="cell--form-input">
+                        <p>Data attuale Attività V&amp;M</p>
+                    </td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <tr class="row--standard">
+                    <td class="cell--form-input">
+                        <p>Verificatore/Manutentore</p>
+                    </td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <tr class="row--standard">
+                    <td class="cell--form-input">
+                        <p>Firma</p>
+                    </td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <!-- ========== SEZIONE 5: INTESTAZIONE TABELLA RISULTATI ========== -->
+                <tr class="row--standard">
+                    <td rowspan="2" class="cell--header-column">
+                        <p>Codice Attività</p>
+                    </td>
+                    <td rowspan="2" class="cell--header-column">
+                        <p>Tipo Attività</p>
+                    </td>
+                    <td rowspan="2" class="cell--header-column">
+                        <p>Impianto</p>
+                    </td>
+                    <td rowspan="2" class="cell--header-column">
+                        <p>Attività</p>
+                    </td>
+                    <td colspan="6" class="cell--header-column">
+                        <p>Esito</p>
+                    </td>
+                    <td class="cell--header-column">
+                        <p>Nota</p>
+                    </td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <!-- Sottointestazione esiti -->
+                <tr class="row--standard">
+                    <td class="cell--header-outcome">
+                        <p>P</p>
+                    </td>
+                    <td class="cell--header-outcome">
+                        <p>PI</p>
+                    </td>
+                    <td class="cell--header-outcome">
+                        <p>NA</p>
+                    </td>
+                    <td class="cell--header-outcome">
+                        <p>NP</p>
+                    </td>
+                    <td class="cell--header-outcome">
+                        <p>VN</p>
+                    </td>
+                    <td class="cell--header-outcome">
+                        <p>B</p>
+                    </td>
+                    <td class="cell--data-standard"></td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <!-- ========== SEZIONE 6: RIGHE DATI (generate dinamicamente) ========== -->
+                <!-- ATTIVITA_ROWS -->
+
+                <!-- ========== SEZIONE 7: LEGENDA ========== -->
+                <tr class="row--legend">
+                    <td colspan="11" class="cell--legend">
+                        <p><span class="text--bold">Legenda:</span><span class="text--normal"> Nella colonna esito
+                                spuntare:</span></p>
+                        <p><span class="text--bold">P</span><span class="text--normal"> = Positivo | </span>
+                            <span class="text--bold">PI</span><span class="text--normal"> = Positivo previo intervento |
+                            </span>
+                            <span class="text--bold">NA</span><span class="text--normal"> = Intervento rimandato a sessione
+                                successiva | </span>
+                            <span class="text--bold">NP</span><span class="text--normal"> = Componente non presente |
+                            </span>
+                            <span class="text--bold">VN</span><span class="text--normal"> = Vedere nota</span>
+                        </p>
+                        <p><span class="text--bold">B</span><span class="text--normal"> = Gli interventi saranno eseguiti
+                                dal costruttore e/o dal centro assistenza | Numerare le Note e descriverle nell'apposito
+                                riquadro</span></p>
+                    </td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <!-- ========== SEZIONE 8: SPAZIO NOTE ========== -->
+                <tr class="row--standard">
+                    <td colspan="11" rowspan="3" class="cell--data-standard"></td>
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <tr class="row--standard">
+                    <td class="cell--spacer"></td>
+                </tr>
+
+                <tr class="row--standard">
+                    <td class="cell--spacer"></td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+
+</body>
+
+</html>
