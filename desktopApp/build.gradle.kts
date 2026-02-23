@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -21,15 +22,18 @@ kotlin {
                 implementation(project(":common"))
                 implementation(compose.desktop.currentOs)
 
-                // iText7 Core (già presente tramite i tuoi alias libs.itext)
+                // iText7 Core + html2pdf
                 implementation(libs.itext.kernel)
                 implementation(libs.itext.layout)
                 implementation(libs.itext.forms)
+                implementation(libs.itext.html2pdf)
 
-                // HTML to PDF: Usiamo questa sintassi esplicita
-                // Assicurati che queste due righe siano esattamente così:
-                implementation("com.itextpdf:html2pdf:6.3.0")
-                implementation(platform("com.itextpdf:itext-core:9.4.0"))
+                // Serializzazione JSON
+                implementation(libs.kotlinx.serialization.json)
+
+                // Coroutines
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.coroutines.swing)
             }
         }
     }
@@ -37,7 +41,7 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "com.example.desktop.MainKt"
+        mainClass = "manutenzioni.app.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi)

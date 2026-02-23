@@ -296,13 +296,16 @@
                 <tr class="row--standard">
                     <td colspan="2" class="cell--header-section">
                         <p>Codice Scheda:</p>
+                        <p><!-- COD_SCHEDA --></p>
                     </td>
                     <td class="cell--spacer"></td>
                     <td colspan="7" class="cell--header-section">
                         <p>Oggetto</p>
+                        <p><!-- OGGETTO --></p>
                     </td>
                     <td class="cell--form-input">
                         <p>Periodicità:</p>
+                        <p><!-- PERIODICITA --></p>
                     </td>
                     <td class="cell--spacer"></td>
                 </tr>
@@ -337,6 +340,7 @@
                 <tr class="row--standard">
                     <td colspan="10" class="cell--label">
                         <p>Premessa e/o informazioni:</p>
+                        <p style="font-weight: normal; font-size: 5pt;"><!-- PREMESSA --></p>
                     </td>
                     <td class="cell--form-input">
                         <p>Data precedente</p>
@@ -423,43 +427,8 @@
                     <td class="cell--spacer"></td>
                 </tr>
 
-                <!-- ========== SEZIONE 6: RIGHE DATI ========== -->
-                <tr class="row--data">
-                    <td class="cell--data-empty"></td>
-                    <td class="cell--data-empty"></td>
-                    <td class="cell--data-empty"></td>
-                    <td class="cell--data-empty"></td>
-                    <!-- Esito: P, PI, NA, NP, VN, B -->
-                    <td class="cell--data-empty">
-                        <input type="radio" name="esito1" id="esito1-p" value="P" />
-                        <label for="esito1-p" class="visually-hidden">P</label>
-                    </td>
-                    <td class="cell--data-empty">
-                        <input type="radio" name="esito1" id="esito1-pi" value="PI" />
-                        <label for="esito1-pi" class="visually-hidden">PI</label>
-                    </td>
-                    <td class="cell--data-empty">
-                        <input type="radio" name="esito1" id="esito1-na" value="NA" />
-                        <label for="esito1-na" class="visually-hidden">NA</label>
-                    </td>
-                    <td class="cell--data-empty">
-                        <input type="radio" name="esito1" id="esito1-np" value="NP" />
-                        <label for="esito1-np" class="visually-hidden">NP</label>
-                    </td>
-                    <td class="cell--data-empty">
-                        <input type="radio" name="esito1" id="esito1-vn" value="VN" />
-                        <label for="esito1-vn" class="visually-hidden">VN</label>
-                    </td>
-                    <td class="cell--data-empty">
-                        <input type="radio" name="esito1" id="esito1-b" value="B" />
-                        <label for="esito1-b" class="visually-hidden">B</label>
-                    </td>
-                    <td class="cell--data-standard">
-                        <input type="text" name="note1" id="note1" />
-                        <label for="note1" class="visually-hidden">Nota</label>
-                    </td>
-                    <td class="cell--spacer"></td>
-                </tr>
+                <!-- ========== SEZIONE 6: RIGHE DATI (generate dinamicamente) ========== -->
+                <!-- ATTIVITA_ROWS -->
 
                 <!-- ========== SEZIONE 7: LEGENDA ========== -->
                 <tr class="row--legend">

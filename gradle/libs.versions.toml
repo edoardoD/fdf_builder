@@ -1,14 +1,22 @@
 [versions]
 kotlin = "2.1.0"
 compose-plugin = "1.6.11"
-itext = "8.0.5"
+itext = "9.4.0"
+itext-html2pdf = "6.3.0"
+kotlinx-serialization-json = "1.9.0"
+kotlinx-coroutines = "1.9.0"
 
 [libraries]
 itext-kernel = { module = "com.itextpdf:kernel", version.ref = "itext" }
 itext-layout = { module = "com.itextpdf:layout", version.ref = "itext" }
 itext-forms = { module = "com.itextpdf:forms", version.ref = "itext" }
+itext-html2pdf = { module = "com.itextpdf:html2pdf", version.ref = "itext-html2pdf" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 
 [plugins]
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

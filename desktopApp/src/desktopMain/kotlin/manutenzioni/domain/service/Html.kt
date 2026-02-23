@@ -1,6 +1,6 @@
 package manutenzioni.domain.service
 
-interface IhtmlModifier {
+interface Html {
     /**
      * Accetta una mappa di parametri, la chiave è l'id da cercare nel file
      * html e fillare mentre il value è il valore da mettere nel tag corrispondente alla chiave
