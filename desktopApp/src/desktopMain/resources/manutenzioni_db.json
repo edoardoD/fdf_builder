@@ -1,0 +1,500 @@
+{
+  "impianti": [
+    {
+      "codIntervento": "GE",
+      "nomeCompleto": "Gruppo Elettrogeno",
+      "premessa": "Le verifiche periodiche sul gruppo elettrogeno devono essere supportate dalla consultazione del manuale d'uso e manutenzione.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica livello olio motore e liquido raffreddamento",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica livello carburante e stato batteria avviamento",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Prova di avviamento manuale e automatico del gruppo",
+          "frequenza": { "tipo": "M", "valore": 3 }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Prova di funzionamento sotto carico per almeno 30 minuti",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Sostituzione filtri olio, aria e carburante",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura della resistenza di isolamento degli avvolgimenti",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "CEI 11-20", "descrizione": "Impianti di produzione di energia elettrica" },
+        { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" }
+      ]
+    },
+    {
+      "codIntervento": "CAB",
+      "nomeCompleto": "Cabina Elettrica MT/BT",
+      "premessa": "Le attività sulla cabina elettrica devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, ed eseguiti in totale sicurezza.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Controllo visivo generale dei locali cabina e verifica assenza umidità",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica stato interruttori MT e BT, segnalazioni e interblocchi",
+          "frequenza": { "tipo": "M", "valore": 3 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Prova di sgancio di emergenza e verifica interblocchi meccanici",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura della resistenza di isolamento dei cavi MT",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Pulizia e serraggio delle connessioni nei quadri BT",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Termografia",
+          "descrizione": "Analisi termografica delle connessioni e degli interruttori sotto carico",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Misura",
+          "descrizione": "Verifica impianto di terra e misura resistenza di terra",
+          "frequenza": { "tipo": "A", "valore": 2 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "CEI 11-27", "descrizione": "Lavori su impianti elettrici" },
+        { "codNormativa": "CEI 0-16", "descrizione": "Regola tecnica di riferimento per la connessione di utenti attivi e passivi alle reti AT e MT" }
+      ]
+    },
+    {
+      "codIntervento": "Q",
+      "nomeCompleto": "Quadri Elettrici BT",
+      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Controllo visivo dello stato generale del quadro e della carpenteria",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica tarature e impostazioni dei relè di protezione",
+          "frequenza": { "tipo": "M", "valore": 3 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Prova di intervento degli interruttori differenziali",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Serraggio morsetti e connessioni. Pulizia interna quadro",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Termografia",
+          "descrizione": "Analisi termografica connessioni e apparecchiature sotto carico",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "CEI 17-13", "descrizione": "Apparecchiature assiemate di protezione e manovra per bassa tensione" },
+        { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" }
+      ]
+    },
+    {
+      "codIntervento": "UPS",
+      "nomeCompleto": "Gruppi di Continuità (UPS)",
+      "premessa": "Il controllo periodico deve essere effettuato da tecnico qualificato. Prima di passare alla fase esecutiva delle prove, occorre controllare che gli effetti delle prove (black-out simulato) non producano situazioni di pericolo.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica stato LED, display e allarmi attivi sull'UPS",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica temperatura ambiente e condizioni batterie",
+          "frequenza": { "tipo": "M", "valore": 3 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Prova di commutazione rete/batteria e ritorno",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura tensione e resistenza interna dei singoli elementi batteria",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Test di autonomia batteria sotto carico nominale",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "CEI EN 62040", "descrizione": "Sistemi statici di continuità (UPS)" }
+      ]
+    },
+    {
+      "codIntervento": "EM",
+      "nomeCompleto": "Illuminazione di Sicurezza",
+      "premessa": "Prima di effettuare qualsiasi tipo di prova sugli apparecchi di illuminazione e segnalazione di sicurezza occorre verificare con i referenti del sito l'effettiva possibilità di svolgere le prove.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica accensione e stato di tutti gli apparecchi di emergenza",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Prova di funzionamento in emergenza per almeno 1 minuto",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Test di autonomia completa (scarica totale batterie)",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Sostituzione lampade e batterie non conformi",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "UNI EN 1838", "descrizione": "Illuminazione di emergenza" },
+        { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" }
+      ]
+    },
+    {
+      "codIntervento": "RI",
+      "nomeCompleto": "Rivelazione Incendi",
+      "premessa": "Il controllo periodico deve essere effettuato da tecnico qualificato. Durante le operazioni di controllo periodico, deve essere eseguito un controllo funzionale sul sistema e sul 50% di tutti i dispositivi.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica stato centrale e assenza anomalie o allarmi",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Prova rivelatori di fumo (50% dei dispositivi per sessione semestrale)",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Prova pulsanti manuali di allarme e attivazione sirene",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Verifica trasmissione allarmi a centrale di vigilanza/VVF",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Pulizia camere ottiche rivelatori e sostituzione elementi esausti",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Misura",
+          "descrizione": "Verifica stato batterie tampone della centrale e moduli",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "UNI 9795", "descrizione": "Sistemi fissi automatici di rivelazione e di segnalazione allarme d'incendio" },
+        { "codNormativa": "UNI 11224", "descrizione": "Controllo iniziale e manutenzione dei sistemi di rivelazione incendi" }
+      ]
+    },
+    {
+      "codIntervento": "IE",
+      "nomeCompleto": "Impianto Elettrico",
+      "premessa": "Prima di effettuare qualsiasi tipo di prova occorre verificare con i referenti del sito la effettiva possibilità di svolgere le prove. I controlli a vista devono essere svolti senza influire sulle regolari attività lavorative del sito.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Controllo a vista dell'impianto: cavi, canali, prese, interruttori",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica integrità coperchi cassette di derivazione e morsettiere",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Misura",
+          "descrizione": "Verifica continuità dei conduttori di protezione (PE)",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura della resistenza di isolamento dei circuiti",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Prova di intervento interruttori differenziali con strumento",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura impedenza anello di guasto sui circuiti principali",
+          "frequenza": { "tipo": "A", "valore": 2 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" },
+        { "codNormativa": "CEI 11-27", "descrizione": "Lavori su impianti elettrici" }
+      ]
+    },
+    {
+      "codIntervento": "FTV",
+      "nomeCompleto": "Impianto Fotovoltaico",
+      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica stato moduli: pulizia, integrità vetri, fissaggi",
+          "frequenza": { "tipo": "M", "valore": 3 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica stato inverter: LED, display, ventilazione",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura tensione e corrente stringhe fotovoltaiche",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura resistenza di isolamento lato DC",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Verifica dispositivi di protezione DC (fusibili, sezionatori)",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Termografia",
+          "descrizione": "Analisi termografica moduli e connessioni sotto produzione",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "CEI 82-25", "descrizione": "Guida alla realizzazione di sistemi di generazione fotovoltaica" },
+        { "codNormativa": "CEI 11-20", "descrizione": "Impianti di produzione di energia elettrica" }
+      ]
+    },
+    {
+      "codIntervento": "PEM",
+      "nomeCompleto": "Sgancio Generale di Emergenza",
+      "premessa": "Prima di effettuare qualsiasi tipo di prova sui dispositivi di sgancio di emergenza occorre verificare con i referenti del sito la effettiva possibilità di svolgere le prove.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica stato e accessibilità dei pulsanti di sgancio",
+          "frequenza": { "tipo": "M", "valore": 1 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Prova di sgancio generale e verifica apertura utenze",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica segnaletica di sicurezza e cartellonistica",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" },
+        { "codNormativa": "DM 37/08", "descrizione": "Attività di installazione degli impianti" }
+      ]
+    },
+    {
+      "codIntervento": "RIF",
+      "nomeCompleto": "Rifasamento",
+      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica stato condensatori: rigonfiamenti, perdite, decolorazione",
+          "frequenza": { "tipo": "M", "valore": 3 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura del fattore di potenza (cosφ) al punto di consegna",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Verifica inserzione/disinserzione automatica gradini",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Pulizia batteria condensatori e serraggio connessioni",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura capacità residua dei singoli condensatori",
+          "frequenza": { "tipo": "A", "valore": 2 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "CEI 33-7", "descrizione": "Condensatori di potenza per impianti a corrente alternata" }
+      ]
+    },
+    {
+      "codIntervento": "TRFS",
+      "nomeCompleto": "Trasformatori a Secco MT/BT",
+      "premessa": "Le attività sul trasformatore MT/BT devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, ed eseguiti in totale sicurezza.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica stato generale trasformatore: pulizia, ventilazione, temperatura",
+          "frequenza": { "tipo": "M", "valore": 3 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Termografia",
+          "descrizione": "Analisi termografica connessioni MT e BT sotto carico",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura resistenza di isolamento avvolgimenti MT e BT",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Pulizia avvolgimenti con aspirazione e soffiatura, serraggio connessioni",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura rapporto di trasformazione e verifica presa regolatore",
+          "frequenza": { "tipo": "A", "valore": 3 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "CEI 14-4", "descrizione": "Trasformatori di potenza" },
+        { "codNormativa": "CEI 11-27", "descrizione": "Lavori su impianti elettrici" }
+      ]
+    },
+    {
+      "codIntervento": "SPD",
+      "nomeCompleto": "Limitatori di Sovratensione (SPD)",
+      "premessa": "I controlli a vista devono essere svolti senza influire sulle regolari attività lavorative del sito, mantenendo in ogni caso le condizioni di sicurezza per le persone.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica indicatori di stato degli SPD (finestre di controllo)",
+          "frequenza": { "tipo": "M", "valore": 6 }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo visivo",
+          "descrizione": "Verifica serraggio connessioni e stato fusibili di backup",
+          "frequenza": { "tipo": "A", "valore": 1 }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Prova funzionale",
+          "descrizione": "Verifica corrente di dispersione e sostituzione moduli esausti",
+          "frequenza": { "tipo": "A", "valore": 2 }
+        }
+      ],
+      "listaNormative": [
+        { "codNormativa": "CEI EN 61643", "descrizione": "Dispositivi di protezione contro le sovratensioni" }
+      ]
+    }
+  ]
+}
+
