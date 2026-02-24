@@ -417,12 +417,54 @@ STEP 5 → ✅ VALIDAZIONE
 # Package nativo macOS
 ./gradlew :desktopApp:packageDmg
 
-# Package nativo Windows
+# Package nativo Windows (solo su Windows)
 ./gradlew :desktopApp:packageMsi
+
+# Package nativo Linux (solo su Linux)
+./gradlew :desktopApp:packageDeb
 
 # Clean
 ./gradlew clean
 ```
+
+---
+
+## 10. 🚀 CI/CD — GitHub Actions
+
+### Workflow: `.github/workflows/release.yml`
+
+**Trigger:** Push di un tag semver (`v*`) oppure dispatch manuale.
+
+**Flusso:**
+
+```
+git tag v1.0.0 && git push origin v1.0.0
+        │
+        ▼
+┌──────────────────────────────────────────┐
+│  GitHub Actions — Job "build" (matrix)   │
+│  ├── macos-latest   → packageDmg  → .dmg│
+│  ├── windows-latest → packageMsi  → .msi│
+│  └── ubuntu-latest  → packageDeb  → .deb│
+└──────────────────┬───────────────────────┘
+                   ▼
+┌──────────────────────────────────────────┐
+│  Job "release"                           │
+│  → Scarica tutti gli artifact            │
+│  → Crea GitHub Release "v1.0.0"         │
+│  → Allega .dmg + .msi + .deb            │
+└──────────────────────────────────────────┘
+```
+
+**Output per SO:**
+
+| Runner | Task Gradle | Artifact | Percorso build |
+|---|---|---|---|
+| `macos-latest` | `packageDmg` | `.dmg` | `desktopApp/build/compose/binaries/main/dmg/` |
+| `windows-latest` | `packageMsi` | `.msi` | `desktopApp/build/compose/binaries/main/msi/` |
+| `ubuntu-latest` | `packageDeb` | `.deb` | `desktopApp/build/compose/binaries/main/deb/` |
+
+**Requisiti:** JDK 17 (Temurin), `jpackage` nativo (incluso nel JDK).
 
 ---
 

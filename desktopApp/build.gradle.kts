@@ -44,20 +44,26 @@ compose.desktop {
         mainClass = "manutenzioni.app.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
-            packageName = "FdfBuilder"
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            packageName = "ManutenzioniMaker"
             packageVersion = "1.0.0"
+            description = "Generatore schede di manutenzione periodica con PDF AcroForm"
+            vendor = "Manutenzioni Maker"
 
             macOS {
-                bundleID = "com.example.fdfbuilder"
-                dockName = "FDF Builder"
-                // No signing for now as requested
+                bundleID = "com.example.manutenzionimaker"
+                dockName = "Manutenzioni Maker"
             }
 
             windows {
                 menu = true
                 shortcut = true
-                // No certificate for now as requested
+                menuGroup = "Manutenzioni Maker"
+            }
+
+            linux {
+                packageName = "manutenzioni-maker"
+                debMaintainer = "dev@example.com"
             }
         }
     }
