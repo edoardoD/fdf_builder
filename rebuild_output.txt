@@ -1,0 +1,30 @@
+> Task :desktopApp:cleanDesktopTest UP-TO-DATE
+> Task :desktopApp:cleanAllTests UP-TO-DATE
+> Task :desktopApp:clean
+> Task :common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :common:compileKotlinDesktop UP-TO-DATE
+> Task :common:desktopProcessResources NO-SOURCE
+> Task :common:desktopMainClasses UP-TO-DATE
+> Task :common:desktopJar UP-TO-DATE
+> Task :desktopApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :desktopApp:generateComposeResClass
+> Task :desktopApp:convertXmlValueResourcesForCommonMain NO-SOURCE
+> Task :desktopApp:copyNonXmlValueResourcesForCommonMain NO-SOURCE
+> Task :desktopApp:prepareComposeResourcesTaskForCommonMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForCommonMain NO-SOURCE
+> Task :desktopApp:convertXmlValueResourcesForDesktopMain NO-SOURCE
+> Task :desktopApp:copyNonXmlValueResourcesForDesktopMain NO-SOURCE
+> Task :desktopApp:prepareComposeResourcesTaskForDesktopMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForDesktopMain NO-SOURCE
+> Task :desktopApp:desktopCopyHierarchicalMultiplatformResources
+> Task :desktopApp:desktopProcessResources
+> Task :desktopApp:compileKotlinDesktop
+> Task :desktopApp:desktopMainClasses
+> Task :desktopApp:desktopJar
+> Task :desktopApp:flattenJars
+
+> Task :desktopApp:packageUberJarForCurrentOS
+The jar is written to /Users/edoardo/development_prdj/fdf_builder/desktopApp/build/compose/jars/ManutenzioniMaker-macos-arm64-1.0.0.jar
+
+BUILD SUCCESSFUL in 11s
+11 actionable tasks: 8 executed, 3 up-to-date

@@ -1,0 +1,25 @@
+> Task :common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :common:compileKotlinDesktop UP-TO-DATE
+> Task :common:desktopProcessResources NO-SOURCE
+> Task :common:desktopMainClasses UP-TO-DATE
+> Task :common:desktopJar UP-TO-DATE
+> Task :desktopApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :desktopApp:generateComposeResClass UP-TO-DATE
+> Task :desktopApp:convertXmlValueResourcesForCommonMain NO-SOURCE
+> Task :desktopApp:copyNonXmlValueResourcesForCommonMain NO-SOURCE
+> Task :desktopApp:prepareComposeResourcesTaskForCommonMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForCommonMain NO-SOURCE
+> Task :desktopApp:convertXmlValueResourcesForDesktopMain NO-SOURCE
+> Task :desktopApp:copyNonXmlValueResourcesForDesktopMain NO-SOURCE
+> Task :desktopApp:prepareComposeResourcesTaskForDesktopMain NO-SOURCE
+> Task :desktopApp:generateResourceAccessorsForDesktopMain NO-SOURCE
+> Task :desktopApp:compileKotlinDesktop UP-TO-DATE
+> Task :desktopApp:desktopCopyHierarchicalMultiplatformResources UP-TO-DATE
+> Task :desktopApp:desktopProcessResources UP-TO-DATE
+> Task :desktopApp:desktopMainClasses UP-TO-DATE
+> Task :desktopApp:desktopJar UP-TO-DATE
+> Task :desktopApp:flattenJars UP-TO-DATE
+> Task :desktopApp:packageUberJarForCurrentOS UP-TO-DATE
+
+BUILD SUCCESSFUL in 564ms
+9 actionable tasks: 9 up-to-date
