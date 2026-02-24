@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import manutenzioni.app.data.Cliente
 import manutenzioni.app.data.Impianto
 import manutenzioni.app.data.Periodo
 import manutenzioni.app.strategy.HtmlToPdfStrategy
@@ -31,6 +32,8 @@ data class ManutenzioniUiState(
     val selectedImpianto: Impianto? = null,
     val frequenzeDisponibili: List<Periodo> = emptyList(),
     val selectedFrequenza: Periodo? = null,
+    val clienti: List<Cliente> = emptyList(),
+    val selectedCliente: Cliente? = null,
     val pdfFile: File? = null,
     val isLoading: Boolean = false,
     val statusMessage: String = "Seleziona un impianto per iniziare",
@@ -55,6 +58,7 @@ class ManutenzioniViewModel(
 
     init {
         loadImpianti()
+        loadClienti()
     }
 
     /** Carica gli impianti dal repository */
@@ -76,6 +80,53 @@ class ManutenzioniViewModel(
                         isLoading = false,
                         errorMessage = "Errore caricamento: ${e.message}"
                     )
+                }
+            }
+        }
+    }
+
+    /** Carica i clienti dal repository */
+    private fun loadClienti() {
+        scope.launch {
+            try {
+                val clienti = repository.caricaClienti()
+                _uiState.update { it.copy(clienti = clienti) }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(errorMessage = "Errore caricamento clienti: ${e.message}")
+                }
+            }
+        }
+    }
+
+    /** Seleziona un cliente esistente */
+    fun selectCliente(cliente: Cliente) {
+        _uiState.update {
+            it.copy(
+                selectedCliente = cliente,
+                statusMessage = "Cliente: ${cliente.nome}",
+                errorMessage = null
+            )
+        }
+    }
+
+    /** Aggiunge un nuovo cliente e lo seleziona automaticamente */
+    fun addCliente(cliente: Cliente) {
+        scope.launch {
+            try {
+                repository.salvaCliente(cliente)
+                val clienti = repository.caricaClienti()
+                _uiState.update {
+                    it.copy(
+                        clienti = clienti,
+                        selectedCliente = cliente,
+                        statusMessage = "✓ Cliente ${cliente.nome} aggiunto e selezionato",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(errorMessage = "Errore salvataggio cliente: ${e.message}")
                 }
             }
         }
@@ -117,7 +168,7 @@ class ManutenzioniViewModel(
                 if (!outputDir.exists()) outputDir.mkdirs()
 
                 val outputPath = "output/${impianto.codIntervento}_${frequenza.label().replace(" ", "_")}.pdf"
-                val file = pdfStrategy.generate(impianto, frequenza, outputPath)
+                val file = pdfStrategy.generate(impianto, frequenza, outputPath, state.selectedCliente?.nome)
 
                 _uiState.update {
                     it.copy(

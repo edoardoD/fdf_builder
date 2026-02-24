@@ -45,9 +45,22 @@ data class Normativa(
     val descrizione: String
 )
 
+/**
+ * Entità Cliente — rappresenta il committente della manutenzione.
+ * Embedding-ready per NoSQL (Realm).
+ */
+@Serializable
+data class Cliente(
+    val id: String,
+    val nome: String,
+    val indirizzo: String? = null,
+    val partitaIva: String? = null
+)
+
 /** Wrapper per la serializzazione del database JSON */
 @Serializable
 data class ManutenzioniDatabase(
-    val impianti: List<Impianto>
+    val impianti: List<Impianto>,
+    val clienti: List<Cliente> = emptyList()
 )
 

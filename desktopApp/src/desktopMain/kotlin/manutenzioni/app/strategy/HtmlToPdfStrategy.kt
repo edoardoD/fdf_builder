@@ -21,7 +21,7 @@ class HtmlToPdfStrategy(
     private val pdfEngine: Pdf = Pdf()
 ) : PdfGeneratorStrategy {
 
-    override fun generate(impianto: Impianto, frequenza: Periodo, outputPath: String): File {
+    override fun generate(impianto: Impianto, frequenza: Periodo, outputPath: String, clienteNome: String?): File {
         // 1. Filtra attività per frequenza inclusiva
         val attivitaFiltrate = FrequencyFilter.filterByFrequenza(
             attivita = impianto.listaAttivita,
@@ -34,8 +34,8 @@ class HtmlToPdfStrategy(
             )
         }
 
-        // 2. Genera HTML dinamico
-        val htmlContent = htmlService.buildHtml(impianto, attivitaFiltrate, frequenza)
+        // 2. Genera HTML dinamico (con dati cliente)
+        val htmlContent = htmlService.buildHtml(impianto, attivitaFiltrate, frequenza, clienteNome)
 
         // 3. Scrivi HTML temporaneo
         val tempHtml = File.createTempFile("manutenzione_${impianto.codIntervento}_", ".html")

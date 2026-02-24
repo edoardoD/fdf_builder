@@ -19,8 +19,9 @@ interface PdfGeneratorStrategy {
      * @param impianto L'impianto selezionato
      * @param frequenza La frequenza di manutenzione selezionata
      * @param outputPath Il percorso del file PDF di output
+     * @param clienteNome Il nome del cliente da inserire nell'header del PDF
      * @return Il file PDF generato
      */
-    fun generate(impianto: Impianto, frequenza: Periodo, outputPath: String): File
+    fun generate(impianto: Impianto, frequenza: Periodo, outputPath: String, clienteNome: String? = null): File
 }
 

@@ -14,8 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import manutenzioni.app.data.Cliente
 import manutenzioni.app.data.Impianto
 import manutenzioni.app.data.Periodo
+import java.util.UUID
 
 /**
  * Sidebar di selezione — 25% della larghezza.
@@ -29,6 +31,8 @@ import manutenzioni.app.data.Periodo
 @Composable
 fun Sidebar(
     uiState: ManutenzioniUiState,
+    onClienteSelected: (Cliente) -> Unit,
+    onAddCliente: (Cliente) -> Unit,
     onImpiantoSelected: (Impianto) -> Unit,
     onFrequenzaSelected: (Periodo) -> Unit,
     onGeneraPdf: () -> Unit,
@@ -36,6 +40,23 @@ fun Sidebar(
     onViewModeChanged: (ViewMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Flag locale per evidenziare errore selezione cliente
+    var showClienteError by remember { mutableStateOf(false) }
+    // Flag per mostrare il Dialog di creazione cliente
+    var showNuovoClienteDialog by remember { mutableStateOf(false) }
+
+    // Dialog per inserimento nuovo cliente
+    if (showNuovoClienteDialog) {
+        NuovoClienteDialog(
+            onDismiss = { showNuovoClienteDialog = false },
+            onConfirm = { cliente ->
+                onAddCliente(cliente)
+                showNuovoClienteDialog = false
+                showClienteError = false
+            }
+        )
+    }
+
     Column(
         modifier = modifier.verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -48,6 +69,25 @@ fun Sidebar(
                 fontSize = 16.sp
             ),
             color = MaterialTheme.colors.primary
+        )
+
+        Divider()
+
+        // === Selezione Cliente ===
+        Text(
+            text = "Cliente",
+            style = MaterialTheme.typography.subtitle2,
+            fontWeight = FontWeight.SemiBold
+        )
+        ClienteDropdown(
+            clienti = uiState.clienti,
+            selected = uiState.selectedCliente,
+            showError = showClienteError && uiState.selectedCliente == null,
+            onSelected = { cliente ->
+                onClienteSelected(cliente)
+                showClienteError = false
+            },
+            onAddNew = { showNuovoClienteDialog = true }
         )
 
         Divider()
@@ -108,7 +148,13 @@ fun Sidebar(
 
         // === Bottoni Azione ===
         Button(
-            onClick = onGeneraPdf,
+            onClick = {
+                if (uiState.selectedCliente == null) {
+                    showClienteError = true
+                } else {
+                    onGeneraPdf()
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
             enabled = uiState.selectedImpianto != null
                     && uiState.selectedFrequenza != null
@@ -264,3 +310,195 @@ private fun FrequenzaDropdown(
     }
 }
 
+/**
+ * Dropdown per la selezione del cliente.
+ * La prima voce è sempre "➕ Aggiungi Nuovo Cliente".
+ * Se showError = true, il bordo diventa rosso.
+ */
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun ClienteDropdown(
+    clienti: List<Cliente>,
+    selected: Cliente?,
+    showError: Boolean,
+    onSelected: (Cliente) -> Unit,
+    onAddNew: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            value = selected?.nome ?: "",
+            onValueChange = {},
+            readOnly = true,
+            placeholder = { Text("Seleziona cliente...", fontSize = 12.sp) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.fillMaxWidth(),
+            textStyle = LocalTextStyle.current.copy(fontSize = 12.sp),
+            singleLine = true,
+            isError = showError,
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                errorBorderColor = Color(0xFFD32F2F)
+            )
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            // Prima voce: Aggiungi Nuovo Cliente
+            DropdownMenuItem(onClick = {
+                expanded = false
+                onAddNew()
+            }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colors.primary
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "➕ Aggiungi Nuovo Cliente",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colors.primary
+                    )
+                }
+            }
+
+            if (clienti.isNotEmpty()) {
+                Divider()
+            }
+
+            clienti.forEach { cliente ->
+                DropdownMenuItem(onClick = {
+                    onSelected(cliente)
+                    expanded = false
+                }) {
+                    Column {
+                        Text(
+                            text = cliente.nome,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        if (!cliente.partitaIva.isNullOrBlank()) {
+                            Text(
+                                text = "P.IVA: ${cliente.partitaIva}",
+                                fontSize = 10.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Messaggio errore sotto il campo
+    if (showError) {
+        Text(
+            text = "Seleziona un cliente prima di generare il PDF",
+            color = Color(0xFFD32F2F),
+            fontSize = 10.sp,
+            modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+        )
+    }
+}
+
+/**
+ * Dialog per l'inserimento rapido di un nuovo cliente.
+ * Campi: Nome (obbligatorio), Indirizzo, Partita IVA.
+ */
+@Composable
+private fun NuovoClienteDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (Cliente) -> Unit
+) {
+    var nome by remember { mutableStateOf("") }
+    var indirizzo by remember { mutableStateOf("") }
+    var partitaIva by remember { mutableStateOf("") }
+    var nomeError by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Nuovo Cliente",
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = nome,
+                    onValueChange = {
+                        nome = it
+                        nomeError = false
+                    },
+                    label = { Text("Nome *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    isError = nomeError,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
+                )
+                if (nomeError) {
+                    Text(
+                        text = "Il nome è obbligatorio",
+                        color = Color(0xFFD32F2F),
+                        fontSize = 10.sp
+                    )
+                }
+                OutlinedTextField(
+                    value = indirizzo,
+                    onValueChange = { indirizzo = it },
+                    label = { Text("Indirizzo") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
+                )
+                OutlinedTextField(
+                    value = partitaIva,
+                    onValueChange = { partitaIva = it },
+                    label = { Text("Partita IVA") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (nome.isBlank()) {
+                        nomeError = true
+                    } else {
+                        onConfirm(
+                            Cliente(
+                                id = UUID.randomUUID().toString(),
+                                nome = nome.trim(),
+                                indirizzo = indirizzo.trim().ifBlank { null },
+                                partitaIva = partitaIva.trim().ifBlank { null }
+                            )
+                        )
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = MaterialTheme.colors.primary,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Salva")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Annulla")
+            }
+        }
+    )
+}

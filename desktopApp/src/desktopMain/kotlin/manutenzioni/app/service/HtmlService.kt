@@ -19,12 +19,14 @@ class HtmlService(
     /**
      * Genera l'HTML completo con i dati dell'impianto e le attività filtrate.
      *
+     * @param clienteNome Nome del cliente da iniettare nell'header
      * @return il contenuto HTML come stringa
      */
     fun buildHtml(
         impianto: Impianto,
         attivitaFiltrate: List<Attivita>,
-        frequenza: Periodo
+        frequenza: Periodo,
+        clienteNome: String? = null
     ): String {
         var html = loadTemplate()
 
@@ -33,6 +35,14 @@ class HtmlService(
         html = html.replace("<!-- OGGETTO -->", escapeHtml(impianto.nomeCompleto))
         html = html.replace("<!-- PERIODICITA -->", escapeHtml(frequenza.label()))
         html = html.replace("<!-- PREMESSA -->", escapeHtml(impianto.premessa ?: ""))
+
+        // Iniezione nome cliente nell'header
+        val clienteText = if (!clienteNome.isNullOrBlank()) {
+            "Cliente: ${escapeHtml(clienteNome)}"
+        } else {
+            "Cliente"
+        }
+        html = html.replace("<p>Cliente</p>", "<p>$clienteText</p>")
 
         // Generazione righe dinamiche
         val rows = buildAttivitaRows(attivitaFiltrate, impianto.codIntervento)

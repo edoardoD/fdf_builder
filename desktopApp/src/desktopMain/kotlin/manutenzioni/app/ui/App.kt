@@ -35,6 +35,8 @@ fun App(viewModel: ManutenzioniViewModel) {
                 // Sidebar — 25%
                 Sidebar(
                     uiState = uiState,
+                    onClienteSelected = viewModel::selectCliente,
+                    onAddCliente = viewModel::addCliente,
                     onImpiantoSelected = viewModel::selectImpianto,
                     onFrequenzaSelected = viewModel::selectFrequenza,
                     onGeneraPdf = viewModel::generatePdf,
