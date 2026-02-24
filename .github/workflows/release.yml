@@ -110,11 +110,15 @@ jobs:
             ## 📦 Manutenzioni Maker ${{ github.ref_name }}
 
             ### Download
-            | Piattaforma | File |
-            |---|---|
-            | 🍎 macOS | `.dmg` |
-            | 🪟 Windows | `.msi` |
-            | 🐧 Linux | `.deb` |
+            | Piattaforma | Installer | Fat JAR (Portatile) |
+            |---|---|---|
+            | 🍎 macOS | `.dmg` | `.jar` |
+            | 🪟 Windows | `.msi` | `.jar` |
+            | 🐧 Linux | `.deb` | `.jar` |
+
+            ### Note sul Fat JAR
+            I file `.jar` contengono tutte le dipendenze e sono utili se l'installer nativo ha problemi. 
+            Richiedono Java 17+ installato sul sistema: `java -jar nomefile.jar`
 
             ### Installazione
             - **macOS**: Apri il `.dmg` e trascina l'app in Applicazioni
