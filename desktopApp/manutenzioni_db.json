@@ -757,6 +757,12 @@
             "nome": "villa igea",
             "indirizzo": null,
             "partitaIva": null
+        },
+        {
+            "id": "807fc3e2-c527-48f5-8d9a-a7603249dc66",
+            "nome": "celanese",
+            "indirizzo": null,
+            "partitaIva": null
         }
     ]
 }

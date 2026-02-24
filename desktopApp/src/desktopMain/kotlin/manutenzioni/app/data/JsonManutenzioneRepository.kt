@@ -10,8 +10,10 @@ import java.io.File
  * Tutte le operazioni CRUD persistono su file locale.
  */
 class JsonManutenzioneRepository(
-    private val dbFileName: String = "manutenzioni_db.json"
+    fileName: String = "manutenzioni_db.json"
 ) : ManutenzioneRepository {
+
+    private val dbFile: File = resolveDbPath(fileName)
 
     private val json = Json {
         prettyPrint = true
@@ -19,14 +21,26 @@ class JsonManutenzioneRepository(
         encodeDefaults = true
     }
 
-    private val dbFile: File = File(dbFileName)
-
     /** Cache in-memory del database */
     private var cache: MutableList<Impianto>? = null
     private var cacheClienti: MutableList<Cliente>? = null
 
     init {
+        println("📂 Database log: \${dbFile.absolutePath}")
         copyDefaultIfMissing()
+    }
+
+    /**
+     * Risolve il percorso del database in modo che sia scrivibile su ogni SO.
+     * Su Desktop usa la cartella home dell'utente.
+     */
+    private fun resolveDbPath(fileName: String): File {
+        val userHome = System.getProperty("user.home")
+        val appDataDir = File(userHome, ".manutenzioni-maker")
+        if (!appDataDir.exists()) {
+            appDataDir.mkdirs()
+        }
+        return File(appDataDir, fileName)
     }
 
     /**
@@ -138,4 +152,3 @@ class JsonManutenzioneRepository(
         saveToDisk(getImpiantiCache(), list)
     }
 }
-

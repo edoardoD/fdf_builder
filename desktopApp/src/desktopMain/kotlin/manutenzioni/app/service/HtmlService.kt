@@ -5,6 +5,7 @@ import manutenzioni.app.data.Impianto
 import manutenzioni.app.data.Periodo
 import manutenzioni.domain.service.Html
 import java.io.File
+import java.io.InputStream
 
 /**
  * Implementazione concreta del template engine HTML.
@@ -62,22 +63,23 @@ class HtmlService(
 
     private fun loadTemplate(): String {
         // 1. Cerca nel classpath (resources)
-        val fromClasspath = Thread.currentThread().contextClassLoader
-            ?.getResourceAsStream(templatePath)
+        val fromClasspath: InputStream? = Thread.currentThread().contextClassLoader?.getResourceAsStream(templatePath)
             ?: this::class.java.classLoader?.getResourceAsStream(templatePath)
             ?: this::class.java.getResourceAsStream("/$templatePath")
+            ?: ClassLoader.getSystemResourceAsStream(templatePath)
 
         if (fromClasspath != null) {
             return fromClasspath.bufferedReader().use { it.readText() }
         }
 
         // 2. Fallback: cerca su filesystem (percorso assoluto o relativo)
+        // Questo è utile durante lo sviluppo, ma in produzione (JAR/App) il file è dentro le risorse
         val file = File(templatePath)
         if (file.exists()) {
             return file.readText()
         }
 
-        throw IllegalStateException("Template HTML non trovato: $templatePath")
+        throw IllegalStateException("Template HTML non trovato: $templatePath. Assicurati che il file sia presente nelle risorse.")
     }
 
     /**
@@ -130,4 +132,3 @@ class HtmlService(
             .replace("'", "&#39;")
     }
 }
-

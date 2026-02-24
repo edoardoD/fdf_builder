@@ -6,7 +6,7 @@ name: Build & Release Installers
 #   - Dispatch manuale dalla UI di GitHub (per test)
 #
 # Flusso:
-#   1. Job "build" (matrix 3 SO) → compila + genera installer nativo
+#   1. Job "build" (matrix 3 SO) → compila + genera installer nativo + Fat JAR
 #   2. Job "release" → scarica tutti gli artifact e crea GitHub Release
 # ─────────────────────────────────────────────────────────────
 
@@ -63,14 +63,24 @@ jobs:
         if: runner.os != 'Windows'
         run: chmod +x ./gradlew
 
-      - name: 🏗️ Build installer (${{ matrix.task }})
-        run: ./gradlew :desktopApp:${{ matrix.task }}
+      - name: 🏗️ Build installer & UberJar
+        run: ./gradlew :desktopApp:${{ matrix.task }} :desktopApp:packageUberJarForCurrentOS
+
+      - name: 🔄 Rename UberJar
+        shell: bash
+        run: |
+          # Rinomina il jar per includere il nome del sistema operativo
+          # Questo evita conflitti quando si uniscono gli artifact e chiarisce quale jar usare
+          cd desktopApp/build/compose/jars
+          mv *.jar ManutenzioniMaker-${{ matrix.os }}.jar
 
       - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact-name }}
-          path: ${{ matrix.artifact-path }}
+          path: |
+            ${{ matrix.artifact-path }}
+            desktopApp/build/compose/jars/*.jar
           retention-days: 7
           if-no-files-found: error
 
@@ -102,6 +112,7 @@ jobs:
             installers/**/*.dmg
             installers/**/*.msi
             installers/**/*.deb
+            installers/**/*.jar
           generate_release_notes: true
           draft: false
           prerelease: false
@@ -112,13 +123,18 @@ jobs:
             ### Download
             | Piattaforma | Installer | Fat JAR (Portatile) |
             |---|---|---|
-            | 🍎 macOS | `.dmg` | `.jar` |
-            | 🪟 Windows | `.msi` | `.jar` |
-            | 🐧 Linux | `.deb` | `.jar` |
+            | 🍎 macOS | `.dmg` | `ManutenzioniMaker-macos-latest.jar` |
+            | 🪟 Windows | `.msi` | `ManutenzioniMaker-windows-latest.jar` |
+            | 🐧 Linux | `.deb` | `ManutenzioniMaker-ubuntu-latest.jar` |
 
             ### Note sul Fat JAR
-            I file `.jar` contengono tutte le dipendenze e sono utili se l'installer nativo ha problemi. 
-            Richiedono Java 17+ installato sul sistema: `java -jar nomefile.jar`
+            I file `.jar` contengono tutte le dipendenze e sono utili se l'installer nativo ha problemi (es. crash su macOS per permessi/notarizzazione).
+            Richiedono Java 17+ installato sul sistema.
+            
+            **Comando per avviare:**
+            ```bash
+            java -jar ManutenzioniMaker-macos-latest.jar
+            ```
 
             ### Installazione
             - **macOS**: Apri il `.dmg` e trascina l'app in Applicazioni
@@ -127,4 +143,3 @@ jobs:
 
             ---
             _Generato automaticamente da GitHub Actions_
-

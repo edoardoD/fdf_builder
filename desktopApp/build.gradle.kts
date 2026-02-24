@@ -73,6 +73,7 @@ tasks.register("createDmg") {
     dependsOn("packageDmg")
 }
 
+
 tasks.register("createMsi") {
     dependsOn("packageMsi")
 }
