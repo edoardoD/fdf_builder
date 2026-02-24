@@ -115,7 +115,7 @@ common/                                      ← 📚 MODULO KMP CONDIVISO
 
 | Layer | Responsabilità | Dipende da | **Non può** dipendere da |
 |---|---|---|---|
-| `domain` | Interfacce, regole di business, contratti | Model (`app.data`) ¹ | `ui`, `strategy` impl, `service` impl |
+| `domain` | Interfacce, regole di business, contratti | Model (`app.data` ¹ | `ui`, `strategy` impl, `service` impl |
 | `data` | Model `@Serializable`, persistenza JSON, I/O | `domain` | `ui`, `strategy` |
 | `service` | Rendering HTML, conversione PDF | `domain`, `data` | `ui` |
 | `strategy` | Orchestrazione della pipeline di generazione | `domain`, `service` | `ui` |
@@ -441,28 +441,33 @@ STEP 5 → ✅ VALIDAZIONE
 git tag v1.0.0 && git push origin v1.0.0
         │
         ▼
-┌──────────────────────────────────────────┐
-│  GitHub Actions — Job "build" (matrix)   │
-│  ├── macos-latest   → packageDmg  → .dmg│
-│  ├── windows-latest → packageMsi  → .msi│
-│  └── ubuntu-latest  → packageDeb  → .deb│
-└──────────────────┬───────────────────────┘
-                   ▼
-┌──────────────────────────────────────────┐
-│  Job "release"                           │
-│  → Scarica tutti gli artifact            │
-│  → Crea GitHub Release "v1.0.0"         │
-│  → Allega .dmg + .msi + .deb            │
-└──────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  GitHub Actions — Job "build" (matrix)                   │
+│  ├── macos   → packageDmg + packageUberJar → .dmg + .jar │
+│  ├── windows → packageMsi + packageUberJar → .msi + .jar │
+│  └── linux   → packageDeb + packageUberJar → .deb + .jar │
+└──────────────────────────┬───────────────────────────────┘
+                           ▼
+┌──────────────────────────────────────────────────────────┐
+│  Job "release"                                           │
+│  → Scarica tutti gli artifact                            │
+│  → Crea GitHub Release "v1.0.0"                         │
+│  → Allega .dmg + .msi + .deb + .jar (Fat JAR)            │
+└──────────────────────────────────────────────────────────┘
 ```
 
 **Output per SO:**
 
-| Runner | Task Gradle | Artifact | Percorso build |
+| Runner | Task Gradle | Installer | Fat JAR |
 |---|---|---|---|
-| `macos-latest` | `packageDmg` | `.dmg` | `desktopApp/build/compose/binaries/main/dmg/` |
-| `windows-latest` | `packageMsi` | `.msi` | `desktopApp/build/compose/binaries/main/msi/` |
-| `ubuntu-latest` | `packageDeb` | `.deb` | `desktopApp/build/compose/binaries/main/deb/` |
+| `macos-latest` | `packageDmg`, `packageUberJar...` | `.dmg` | `.jar` |
+| `windows-latest` | `packageMsi`, `packageUberJar...` | `.msi` | `.jar` |
+| `ubuntu-latest` | `packageDeb`, `packageUberJar...` | `.deb` | `.jar` |
+
+**Note sui Fat JAR:**
+- Localizzati in `desktopApp/build/compose/binaries/main/uberjar/`
+- Utili per il debug e come alternativa se gli installer nativi falliscono.
+- Richiedono un JRE 17 installato localmente: `java -jar nomefile.jar`.
 
 **Requisiti:** JDK 17 (Temurin), `jpackage` nativo (incluso nel JDK).
 
