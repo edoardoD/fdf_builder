@@ -1,5 +1,7 @@
 package manutenzioni.app.ui
 
+import java.awt.FileDialog
+import java.awt.Frame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -150,7 +152,6 @@ class ManutenzioniViewModel(
     /** Seleziona una frequenza e genera automaticamente il PDF */
     fun selectFrequenza(frequenza: Periodo) {
         _uiState.update { it.copy(selectedFrequenza = frequenza) }
-        generatePdf()
     }
 
     /** Genera il PDF con la strategia corrente */
@@ -159,15 +160,27 @@ class ManutenzioniViewModel(
         val impianto = state.selectedImpianto ?: return
         val frequenza = state.selectedFrequenza ?: return
 
+        // Usiamo AWT FileDialog per selezionare il percorso di salvataggio
+        val defaultFileName = "${impianto.codIntervento}_${frequenza.label().replace(" ", "_")}.pdf"
+        val dialog = FileDialog(null as Frame?, "Salva PDF", FileDialog.SAVE)
+        dialog.file = defaultFileName
+        dialog.isVisible = true
+
+        val selectedFile = dialog.file
+        val selectedDir = dialog.directory
+
+        if (selectedFile == null || selectedDir == null) {
+            // L'utente ha annullato
+            return
+        }
+
+        val outputPath = File(selectedDir, selectedFile).absolutePath
+
         scope.launch {
             _uiState.update {
                 it.copy(isLoading = true, errorMessage = null, statusMessage = "Generazione PDF in corso...")
             }
             try {
-                val outputDir = File("output")
-                if (!outputDir.exists()) outputDir.mkdirs()
-
-                val outputPath = "output/${impianto.codIntervento}_${frequenza.label().replace(" ", "_")}.pdf"
                 val file = pdfStrategy.generate(impianto, frequenza, outputPath, state.selectedCliente?.nome)
 
                 _uiState.update {
@@ -233,4 +246,3 @@ class ManutenzioniViewModel(
         loadImpianti()
     }
 }
-
