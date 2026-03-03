@@ -14,7 +14,7 @@
 1. Selezionare un **Cliente** committente
 2. Scegliere un **Impianto** (es. Gruppo Elettrogeno, Cabina MT/BT, Quadri BT)
 3. Impostare una **Frequenza** di manutenzione (Mensile, Trimestrale, Semestrale, Annuale, Biennale…)
-4. Generare automaticamente un **PDF compilabile (AcroForm)** con radio button per esiti e campi testo per note
+4. Generare automaticamente uno o N **PDF compilabile (AcroForm)** con radio button per esiti e campi testo per note
 
 Il PDF prodotto è una scheda professionale conforme alle normative CEI/UNI, pronta per la compilazione in cantiere.
 

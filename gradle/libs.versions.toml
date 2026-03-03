@@ -5,6 +5,7 @@ itext = "9.4.0"
 itext-html2pdf = "6.3.0"
 kotlinx-serialization-json = "1.9.0"
 kotlinx-coroutines = "1.9.0"
+javafx = "21.0.2"
 
 [libraries]
 itext-kernel = { module = "com.itextpdf:kernel", version.ref = "itext" }
@@ -14,6 +15,9 @@ itext-html2pdf = { module = "com.itextpdf:html2pdf", version.ref = "itext-html2p
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
+javafx-base = { module = "org.openjfx:javafx-base", version.ref = "javafx" }
+javafx-controls = { module = "org.openjfx:javafx-controls", version.ref = "javafx" }
+javafx-graphics = { module = "org.openjfx:javafx-graphics", version.ref = "javafx" }
 
 [plugins]
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

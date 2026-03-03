@@ -5,11 +5,15 @@ import manutenzioni.app.data.Periodo
 import manutenzioni.app.service.HtmlService
 import manutenzioni.app.service.Pdf
 import manutenzioni.domain.service.FrequencyFilter
-import manutenzioni.domain.strategy.PdfGeneratorStrategy
+import manutenzioni.domain.strategy.AbstractPdfGeneratorStrategy
 import java.io.File
 
 /**
  * Strategia concreta: HTML → PDF con AcroForm.
+ *
+ * Estende [AbstractPdfGeneratorStrategy] che fornisce la logica batch
+ * (loop, naming progressivo, progress callback, error handling).
+ * Questa classe implementa solo il metodo `generate()` per produrre un singolo PDF.
  *
  * Orchestra il flusso completo:
  * 1. FrequencyFilter filtra le attività per la frequenza selezionata
@@ -19,7 +23,7 @@ import java.io.File
 class HtmlToPdfStrategy(
     private val htmlService: HtmlService = HtmlService(),
     private val pdfEngine: Pdf = Pdf()
-) : PdfGeneratorStrategy {
+) : AbstractPdfGeneratorStrategy() {
 
     override fun generate(impianto: Impianto, frequenza: Periodo, outputPath: String, clienteNome: String?): File {
         // 1. Filtra attività per frequenza inclusiva

@@ -1,7 +1,5 @@
 package manutenzioni.app.ui
 
-import java.awt.FileDialog
-import java.awt.Frame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -10,14 +8,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import manutenzioni.app.data.Cliente
 import manutenzioni.app.data.Impianto
 import manutenzioni.app.data.Periodo
 import manutenzioni.app.strategy.HtmlToPdfStrategy
 import manutenzioni.domain.ManutenzioneRepository
 import manutenzioni.domain.service.FrequencyFilter
-import manutenzioni.domain.strategy.PdfGeneratorStrategy
+import manutenzioni.domain.strategy.PdfBatchGenerator
 import java.io.File
+import javax.swing.JFileChooser
 
 /** Modalità di visualizzazione dell'area principale */
 enum class ViewMode {
@@ -40,7 +40,13 @@ data class ManutenzioniUiState(
     val isLoading: Boolean = false,
     val statusMessage: String = "Seleziona un impianto per iniziare",
     val errorMessage: String? = null,
-    val viewMode: ViewMode = ViewMode.PDF_PREVIEW
+    val viewMode: ViewMode = ViewMode.PDF_PREVIEW,
+    /** Numero di copie da generare (>= 1, default = 1) */
+    val numberOfCopies: Int = 1,
+    /** Progresso batch: "Generazione copia X di N..." (null se non in corso) */
+    val batchProgress: String? = null,
+    /** Lista dei file generati nell'ultimo batch */
+    val generatedFiles: List<File> = emptyList()
 )
 
 /**
@@ -51,7 +57,7 @@ data class ManutenzioniUiState(
  */
 class ManutenzioniViewModel(
     private val repository: ManutenzioneRepository,
-    private val pdfStrategy: PdfGeneratorStrategy = HtmlToPdfStrategy()
+    private val pdfStrategy: PdfBatchGenerator = HtmlToPdfStrategy()
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -154,40 +160,84 @@ class ManutenzioniViewModel(
         _uiState.update { it.copy(selectedFrequenza = frequenza) }
     }
 
-    /** Genera il PDF con la strategia corrente */
+    /** Imposta il numero di copie da generare (min 1) */
+    fun setNumberOfCopies(n: Int) {
+        _uiState.update { it.copy(numberOfCopies = n.coerceIn(1, 99)) }
+    }
+
+    /** Genera il PDF con la strategia corrente — usa sempre il flusso batch */
     fun generatePdf() {
         val state = _uiState.value
         val impianto = state.selectedImpianto ?: return
         val frequenza = state.selectedFrequenza ?: return
+        val copies = state.numberOfCopies
 
-        // Usiamo AWT FileDialog per selezionare il percorso di salvataggio
-        val defaultFileName = "${impianto.codIntervento}_${frequenza.label().replace(" ", "_")}.pdf"
-        val dialog = FileDialog(null as Frame?, "Salva PDF", FileDialog.SAVE)
-        dialog.file = defaultFileName
-        dialog.isVisible = true
-
-        val selectedFile = dialog.file
-        val selectedDir = dialog.directory
-
-        if (selectedFile == null || selectedDir == null) {
-            // L'utente ha annullato
-            return
+        // JFileChooser in modalità FILES_AND_DIRECTORIES per permettere la creazione di nuove cartelle
+        val chooser = JFileChooser().apply {
+            dialogTitle = "Seleziona o crea la cartella di destinazione"
+            fileSelectionMode = JFileChooser.FILES_AND_DIRECTORIES
+            approveButtonText = "Salva qui"
         }
-
-        val outputPath = File(selectedDir, selectedFile).absolutePath
+        val result = chooser.showOpenDialog(null)
+        if (result != JFileChooser.APPROVE_OPTION) return
+        var outputDir = chooser.selectedFile
+        // Se l'utente ha selezionato un file, ma il path non esiste, lo creo come cartella
+        if (!outputDir.exists()) {
+            outputDir.mkdirs()
+        }
+        // Se l'utente ha selezionato un file invece di una cartella, risalgo al parent
+        if (!outputDir.isDirectory) {
+            outputDir = outputDir.parentFile
+        }
+        if (outputDir == null || !outputDir.exists() || !outputDir.isDirectory) return
 
         scope.launch {
             _uiState.update {
-                it.copy(isLoading = true, errorMessage = null, statusMessage = "Generazione PDF in corso...")
+                it.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    batchProgress = "Avvio generazione...",
+                    statusMessage = "Generazione di $copies ${if (copies == 1) "copia" else "copie"} in corso...",
+                    generatedFiles = emptyList()
+                )
             }
             try {
-                val file = pdfStrategy.generate(impianto, frequenza, outputPath, state.selectedCliente?.nome)
+                val batchResult = withContext(Dispatchers.IO) {
+                    pdfStrategy.generateBatch(
+                        impianto = impianto,
+                        frequenza = frequenza,
+                        outputDir = outputDir,
+                        copies = copies,
+                        clienteNome = state.selectedCliente?.nome,
+                        onProgress = { current, total ->
+                            _uiState.update {
+                                it.copy(
+                                    batchProgress = "Generazione copia $current di $total...",
+                                    statusMessage = "Generazione copia $current di $total..."
+                                )
+                            }
+                        }
+                    )
+                }
+
+                val statusMsg = if (batchResult.isFullSuccess) {
+                    "✓ ${batchResult.successCount} ${if (batchResult.successCount == 1) "PDF generato" else "PDF generati"} in ${outputDir.name}/"
+                } else {
+                    "⚠ ${batchResult.successCount}/${batchResult.totalRequested} PDF generati. ${batchResult.failureCount} errori."
+                }
+
+                val errorMsg = if (batchResult.errors.isNotEmpty()) {
+                    "Errori: " + batchResult.errors.entries.joinToString("; ") { "Copia ${it.key}: ${it.value}" }
+                } else null
 
                 _uiState.update {
                     it.copy(
-                        pdfFile = file,
+                        pdfFile = batchResult.generatedFiles.firstOrNull(),
+                        generatedFiles = batchResult.generatedFiles,
                         isLoading = false,
-                        statusMessage = "✓ PDF generato: ${file.name}",
+                        batchProgress = null,
+                        statusMessage = statusMsg,
+                        errorMessage = errorMsg,
                         viewMode = ViewMode.PDF_PREVIEW
                     )
                 }
@@ -195,6 +245,7 @@ class ManutenzioniViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
+                        batchProgress = null,
                         errorMessage = "Errore generazione PDF: ${e.message}"
                     )
                 }

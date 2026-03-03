@@ -42,6 +42,7 @@ fun App(viewModel: ManutenzioniViewModel) {
                     onGeneraPdf = viewModel::generatePdf,
                     onOpenPdf = viewModel::openPdfInSystem,
                     onViewModeChanged = viewModel::setViewMode,
+                    onNumberOfCopiesChanged = viewModel::setNumberOfCopies,
                     modifier = Modifier
                         .fillMaxWidth(0.25f)
                         .fillMaxHeight()

@@ -38,6 +38,7 @@ fun Sidebar(
     onGeneraPdf: () -> Unit,
     onOpenPdf: () -> Unit,
     onViewModeChanged: (ViewMode) -> Unit,
+    onNumberOfCopiesChanged: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Flag locale per evidenziare errore selezione cliente
@@ -147,6 +148,74 @@ fun Sidebar(
         Spacer(Modifier.height(8.dp))
 
         // === Bottoni Azione ===
+
+        // Selettore numero di copie
+        Text(
+            text = "Numero di copie",
+            style = MaterialTheme.typography.subtitle2,
+            fontWeight = FontWeight.SemiBold
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            IconButton(
+                onClick = { onNumberOfCopiesChanged(uiState.numberOfCopies - 1) },
+                enabled = uiState.numberOfCopies > 1,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Diminuisci copie",
+                    tint = if (uiState.numberOfCopies > 1) MaterialTheme.colors.primary else Color.LightGray
+                )
+            }
+            Text(
+                text = "${uiState.numberOfCopies}",
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+            IconButton(
+                onClick = { onNumberOfCopiesChanged(uiState.numberOfCopies + 1) },
+                enabled = uiState.numberOfCopies < 99,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    Icons.Default.KeyboardArrowUp,
+                    contentDescription = "Aumenta copie",
+                    tint = if (uiState.numberOfCopies < 99) MaterialTheme.colors.primary else Color.LightGray
+                )
+            }
+        }
+
+        // Indicatore progresso batch (visibile solo durante la generazione)
+        uiState.batchProgress?.let { progress ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = Color(0xFFFFF3E0),
+                elevation = 0.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(14.dp),
+                        strokeWidth = 2.dp,
+                        color = Color(0xFFE65100)
+                    )
+                    Text(
+                        text = progress,
+                        fontSize = 11.sp,
+                        color = Color(0xFFE65100)
+                    )
+                }
+            }
+        }
+
         Button(
             onClick = {
                 if (uiState.selectedCliente == null) {

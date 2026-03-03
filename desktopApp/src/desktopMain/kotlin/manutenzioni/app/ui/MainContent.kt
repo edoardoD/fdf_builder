@@ -172,8 +172,61 @@ private fun PdfPreviewPanel(uiState: ManutenzioniUiState, modifier: Modifier) {
             }
         }
 
-        // Card PDF generato
-        uiState.pdfFile?.let { file ->
+        // Card PDF generati (batch)
+        if (uiState.generatedFiles.isNotEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                backgroundColor = Color(0xFFE8F5E9),
+                elevation = 2.dp
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color(0xFF2E7D32),
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Column {
+                            Text(
+                                text = if (uiState.generatedFiles.size == 1) "PDF Generato con successo"
+                                       else "${uiState.generatedFiles.size} PDF Generati con successo",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF2E7D32)
+                            )
+                            Text(
+                                text = uiState.generatedFiles.first().parentFile?.absolutePath ?: "",
+                                fontSize = 11.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    uiState.generatedFiles.forEach { file ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "📄 ${file.name}",
+                                fontSize = 11.sp,
+                                color = Color.DarkGray,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "${file.length() / 1024} KB",
+                                fontSize = 11.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
+                }
+            }
+        } else if (uiState.pdfFile != null) {
+            // Fallback per singolo file (retrocompatibilità)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 backgroundColor = Color(0xFFE8F5E9),
@@ -197,12 +250,12 @@ private fun PdfPreviewPanel(uiState: ManutenzioniUiState, modifier: Modifier) {
                             color = Color(0xFF2E7D32)
                         )
                         Text(
-                            text = file.absolutePath,
+                            text = uiState.pdfFile.absolutePath,
                             fontSize = 11.sp,
                             color = Color.Gray
                         )
                         Text(
-                            text = "Dimensione: ${file.length() / 1024} KB",
+                            text = "Dimensione: ${uiState.pdfFile.length() / 1024} KB",
                             fontSize = 11.sp,
                             color = Color.Gray
                         )
