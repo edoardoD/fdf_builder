@@ -107,3 +107,5 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/gradle,java,macos,visualstudiocode
+/.kotlin/sessions/kotlin-compiler-5273804190512048602.salive
+/.idea/inspectionProfiles/Project_Default.xml
