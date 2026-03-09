@@ -172,24 +172,27 @@ class ManutenzioniViewModel(
         val frequenza = state.selectedFrequenza ?: return
         val copies = state.numberOfCopies
 
-        // JFileChooser in modalità FILES_AND_DIRECTORIES per permettere la creazione di nuove cartelle
-        val chooser = JFileChooser().apply {
-            dialogTitle = "Seleziona o crea la cartella di destinazione"
-            fileSelectionMode = JFileChooser.FILES_AND_DIRECTORIES
-            approveButtonText = "Salva qui"
+        // --- Sostituzione JFileChooser con FileDialog AWT per selezione cartella su macOS ---
+        val outputDirPath = run {
+            System.setProperty("apple.awt.fileDialogForDirectories", "true")
+            val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Seleziona o crea una cartella", java.awt.FileDialog.LOAD)
+            dialog.isVisible = true
+            val selectedDir = dialog.directory
+            val selectedFile = dialog.file // In questa modalità, 'file' corrisponde alla cartella selezionata
+            System.setProperty("apple.awt.fileDialogForDirectories", "false")
+            if (selectedDir == null || selectedFile == null) {
+                return
+            }
+            java.io.File(selectedDir, selectedFile).absolutePath
         }
-        val result = chooser.showOpenDialog(null)
-        if (result != JFileChooser.APPROVE_OPTION) return
-        var outputDir = chooser.selectedFile
-        // Se l'utente ha selezionato un file, ma il path non esiste, lo creo come cartella
+        val outputDir = java.io.File(outputDirPath)
         if (!outputDir.exists()) {
             outputDir.mkdirs()
         }
-        // Se l'utente ha selezionato un file invece di una cartella, risalgo al parent
         if (!outputDir.isDirectory) {
-            outputDir = outputDir.parentFile
+            // Se non è una directory valida, interrompi
+            return
         }
-        if (outputDir == null || !outputDir.exists() || !outputDir.isDirectory) return
 
         scope.launch {
             _uiState.update {
