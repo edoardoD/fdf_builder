@@ -165,6 +165,38 @@ class ManutenzioniViewModel(
         _uiState.update { it.copy(numberOfCopies = n.coerceIn(1, 99)) }
     }
 
+    /** Seleziona una cartella di output in modo cross-platform (macOS: FileDialog, altri: JFileChooser) */
+    private fun selectOutputDirectoryCompatibile(): File? {
+        return try {
+            val os = System.getProperty("os.name").lowercase()
+            if (os.contains("mac")) {
+                System.setProperty("apple.awt.fileDialogForDirectories", "true")
+                val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Seleziona o crea una cartella", java.awt.FileDialog.LOAD)
+                dialog.isVisible = true
+                val selectedDir = dialog.directory
+                val selectedFile = dialog.file
+                System.setProperty("apple.awt.fileDialogForDirectories", "false")
+                if (selectedDir == null || selectedFile == null) return null
+                val dir = File(selectedDir, selectedFile)
+                if (!dir.exists()) dir.mkdirs()
+                if (dir.isDirectory) dir else null
+            } else {
+                val chooser = JFileChooser().apply {
+                    dialogTitle = "Seleziona o crea la cartella di destinazione"
+                    fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+                    approveButtonText = "Salva qui"
+                }
+                val result = chooser.showOpenDialog(null)
+                if (result != JFileChooser.APPROVE_OPTION) return null
+                val dir = chooser.selectedFile
+                if (!dir.exists()) dir.mkdirs()
+                if (dir.isDirectory) dir else null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     /** Genera il PDF con la strategia corrente — usa sempre il flusso batch */
     fun generatePdf() {
         val state = _uiState.value
@@ -172,27 +204,7 @@ class ManutenzioniViewModel(
         val frequenza = state.selectedFrequenza ?: return
         val copies = state.numberOfCopies
 
-        // --- Sostituzione JFileChooser con FileDialog AWT per selezione cartella su macOS ---
-        val outputDirPath = run {
-            System.setProperty("apple.awt.fileDialogForDirectories", "true")
-            val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Seleziona o crea una cartella", java.awt.FileDialog.LOAD)
-            dialog.isVisible = true
-            val selectedDir = dialog.directory
-            val selectedFile = dialog.file // In questa modalità, 'file' corrisponde alla cartella selezionata
-            System.setProperty("apple.awt.fileDialogForDirectories", "false")
-            if (selectedDir == null || selectedFile == null) {
-                return
-            }
-            java.io.File(selectedDir, selectedFile).absolutePath
-        }
-        val outputDir = java.io.File(outputDirPath)
-        if (!outputDir.exists()) {
-            outputDir.mkdirs()
-        }
-        if (!outputDir.isDirectory) {
-            // Se non è una directory valida, interrompi
-            return
-        }
+        val outputDir = selectOutputDirectoryCompatibile() ?: return
 
         scope.launch {
             _uiState.update {
