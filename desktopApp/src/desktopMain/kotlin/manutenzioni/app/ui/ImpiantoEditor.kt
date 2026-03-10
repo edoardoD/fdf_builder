@@ -16,15 +16,23 @@ import androidx.compose.ui.unit.sp
 import manutenzioni.app.data.*
 
 /**
- * Editor per visualizzare e modificare i dati di un impianto.
+ * Editor universale per impianti — gestisce sia creazione che modifica.
  *
  * Permette di editare:
  * - Codice intervento, nome completo, premessa
  * - Lista attività con tipo, descrizione e frequenza
+ *
+ * Se l'impianto è nuovo (codIntervento blank), mostra un titolo adeguato
+ * e valida i campi obbligatori prima del salvataggio.
+ *
+ * @param impianto L'impianto da editare (può essere vuoto per creazione)
+ * @param isNew true se l'impianto è in fase di creazione (non ancora persistito)
+ * @param onSave Callback per il salvataggio (validato)
  */
 @Composable
 fun ImpiantoEditor(
     impianto: Impianto,
+    isNew: Boolean = impianto.codIntervento.isBlank(),
     onSave: (Impianto) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -34,6 +42,10 @@ fun ImpiantoEditor(
     var premessa by remember(impianto) { mutableStateOf(impianto.premessa ?: "") }
     var attivitaList by remember(impianto) { mutableStateOf(impianto.listaAttivita) }
 
+    // Stato di validazione locale
+    var codInterventoError by remember { mutableStateOf(false) }
+    var nomeCompletoError by remember { mutableStateOf(false) }
+
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // Header
         Row(
@@ -41,20 +53,35 @@ fun ImpiantoEditor(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Editor Impianto",
-                style = MaterialTheme.typography.h6,
-                fontWeight = FontWeight.Bold
-            )
+            Column {
+                Text(
+                    text = if (isNew) "Nuovo Impianto" else "Editor Impianto",
+                    style = MaterialTheme.typography.h6,
+                    fontWeight = FontWeight.Bold
+                )
+                if (isNew) {
+                    Text(
+                        text = "Compila i campi obbligatori e salva",
+                        fontSize = 11.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
             Button(
                 onClick = {
-                    val updated = impianto.copy(
-                        codIntervento = codIntervento,
-                        nomeCompleto = nomeCompleto,
-                        premessa = premessa.ifBlank { null },
-                        listaAttivita = attivitaList
-                    )
-                    onSave(updated)
+                    // Validazione locale
+                    codInterventoError = codIntervento.isBlank()
+                    nomeCompletoError = nomeCompleto.isBlank()
+
+                    if (!codInterventoError && !nomeCompletoError) {
+                        val updated = impianto.copy(
+                            codIntervento = codIntervento.trim(),
+                            nomeCompleto = nomeCompleto.trim(),
+                            premessa = premessa.ifBlank { null },
+                            listaAttivita = attivitaList
+                        )
+                        onSave(updated)
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = Color(0xFF2E7D32),
@@ -63,7 +90,7 @@ fun ImpiantoEditor(
             ) {
                 Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Salva")
+                Text(if (isNew) "Crea Impianto" else "Salva")
             }
         }
 
@@ -72,18 +99,50 @@ fun ImpiantoEditor(
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = codIntervento,
-                    onValueChange = { codIntervento = it },
-                    label = { Text("Codice Intervento") },
+                    onValueChange = {
+                        codIntervento = it
+                        codInterventoError = false
+                    },
+                    label = { Text("Codice Intervento *") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    isError = codInterventoError,
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        errorBorderColor = Color(0xFFD32F2F)
+                    ),
+                    placeholder = { Text("es. GE, CAB, QBT", fontSize = 12.sp) }
                 )
+                if (codInterventoError) {
+                    Text(
+                        text = "Il codice intervento è obbligatorio",
+                        color = Color(0xFFD32F2F),
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
                 OutlinedTextField(
                     value = nomeCompleto,
-                    onValueChange = { nomeCompleto = it },
-                    label = { Text("Nome Completo") },
+                    onValueChange = {
+                        nomeCompleto = it
+                        nomeCompletoError = false
+                    },
+                    label = { Text("Nome Completo *") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    isError = nomeCompletoError,
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        errorBorderColor = Color(0xFFD32F2F)
+                    ),
+                    placeholder = { Text("es. Gruppo Elettrogeno", fontSize = 12.sp) }
                 )
+                if (nomeCompletoError) {
+                    Text(
+                        text = "Il nome completo è obbligatorio",
+                        color = Color(0xFFD32F2F),
+                        fontSize = 10.sp,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+                }
                 OutlinedTextField(
                     value = premessa,
                     onValueChange = { premessa = it },
