@@ -286,15 +286,57 @@ class ManutenzioniViewModel(
         }
     }
 
-    /** Salva un impianto modificato */
+    /**
+     * Crea un nuovo impianto vuoto, lo seleziona e apre l'editor.
+     * L'utente potrà compilare codice, nome, premessa e attività dall'editor.
+     */
+    fun createNewImpianto() {
+        val newImpianto = Impianto(
+            codIntervento = "",
+            nomeCompleto = "",
+            premessa = null,
+            listaAttivita = emptyList(),
+            listaNormative = emptyList()
+        )
+        _uiState.update {
+            it.copy(
+                selectedImpianto = newImpianto,
+                frequenzeDisponibili = emptyList(),
+                selectedFrequenza = null,
+                pdfFile = null,
+                viewMode = ViewMode.IMPIANTO_EDITOR,
+                statusMessage = "Nuovo impianto — compila i dati e salva",
+                errorMessage = null
+            )
+        }
+    }
+
+    /** Salva un impianto (nuovo o modificato) e aggiorna la lista */
     fun saveImpianto(impianto: Impianto) {
+        // Validazione campi obbligatori
+        if (impianto.codIntervento.isBlank()) {
+            _uiState.update {
+                it.copy(errorMessage = "Il codice intervento è obbligatorio")
+            }
+            return
+        }
+        if (impianto.nomeCompleto.isBlank()) {
+            _uiState.update {
+                it.copy(errorMessage = "Il nome completo è obbligatorio")
+            }
+            return
+        }
+
         scope.launch {
             try {
                 repository.salvaImpianto(impianto)
-                loadImpianti()
+                val impiantiAggiornati = repository.caricaImpianti()
+                val frequenze = FrequencyFilter.frequenzeDisponibili(impianto.listaAttivita)
                 _uiState.update {
                     it.copy(
+                        impianti = impiantiAggiornati,
                         selectedImpianto = impianto,
+                        frequenzeDisponibili = frequenze,
                         statusMessage = "✓ Impianto ${impianto.codIntervento} salvato",
                         errorMessage = null
                     )
