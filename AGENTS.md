@@ -92,8 +92,10 @@ desktopApp/src/desktopMain/kotlin/manutenzioni/
 │       ├── App.kt                           ←   Root @Composable: Layout 25/75 + StatusBar + MaterialTheme
 │       ├── Sidebar.kt                       ←   Dropdown Cliente/Impianto/Frequenza, azioni, toggle vista
 │       │                                         ClienteDropdown (con "➕ Aggiungi Nuovo"), NuovoClienteDialog
+│       │                                         ImpiantoDropdown (con "➕ Aggiungi Nuovo Impianto")
 │       ├── MainContent.kt                   ←   Area principale: WelcomeScreen / PdfPreviewPanel / ImpiantoEditor
-│       ├── ImpiantoEditor.kt                ←   Editor CRUD attività con editing inline in LazyColumn
+│       ├── ImpiantoEditor.kt                ←   Editor universale: creazione nuovo impianto + editing esistente
+│       │                                         CRUD attività inline, validazione campi obbligatori
 │       └── ManutenzioniViewModel.kt         ←   ViewModel + ManutenzioniUiState (data class immutabile)
 │                                                 StateFlow + CoroutineScope(SupervisorJob + Dispatchers.Default)
 │
@@ -396,6 +398,7 @@ STEP 5 → ✅ VALIDAZIONE
 | ✅ v1.0 | Selezione Impianto + Frequenza + Generazione PDF AcroForm | Completata |
 | ✅ v2.0 | Editor Impianto inline (CRUD attività) | Completata |
 | ✅ v2.1 | Gestione Clienti (Dropdown + Dialog + Iniezione PDF) | Completata |
+| ✅ v2.2 | Creazione Nuovo Impianto da Dropdown + Editor universale | Completata |
 | 🔲 v3.0 | Migrazione da JSON a **Realm Kotlin SDK** | Pianificata |
 | 🔲 v3.1 | **Google Drive API** per upload/sync PDF generati | Pianificata |
 | 🔲 v3.2 | Anteprima PDF embedded nell'area principale (rendering nativo) | Pianificata |
