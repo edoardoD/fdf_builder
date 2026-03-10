@@ -38,6 +38,7 @@ fun App(viewModel: ManutenzioniViewModel) {
                     onClienteSelected = viewModel::selectCliente,
                     onAddCliente = viewModel::addCliente,
                     onImpiantoSelected = viewModel::selectImpianto,
+                    onAddNewImpianto = viewModel::createNewImpianto,
                     onFrequenzaSelected = viewModel::selectFrequenza,
                     onGeneraPdf = viewModel::generatePdf,
                     onOpenPdf = viewModel::openPdfInSystem,
