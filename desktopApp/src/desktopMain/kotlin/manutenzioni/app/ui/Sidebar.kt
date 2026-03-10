@@ -34,6 +34,7 @@ fun Sidebar(
     onClienteSelected: (Cliente) -> Unit,
     onAddCliente: (Cliente) -> Unit,
     onImpiantoSelected: (Impianto) -> Unit,
+    onAddNewImpianto: () -> Unit,
     onFrequenzaSelected: (Periodo) -> Unit,
     onGeneraPdf: () -> Unit,
     onOpenPdf: () -> Unit,
@@ -102,7 +103,8 @@ fun Sidebar(
         ImpiantoDropdown(
             impianti = uiState.impianti,
             selected = uiState.selectedImpianto,
-            onSelected = onImpiantoSelected
+            onSelected = onImpiantoSelected,
+            onAddNew = onAddNewImpianto
         )
 
         // === Selezione Frequenza ===
@@ -276,14 +278,16 @@ fun Sidebar(
 }
 
 /**
- * Dropdown per la selezione dell'impianto
+ * Dropdown per la selezione dell'impianto.
+ * La prima voce è sempre "➕ Aggiungi Nuovo Impianto".
  */
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun ImpiantoDropdown(
     impianti: List<Impianto>,
     selected: Impianto?,
-    onSelected: (Impianto) -> Unit
+    onSelected: (Impianto) -> Unit,
+    onAddNew: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -292,7 +296,10 @@ private fun ImpiantoDropdown(
         onExpandedChange = { expanded = !expanded }
     ) {
         OutlinedTextField(
-            value = selected?.let { "${it.codIntervento} — ${it.nomeCompleto}" } ?: "",
+            value = selected?.let {
+                if (it.codIntervento.isBlank()) "Nuovo impianto (non salvato)"
+                else "${it.codIntervento} — ${it.nomeCompleto}"
+            } ?: "",
             onValueChange = {},
             readOnly = true,
             placeholder = { Text("Seleziona impianto...", fontSize = 12.sp) },
@@ -306,6 +313,32 @@ private fun ImpiantoDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
+            // Prima voce: Aggiungi Nuovo Impianto
+            DropdownMenuItem(onClick = {
+                expanded = false
+                onAddNew()
+            }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colors.primary
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "➕ Aggiungi Nuovo Impianto",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colors.primary
+                    )
+                }
+            }
+
+            if (impianti.isNotEmpty()) {
+                Divider()
+            }
+
             impianti.forEach { impianto ->
                 DropdownMenuItem(onClick = {
                     onSelected(impianto)
