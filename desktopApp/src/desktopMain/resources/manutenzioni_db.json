@@ -102,42 +102,32 @@
     },
     {
       "codIntervento": "Q",
-      "nomeCompleto": "Quadri Elettrici BT",
-      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza.",
+      "nomeCompleto": "Quadro elettrico",
+      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione del quadro occorre verificare che siano state sezionate tutte le alimentazioni elettriche con tensione superiore a 25 Vca / 60 Vdc, verificando preventivamente tramite tester la presenza di eventuali tensioni residue pericolose.",
       "listaAttivita": [
-        {
-          "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Controllo visivo dello stato generale del quadro e della carpenteria",
-          "frequenza": { "tipo": "M", "valore": 1 }
-        },
-        {
-          "nAttivita": 2,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica tarature e impostazioni dei relè di protezione",
-          "frequenza": { "tipo": "M", "valore": 3 }
-        },
-        {
-          "nAttivita": 3,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Prova di intervento degli interruttori differenziali",
-          "frequenza": { "tipo": "M", "valore": 6 }
-        },
-        {
-          "nAttivita": 4,
-          "tipoAttivita": "Manutenzione",
-          "descrizione": "Serraggio morsetti e connessioni. Pulizia interna quadro",
-          "frequenza": { "tipo": "A", "valore": 1 }
-        },
-        {
-          "nAttivita": 5,
-          "tipoAttivita": "Termografia",
-          "descrizione": "Analisi termografica connessioni e apparecchiature sotto carico",
-          "frequenza": { "tipo": "A", "valore": 1 }
-        }
+        { "nAttivita": 1, "tipoAttivita": "Prova", "descrizione": "Prova di funzionamento di tutti i dispositivi differenziali tramite tasto di prova", "frequenza": { "tipo": "M", "valore": 6 } },
+        { "nAttivita": 2, "tipoAttivita": "Controllo", "descrizione": "Controllo presenza targa quadro, sigla identificazione quadro, schema elettrico, targhette identificazione apparecchiature ed interruttori, numerazione morsettiere, più alimentazioni.", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 3, "tipoAttivita": "Controllo", "descrizione": "Controllo presenza, integrità ed efficienza dei dispositivi di sicurezza apertura portelle, stato di conservazione interno/esterno armadio, ed integrità involucro", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 4, "tipoAttivita": "Controllo", "descrizione": "Controllo segni di scariche elettriche sull'involucro, o presenza bruciature su involucro o apparecchiature", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 5, "tipoAttivita": "Controllo", "descrizione": "Verifica corretto funzionamento della strumentazione di misura (se presente)", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 6, "tipoAttivita": "Verifica", "descrizione": "Controllo dispositivi di inserzione, integrità teleruttori, integrità fusibili di protezione, efficienza interruttori automatici, integrità scaricatori di sovratensione", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 7, "tipoAttivita": "Controllo", "descrizione": "Controllo dei dispositivi di comando e segnalazione (selettori, pulsanti, spie, ecc…)", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 8, "tipoAttivita": "Verifica", "descrizione": "controllo dei collegamenti elettrici al circuito principale di potenza, serraggio delle connessioni, verifica di situazioni di surriscaldamento, controllo integrità terminali", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 9, "tipoAttivita": "Verifica", "descrizione": "Controllo dei collegamenti elettrici ai circuiti ausiliari, serraggio delle connessioni", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 10, "tipoAttivita": "Controllo", "descrizione": "Verifica della efficacia delle aperture di ventilazione naturale sul quadro, e verifica del mantenimento del grado di protezione IP di progetto", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 11, "tipoAttivita": "Controllo", "descrizione": "Controllo del corretto funzionamento della ventola di raffreddamento (se presente)", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 12, "tipoAttivita": "Controllo", "descrizione": "Controllo inaccesibilità del quadro alle persone non addestrate (potrella chiusa a chiave, quadro entro locale chiuso a chiave o in zona confinata alle persone non addestrate, altro)", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 13, "tipoAttivita": "Verifica", "descrizione": "Controllo eventuale presenza di corpi estranei all'interno del quadro", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 14, "tipoAttivita": "Controllo", "descrizione": "Controllo serraggio della bulloneria meccanica e della bulloneria elettrica", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 15, "tipoAttivita": "Controllo", "descrizione": "controllo dei blocchi e degli interblocchi", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 16, "tipoAttivita": "Controllo", "descrizione": "Verifica e misura di contintuità del collegamento di messa a terra e del collettore di terra del quadro", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 17, "tipoAttivita": "Verifica", "descrizione": "Controllo del corretto fissaggio a pavimento/parete del quadro tale da evitare il rovesciamento/caduta", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 18, "tipoAttivita": "Controllo", "descrizione": "Controllo presenza e integrità cartellonistica di sicurezza", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 19, "tipoAttivita": "Manut.", "descrizione": "Pulizia parti isolanti e parti attive, aspirazione polvere", "frequenza": { "tipo": "A", "valore": 1 } },
+        { "nAttivita": 20, "tipoAttivita": "Manut.", "descrizione": "Pulizia e lubrificazione leverismi, verifica delle parti estraibili", "frequenza": { "tipo": "A", "valore": 2 } }
       ],
       "listaNormative": [
-        { "codNormativa": "CEI 17-13", "descrizione": "Apparecchiature assiemate di protezione e manovra per bassa tensione" },
+        { "codNormativa": "CEI 11-27", "descrizione": "Lavori su impianti elettrici" },
         { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" }
       ]
     },
