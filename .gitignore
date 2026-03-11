@@ -109,3 +109,51 @@ gradle-app.setting
 # End of https://www.toptal.com/developers/gitignore/api/gradle,java,macos,visualstudiocode
 /.kotlin/sessions/kotlin-compiler-5273804190512048602.salive
 /.idea/inspectionProfiles/Project_Default.xml
+/desktopApp/csv/AMB.csv
+/desktopApp/csv/BACS.csv
+/desktopApp/csv/CAB MT.csv
+/desktopApp/csv/CALENDARIO.csv
+/desktopApp/csv/conversion_report.md
+/desktopApp/csv/DEG.csv
+/desktopApp/csv/DISP2.csv
+/desktopApp/csv/DISP3.csv
+/desktopApp/csv/DISP4.csv
+/desktopApp/csv/DISP5.csv
+/desktopApp/csv/DS.csv
+/desktopApp/csv/ELENCO DIFF.1.csv
+/desktopApp/csv/ELENCO DIFF.06.csv
+/desktopApp/csv/ELENCO EM.csv
+/desktopApp/csv/ELENCO RIL.csv
+/desktopApp/csv/EM.csv
+/desktopApp/csv/Foglio1.csv
+/desktopApp/csv/Foglio2.csv
+/desktopApp/csv/Foglio3.csv
+/desktopApp/csv/FTV.csv
+/desktopApp/csv/GE.csv
+/desktopApp/csv/IE.csv
+/desktopApp/csv/Inizio.csv
+/desktopApp/csv/IS.csv
+/desktopApp/csv/PARAMETRI.csv
+/desktopApp/csv/PEM.csv
+/desktopApp/csv/Q.csv
+/desktopApp/csv/QMT.csv
+/desktopApp/csv/R.1.csv
+/desktopApp/csv/R.01.csv
+/desktopApp/csv/R.2.csv
+/desktopApp/csv/R.02.csv
+/desktopApp/csv/R.3.csv
+/desktopApp/csv/R.03.csv
+/desktopApp/csv/R.4.csv
+/desktopApp/csv/R.04.csv
+/desktopApp/csv/R.5.csv
+/desktopApp/csv/R.05.csv
+/desktopApp/csv/R.6.csv
+/desktopApp/csv/R.06.csv
+/desktopApp/csv/RI.csv
+/desktopApp/csv/RIF.csv
+/desktopApp/csv/RIG.csv
+/desktopApp/csv/SPD.csv
+/desktopApp/csv/start.csv
+/desktopApp/csv/TRFO.csv
+/desktopApp/csv/TRFS.csv
+/desktopApp/csv/UPS.csv
