@@ -1,490 +1,2695 @@
 {
   "impianti": [
     {
-      "codIntervento": "GE",
-      "nomeCompleto": "Gruppo Elettrogeno",
-      "premessa": "Le verifiche periodiche sul gruppo elettrogeno devono essere supportate dalla consultazione del manuale d'uso e manutenzione.",
+      "codIntervento": "AMB",
+      "nomeCompleto": "Ambulatori",
+      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione del quadro occorre verificare che siano state sezionate tutte le alimentazioni elettriche con tensione superiore a 25 Vca / 60 Vdc, verificando preventivamente tramite tester la presenza di eventuali tensioni residue pericolose",
       "listaAttivita": [
         {
           "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica livello olio motore e liquido raffreddamento",
-          "frequenza": { "tipo": "M", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo in ambiente illuminazione ordinaria",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 2,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica livello carburante e stato batteria avviamento",
-          "frequenza": { "tipo": "M", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo in ambiente postazioni PC integrità",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 3,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Prova di avviamento manuale e automatico del gruppo",
-          "frequenza": { "tipo": "M", "valore": 3 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo in ambiente postazioni PC integrità e cablaggi scrivanie + controllo stato eventuale di multiple e stato di conservazione segnalare situazioni particolari come cablaggi e multiple a terra",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 4,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Prova di funzionamento sotto carico per almeno 30 minuti",
-          "frequenza": { "tipo": "M", "valore": 6 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo stato cablaggi elettromedicali e segnalare situazioni di anomalia e/o pericolo",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 5,
-          "tipoAttivita": "Manutenzione",
-          "descrizione": "Sostituzione filtri olio, aria e carburante",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo centralino ambulatorio come da schede già presenti",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 6,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura della resistenza di isolamento degli avvolgimenti",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova centralino ambulatorio come da schede già presenti",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo illuminazione di sicurezza come da schede già presenti",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova illuminazione di sicurezza come da schede già presenti",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo EQP come da schede già presenti",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova EQP come da schede già presenti",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         }
       ],
       "listaNormative": [
-        { "codNormativa": "CEI 11-20", "descrizione": "Impianti di produzione di energia elettrica" },
-        { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" }
+        {
+          "codNormativa": "CEI 64-8",
+          "descrizione": "Impianti elettrici utilizzatori"
+        },
+        {
+          "codNormativa": "CEI 11-27",
+          "descrizione": "Lavori su impianti elettrici"
+        }
+      ]
+    },
+    {
+      "codIntervento": "BACS",
+      "nomeCompleto": "Building Automation Contro System",
+      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione del quadro occorre verificare che siano state sezionate tutte le alimentazioni elettriche con tensione superiore a 25 Vca / 60 Vdc, verificando preventivamente tramite tester la presenza di eventuali tensioni residue pericolose",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica funzionamento Pannello LCD se presente",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verificare segnalazione di eventuali Allarmi in corso",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verificare Storico Allarmi ultimo mese",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica funzionalità del sistema",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Prova corretto funzionamento allarmi tecnici, consistente in prova a campione su almento il 20% in ogni quadro elettrico",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verificare che i sistemi di allarme (Eventuale Pannello LCD) generino segnalazione di allarme durante la prova a campione degli allarmi tecnici.",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Prova corretto funzionamento allarmi tecnici Alta Priorità (Cabina elettrica, ecc)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica funzionamento dimmerazione automatica illuminazione lavorazione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica funzionamento dimmerazione automatica illuminazione Uffici (a campione)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica impostazioni orari accensioni automatiche (illuminazione esterna)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica effettiva inversione Tutta Notte circuiti illuminazione esterna",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica funzionamento Bipotenza su illuminazione esterna",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica funzionamento chiusura automatica Lucernaiin caso di pioggia-vento",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "CEI 64-8",
+          "descrizione": "Impianti elettrici utilizzatori"
+        },
+        {
+          "codNormativa": "UNI EN ISO 16484",
+          "descrizione": "Building automation and control systems (BACS)"
+        }
       ]
     },
     {
       "codIntervento": "CAB",
-      "nomeCompleto": "Cabina Elettrica MT/BT",
-      "premessa": "Le attività sulla cabina elettrica devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, ed eseguiti in totale sicurezza.",
+      "nomeCompleto": "Cabina MT/BT",
+      "premessa": "Le attività sulla cabina elettrica devono essere svolte da personale addestrato ai lavori elettrici con qualifca PES come da Norma CEI 11-27, ed eseguiti in totale sicurezza. Prima di accedere ai locali è fondamentale avvertire i referenti del sito, ed avvertire il responsabile sulle attività che ci si appresta a svolgere. Nel caso l'alimentazione alla cabina provenga dall'ente distributore, occorre applicare tutte le precauzioni per la sicurezza delle persone e nel caso si rilevino problemi ai manufatti in uso all'ente distributore, avvisare tempestivamente il suddetto ente. Prima di procedere alle prove e misure che possano mettere fuori tensione la cabina, concordare con i referenti del sito la possibilità e le modalità in cui svolgere queste attività.",
       "listaAttivita": [
         {
           "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Controllo visivo generale dei locali cabina e verifica assenza umidità",
-          "frequenza": { "tipo": "M", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo generale, della struttura esterna della cabina, integrità parti strutturali, stato del pavimento/terreno esterno perimetrale, stato di conservazione del manto di copertura",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 2,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica stato interruttori MT e BT, segnalazioni e interblocchi",
-          "frequenza": { "tipo": "M", "valore": 3 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo integrità esterna del tetto, dei muri, degli intonaci, del pavimento, e ricerca di eventuali infiltrazioni di acqua",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 3,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Prova di sgancio di emergenza e verifica interblocchi meccanici",
-          "frequenza": { "tipo": "M", "valore": 6 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo integrità delle pareti interne, degli intonaci, del pavimento, del soffitto, e ricerca di eventuali infiltrazioni di acqua",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 4,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura della resistenza di isolamento dei cavi MT",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica delle barriere, strutture di separazione, reti di protezione, e relativi sistemi di chiusura per impedire il contatto diretto con le parti in tensione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 5,
-          "tipoAttivita": "Manutenzione",
-          "descrizione": "Pulizia e serraggio delle connessioni nei quadri BT",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica funzionalità degli infissi (porte, finestre, botole, cunicoli, ecc.), della efficacia dei sistemi di chiusura, e della integrità contro le penetrazioni, cedimenti, e ossidazioni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 6,
-          "tipoAttivita": "Termografia",
-          "descrizione": "Analisi termografica delle connessioni e degli interruttori sotto carico",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica accessibilità alla cabina, per le persone e per eventuali mezzi per il trasporto delle apparecchiature da e verso l'interno della cabina",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 7,
-          "tipoAttivita": "Misura",
-          "descrizione": "Verifica impianto di terra e misura resistenza di terra",
-          "frequenza": { "tipo": "A", "valore": 2 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo della efficacia dei sistemi di areazione naturale e meccanica",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica funzionalità, integrità termostato, funzionamento ventilatore ed efficacia/stato eventuali filtri",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica integrità, funzionalità e completezza delle chiusure di cunicoli/cavedi interni ed esterni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo temperatura ed umidità interne",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo fissaggio, leggibilità e completezza dei cartelli di avvertimento interni ed esterni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo fissaggio, leggibilità, completezza e data ultimo aggiornamento schema elettrico",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica presenza ed intergrità dei dispositivi di comando (leve di manovra, chiavi, ecc.) e protezione (guanti isolanti, pedana/tappeto isolante se necessari)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 14,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo efficienza serrature, chiavi, lucchetti, dispositivi di apertura porte",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 15,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo efficienza impianto di illuminazione ordinaria, illuminazione di sicurezza, eventuali torce, prese di servizio",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 16,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo larghezza passaggi tra le apparecchiature, vie di fuga e di soccorso, uscite di emergenza, e funzionamento eventuali maniglioni antipanico",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 17,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo visibilità segnaletica di esodo cabina, ed indicazione dei luoghi di soccorso più vicini",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 18,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica efficacia misure di protezione contro i contatti diretti, e di protezione contro l'avvicinamento a parti attive, distanze, barriere, schermi, ecc.",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 19,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica efficacia della protezione tramite apparecchiature con involucro metallico",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 20,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo del collegamento di messa a terra tramite i conduttori di protezione al collettore generale di cabina, e verifica del corretto serraggio",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 21,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo carica degli estintori e data di scadenza",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 22,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Pulizia generale all'interno della cabina",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 23,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Pulizia generale all'esterno in prossimità della cabina",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 24,
+          "tipoAttivita": "Prova",
+          "descrizione": "Verifica del sistema di illuminazione di emergenza e sicurezza tramite scarica e ricarica accumulatori con indicazione del tempo di autonomia minimo garantito",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 25,
+          "tipoAttivita": "Prova",
+          "descrizione": "Verifica del sistema di alimentazione di soccorso ausiliari (UPS-Soccorritore) tramite scarica e ricarica accumulatori con indicazione del tempo di autonomia minimo garantito",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 26,
+          "tipoAttivita": "Prova",
+          "descrizione": "Misura della resistenza dei collegamenti equipotenziali su tutte le parti metalliche interne",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 27,
+          "tipoAttivita": "Prova",
+          "descrizione": "Misura della resistenza di terra globale della cabina tramite metodo voltamperometrico",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 28,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di funzionamento dei sistemi di sgancio bt ed MT",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 29,
+          "tipoAttivita": "Prova",
+          "descrizione": "Verifica della presenza ed integrità delle barriere tagliafiamma (se presenti)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 30,
+          "tipoAttivita": "Prova",
+          "descrizione": "Verifica della presenza ed integrità delle soglie raccolta liquidi, della impermeabilità e dello stato di pulizia (se presenti)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
         }
       ],
       "listaNormative": [
-        { "codNormativa": "CEI 11-27", "descrizione": "Lavori su impianti elettrici" },
-        { "codNormativa": "CEI 0-16", "descrizione": "Regola tecnica di riferimento per la connessione di utenti attivi e passivi alle reti AT e MT" }
+        {
+          "codNormativa": "CEI 11-27",
+          "descrizione": "Lavori su impianti elettrici"
+        },
+        {
+          "codNormativa": "CEI 0-16",
+          "descrizione": "Regola tecnica di riferimento per la connessione di utenti attivi e passivi alle reti AT e MT"
+        }
+      ]
+    },
+    {
+      "codIntervento": "DEG",
+      "nomeCompleto": "Degenze",
+      "premessa": "Le attività all'interno delle degenze devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione del quadro occorre verificare che siano state sezionate tutte le alimentazioni elettriche con tensione superiore a 25 Vca / 60 Vdc, verificando preventivamente tramite tester la presenza di eventuali tensioni residue pericolose",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Testaletto Controllo Estetico Strutturale e Stabilità",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Testaletto Controllo integrità copertura esuperiore e inferiore",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Testaletto Controllo e Prova Illuminazione ordinaria più relativi comandi locali",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Testaletto Controllo e Prova Illuminazione luce lettura più relativi comandi locali",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Testaletto Controllo e Prova Illuminazione luce visita più relativi comandi locali",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Testaletto Controllo e Prova elementi chiamata personale",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Testaletto apertura e controllo interno più pulizia e aspirazione polvere e residui eventuali",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Testaletto controllo cablaggi, serraggio morsetti, integrità componenti, controllo integrità nomenclatura e nodi eqp",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Testaletto prova fusibili + sostituzione eventuale con taglia medesima",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Testaletto controllo integrità circuito luce notturna",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Ambiente controllo e prova elementi chiamata personale compreso WC e lampada fuori porta",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Ambiente controllo e prova lampada emergenza (Controllo già presenti in altra scheda)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Ambiente controllo e prova illuminazione bagno",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 14,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Ambiente controllo generale stato impianto elettrico",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 15,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Ambiente controllo generale stato centralino di camera (Controllo già presenti in altra scheda)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 16,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Ambiente controllo Targhettatura centralino di camera (Controllo già presenti in altra scheda)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 17,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Ambiente controllo targhettatura nodo ed eventuale sottonodo (Controllo già presenti in altra scheda)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "CEI 64-8",
+          "descrizione": "Impianti elettrici utilizzatori"
+        },
+        {
+          "codNormativa": "CEI 11-27",
+          "descrizione": "Lavori su impianti elettrici"
+        }
+      ]
+    },
+    {
+      "codIntervento": "DS",
+      "nomeCompleto": "Impianto Diffusione Sonora",
+      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione del quadro occorre verificare che siano state sezionate tutte le alimentazioni elettriche con tensione superiore a 25 Vca / 60 Vdc, verificando preventivamente tramite tester la presenza di eventuali tensioni residue pericolose",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Esame a vista della integrità dei componenti, stato di conservazione, e corretta installazione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova del corretto funzionamento Bandiere e/o Autoparlati dell'Impianto di Allarme Evacuazione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova del corretto funzionamento della centrale, amplificatori e regolazioni varie.",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova del corretto funzionamento del riproduttore di messaggi e delle sorgeti ordinarie, se presente.",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova del corretto funzionamento del sistema di chiamata vocale.",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "CEI 100-55",
+          "descrizione": "Sistemi elettroacustici applicati ai servizi di emergenza"
+        }
+      ]
+    },
+    {
+      "codIntervento": "EM",
+      "nomeCompleto": "Illuminazione emergenza",
+      "premessa": "Autonomia di progetto =",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo Generale a vista sull'integrità degli apparecchi, pulizia, numerazione e corretta installazione",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di funzionamento ed autonomia, tramite simulazione del black-out sul quadro elettrico",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "UNI EN 1838",
+          "descrizione": "Illuminazione di emergenza"
+        },
+        {
+          "codNormativa": "CEI 64-8",
+          "descrizione": "Impianti elettrici utilizzatori"
+        }
+      ]
+    },
+    {
+      "codIntervento": "FTV",
+      "nomeCompleto": "Impianto fotovoltaico",
+      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione del quadro occorre verificare che siano state sezionate tutte le alimentazioni elettriche con tensione superiore a 25 Vca / 60 Vdc, verificando preventivamente tramite tester la presenza di eventuali tensioni residue pericolose",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica a vista dell'integrità e della corretta installazione dei principali componenti dell'impianto",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo della rispondenza e correttezza della documentazione di progetto con quanto riscontrabile sull'impianto fotovoltaico",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Smontaggio e pulizia dei filtri, verifica di situazioni di surriscaldamento, controllo dell'eventuale sistema di ventilazione forzata",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di sezionamento lato DC e/o lato AC con gli interruttori a bordo macchina, eventuale prova del sistema di spegnimento degli ottimizzatori di potenza lato DC (Safe-DC)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Manut.",
+          "descrizione": "Verifica corretto funzionamento degli ottimizzatori lato DC tramite portale di monitoraggio (se presenti)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo visivo dello stato di conservazione dei cavi elettrici lato DC, protezione dagli agenti atmosferici, assenza di segni da cortocircuito, mancanza di tagli o schiacciamenti meccanici",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo dello stato di conservazione dei dispositivi di contenimento dei cavi elettrici, eventuale presenza del coperchio, del setto separatore, dei distanziatori e dei fissaggi",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica collegamenti equipotenziali della struttura di sostegno, del nodo equipotenziale, dei morsetti di terra e serraggio delle connessioni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica mediante misurazione del valore di tensione di parallelo stringhe e corrente in ingresso al quadro da ogni stringa lato DC",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica di continuità di tutti i fusibili di protezione delle stringhe fotovoltaiche",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Manut.",
+          "descrizione": "Pulizia parti isolanti e parti attive, aspirazione o soffiaggio della polvere",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo visivo generale ed integrità dei convertitori DC/AC (inverter), fissaggi, display, tasti a bordo macchina, assenza di allarmi/avvisi, targhe ed etichette identificative",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo visivo dei collegamenti elettrici, serraggio delle connessioni dei cavi in ingresso ed uscita, controllo integrità terminali e connettori",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 14,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo di corretto funzionamento del sistema di monitoraggio dell'impianto (se presente)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 15,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo visivo generale dello stato di conservazione ed integrità dei moduli fotovoltaici e dei componenti principali (vetro, cornice, scatola di giunzione, connettori)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 16,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo Visivo sulla tenuta degli ancoraggi dei moduli fotovoltaici alla copertura dell'edificio, controllo struttura di sostegno e verifica inizio d'infiltrazioni d'acqua dai punti di fissaggio",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 17,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica di corretto funzionamento del sistema di protezione di interfaccia integrato (SPI) all’interno del gruppo di conversione mediante avviamento di funzione di autotest dello stesso",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 18,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica di corretto funzionamento del sistema di protezione di interfaccia esterno(SPI) al gruppo di conversione in particolare il coordinamento fra la protezione di interfaccia (PDI) e il dispositivo di interfaccia (DDI). (SE PRESENTE)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 19,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verfica tempi di intervento sistema di protezione d'interfaccia esterno (SPI)N.B. ATTIVITA' DA SVOLGERE TRAMITE PROVA CASSETTA RELE' DA TECNICO ABILITATO ED ESCLUSA DA VERIFICHE PERIODICHE PROGRAMMATE",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "CEI 82-25",
+          "descrizione": "Guida alla realizzazione di sistemi di generazione fotovoltaica"
+        },
+        {
+          "codNormativa": "CEI 11-20",
+          "descrizione": "Impianti di produzione di energia elettrica"
+        }
+      ]
+    },
+    {
+      "codIntervento": "GE",
+      "nomeCompleto": "Gruppo elettrogeno",
+      "premessa": "Le verifiche periodiche sul gruppo elettrogeno devono essere supportate dalla consultazione del manuale d'uso e manutenzione.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo livello combustibile nel serbatoio di deposito e nel serbatoio di servizio, controllo funzionalità galleggiante del serbatoio di servizio",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova della pompa di rabbocco combustibile dal serbatoio di deposito al serbatoio di servizio, prova della valvola di intercettazione gasolio",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo livello dell'olio, e livello del liquido refrigerante",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo livello del liquido refrigerante, controllo cinghie del ventilatore (o motore elettrico) del radiatore, prova riscaldatore acqua e relativo circuito (termostato)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo livello e densità dell’elettrolita, controllo caricabatterie e corrente di carica (da rete con gruppo fermo e con gruppo in movimento), controllo cinghie di trascinamento, pulizia e serraggio dei terminali",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo efficienza compressore, pressostati di lavoro e di sicurezza, pressione bombole di stoccaggio e tubazioni di adduzione aria al GE, scarico acqua di condensa dalle bombole",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo del collegamento del regolatore di velocità alla pompa iniezione",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di avviamento e funzionamento a vuoto",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Manut.",
+          "descrizione": "Pulizia filtri ed eliminazione morchie - Eventuale sostituzione filtri",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo eventuale presenza di acqua nei serbatoi, e controllo tubi flessibili, raccordi, flange",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo preriscaldatore olio (se montato) ed eventuale sistema di prelubrificazione e dello sfiato vapori olio dal carter",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica che l’aria al radiatore sia sufficiente, controllo pompa/e dell’acqua, controllo stato delle connessioni e dei tubi flessibili, prova motorini elettrici delle serrande e relativi circuiti di controllo",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo isolamento parti calde, controllo sezione delle tubazioni flessibili, controllo perdite, controllo drenaggio condensa",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 14,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Ispezione generale (compresi cunicoli, passerelle cavi, ecc.), controllo di cavi soggetti e movimento/vibrazioni (in corrispondenza dei punti di sfregamento)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 15,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di funzionamento allarmi (preallarmi) e blocchi (allarmi con arresto)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 16,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo scatole di derivazione, quadri di controllo, quadri di potenza, quadri sinottici, sistemi di supervisione, ecc., controllo serraggio connessioni",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 17,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Regolatore di velocità: se meccanico, verifica dell’olio interno 04 04 1 1 1 1 1 1 1 1 3 3 3          Premessa Gruppo elettrogeno Le verifiche periodiche sul gruppo elettrogeno devono essere supportate dalla consultazione del manuale d'uso e manutenzione.",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 18,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo lunghezza spazzole, porta spazzole, movimento spazzole, superficie anelli, ecc. (per alternatori con spazzole)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 19,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di avviamento e funzionamento a carico con commutazione dell'utenza su GE",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 20,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica che i tubi di sfiato e di troppo pieno non siano ostruiti, che non ci siano perdite dal sistema di tubazioni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 21,
+          "tipoAttivita": "Manut.",
+          "descrizione": "Cambio olio e filtri",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 22,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo antigelo (livello e densità)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 23,
+          "tipoAttivita": "Manut.",
+          "descrizione": "Pulizia scambiatore di calore, pulizia esterna (lato aria) del radiatore, ispezione condotti aria alle serrande (elettriche/a gravità)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 24,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo eccessiva contropressione, controllo supporti e staffe di sostegno delle tubazioni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 25,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova sistema di accensione e controllo taratura carburante (motori a benzina e gas), prova pompa di iniezione e iniettori per portata combustibile, pressione, polverizzazione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 26,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo diodi rotanti, scaricatore/resistore, disco porta diodi rotanti (alternatori brushless), controllo rotore e statore principali, serraggio cavi di potenza e ausiliari, controllo cuscinetti (lubrificazione), controllo eccitatrice",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 27,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo regolatore di tensione automatico e relativi accessori, misura (e trascrizione) dei valori di resistenza di isolamento, controllo sensori di temperatura dello statore principale",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 28,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova degli interruttori/contattori di commutazione e dei relativi interblocchi meccanici ed elettrici, prova taratura dei relè di minima tensione (mancanza rete) e dei relè di protezione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 3
+          }
+        },
+        {
+          "nAttivita": 29,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di isolamento dei cavi",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 3
+          }
+        },
+        {
+          "nAttivita": 30,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo valvole-punterie, controllo coppia serraggio bulloni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 3
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "CEI 11-20",
+          "descrizione": "Impianti di produzione di energia elettrica"
+        },
+        {
+          "codNormativa": "CEI 64-8",
+          "descrizione": "Impianti elettrici utilizzatori"
+        }
+      ]
+    },
+    {
+      "codIntervento": "IE",
+      "nomeCompleto": "Impianto elettrico",
+      "premessa": "Prima di effettuare qualsiasi tipo di prova occorre verificare con i referenti del sito la effettiva possibilità di svolgere le prove.I controlli a vista devono essere svolti senza influire sulle regolari attività lavorative del sito, mantenendo in ogni caso le condizioni di sicurezza per le persone.Le verifiche in quota devono essere svolte in condizioni di massima sicurezza per gli addetti e per le persone presenti nel sito, confinando le aree con opportune barriere e cartellonistica di avvertimento.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo generale a vista sull'integrità dell'impianto di terra, stato di conservazione dei componenti e corretta installazione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica della corretta individuazione e segnalazione dei collettori di terra e dei nodi equipotenziali",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica della corretta individuazione dei morsetti, della corretta colorazione dei conduttori e della corretta individuazione dei cavi",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica del serraggio delle connessioni, sostituendo i componenti che presentano segni di ossidazione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Manut.",
+          "descrizione": "Verifica strumentale della continuità elettrica del/i conduttore/i di terra",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Manut.",
+          "descrizione": "Verifica strumentale della continuità elettrica dei conduttori di protezione (a campione)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Verifica strumentale della continuità elettrica dei collegamenti equipotenziali principali",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica strumentale della continuità elettrica dei collegamenti equipotenziali secondari (a campione)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo generale a vista sull'integrità dell'impianto elettrico, stato di conservazione dei componenti, e corretta installazione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica del grado di protezione dai contatti diretti, barriere, distanziatori, e del grado IP dei componenti elettrici",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo a vista sull'intergità e stato di conservazione dei sistemi di distribuzione principale (canali, tubazioni, ecc.)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo a vista sull'intergità e stato di conservazione dei condotti elettrificati (blindo-luce, -sbarre, -trolley, binari, ecc.)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo a vista sull'intergità e stato di conservazione dei cavi elettrici, della protezione meccanica e/o radiazioni solari, ecc.",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 14,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo a vista sull'intergità e stato di conservazione dei sistemi di derivazione principali (cassette, scatole, ecc.)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 15,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo a vista sull'intergità e stato di conservazione delle prese a spina, dei cavi di alimentazione delle utenze e le relative spine",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 16,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo a vista sull'intergità e stato di conservazione degli apparecchi di illuminazione ordinaria interni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 17,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura della resistenza dell'impianto di terra con Metodo Voltamperometrico",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 18,
+          "tipoAttivita": "Misura",
+          "descrizione": "Misura strumentale del valore di resistenza del conduttore di terra",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 19,
+          "tipoAttivita": "misura",
+          "descrizione": "Misura strumentale del valore di resistenza dei collegamenti equipotenziali principali",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "CEI 64-8",
+          "descrizione": "Impianti elettrici utilizzatori"
+        },
+        {
+          "codNormativa": "CEI 11-27",
+          "descrizione": "Lavori su impianti elettrici"
+        }
+      ]
+    },
+    {
+      "codIntervento": "IS",
+      "nomeCompleto": "Illuminazione sicurezza",
+      "premessa": "Autonomia di progetto =",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo Generale a vista sull'integrità degli apparecchi, pulizia, numerazione e corretta installazione",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di funzionamento ed autonomia, tramite simulazione del black-out sul quadro elettrico",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "UNI EN 1838",
+          "descrizione": "Illuminazione di emergenza"
+        },
+        {
+          "codNormativa": "CEI 64-8",
+          "descrizione": "Impianti elettrici utilizzatori"
+        }
+      ]
+    },
+    {
+      "codIntervento": "PEM",
+      "nomeCompleto": "Sgancio generale emergenza",
+      "premessa": "Prima di effettuare qualsiasi tipo di prova sui dispositivi di sgancio di emergenza occorre verificare con i referenti del sito la effettiva possibilità di svolgere le prove.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo generale, integrità dell'involucro e del vetro, stato di conservazione",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica del sistema di sorveglianza del circuito e dei dispositivi atti allo sgancio",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo fissaggio, leggibilità e completezza dei cartelli di identificazione del dispositivo",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di funzionamento, con azionamento del pulsante e verifica di intervento del dispositivo",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "CEI 64-8",
+          "descrizione": "Impianti elettrici utilizzatori"
+        },
+        {
+          "codNormativa": "DM 37/08",
+          "descrizione": "Attività di installazione degli impianti"
+        }
       ]
     },
     {
       "codIntervento": "Q",
       "nomeCompleto": "Quadro elettrico",
-      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione del quadro occorre verificare che siano state sezionate tutte le alimentazioni elettriche con tensione superiore a 25 Vca / 60 Vdc, verificando preventivamente tramite tester la presenza di eventuali tensioni residue pericolose.",
-      "listaAttivita": [
-        { "nAttivita": 1, "tipoAttivita": "Prova", "descrizione": "Prova di funzionamento di tutti i dispositivi differenziali tramite tasto di prova", "frequenza": { "tipo": "M", "valore": 6 } },
-        { "nAttivita": 2, "tipoAttivita": "Controllo", "descrizione": "Controllo presenza targa quadro, sigla identificazione quadro, schema elettrico, targhette identificazione apparecchiature ed interruttori, numerazione morsettiere, più alimentazioni.", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 3, "tipoAttivita": "Controllo", "descrizione": "Controllo presenza, integrità ed efficienza dei dispositivi di sicurezza apertura portelle, stato di conservazione interno/esterno armadio, ed integrità involucro", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 4, "tipoAttivita": "Controllo", "descrizione": "Controllo segni di scariche elettriche sull'involucro, o presenza bruciature su involucro o apparecchiature", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 5, "tipoAttivita": "Controllo", "descrizione": "Verifica corretto funzionamento della strumentazione di misura (se presente)", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 6, "tipoAttivita": "Verifica", "descrizione": "Controllo dispositivi di inserzione, integrità teleruttori, integrità fusibili di protezione, efficienza interruttori automatici, integrità scaricatori di sovratensione", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 7, "tipoAttivita": "Controllo", "descrizione": "Controllo dei dispositivi di comando e segnalazione (selettori, pulsanti, spie, ecc…)", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 8, "tipoAttivita": "Verifica", "descrizione": "controllo dei collegamenti elettrici al circuito principale di potenza, serraggio delle connessioni, verifica di situazioni di surriscaldamento, controllo integrità terminali", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 9, "tipoAttivita": "Verifica", "descrizione": "Controllo dei collegamenti elettrici ai circuiti ausiliari, serraggio delle connessioni", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 10, "tipoAttivita": "Controllo", "descrizione": "Verifica della efficacia delle aperture di ventilazione naturale sul quadro, e verifica del mantenimento del grado di protezione IP di progetto", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 11, "tipoAttivita": "Controllo", "descrizione": "Controllo del corretto funzionamento della ventola di raffreddamento (se presente)", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 12, "tipoAttivita": "Controllo", "descrizione": "Controllo inaccesibilità del quadro alle persone non addestrate (potrella chiusa a chiave, quadro entro locale chiuso a chiave o in zona confinata alle persone non addestrate, altro)", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 13, "tipoAttivita": "Verifica", "descrizione": "Controllo eventuale presenza di corpi estranei all'interno del quadro", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 14, "tipoAttivita": "Controllo", "descrizione": "Controllo serraggio della bulloneria meccanica e della bulloneria elettrica", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 15, "tipoAttivita": "Controllo", "descrizione": "controllo dei blocchi e degli interblocchi", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 16, "tipoAttivita": "Controllo", "descrizione": "Verifica e misura di contintuità del collegamento di messa a terra e del collettore di terra del quadro", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 17, "tipoAttivita": "Verifica", "descrizione": "Controllo del corretto fissaggio a pavimento/parete del quadro tale da evitare il rovesciamento/caduta", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 18, "tipoAttivita": "Controllo", "descrizione": "Controllo presenza e integrità cartellonistica di sicurezza", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 19, "tipoAttivita": "Manut.", "descrizione": "Pulizia parti isolanti e parti attive, aspirazione polvere", "frequenza": { "tipo": "A", "valore": 1 } },
-        { "nAttivita": 20, "tipoAttivita": "Manut.", "descrizione": "Pulizia e lubrificazione leverismi, verifica delle parti estraibili", "frequenza": { "tipo": "A", "valore": 2 } }
-      ],
-      "listaNormative": [
-        { "codNormativa": "CEI 11-27", "descrizione": "Lavori su impianti elettrici" },
-        { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" }
-      ]
-    },
-    {
-      "codIntervento": "UPS",
-      "nomeCompleto": "Gruppi di Continuità (UPS)",
-      "premessa": "Il controllo periodico deve essere effettuato da tecnico qualificato. Prima di passare alla fase esecutiva delle prove, occorre controllare che gli effetti delle prove (black-out simulato) non producano situazioni di pericolo.",
+      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione del quadro occorre verificare che siano state sezionate tutte le alimentazioni elettriche con tensione superiore a 25 Vca / 60 Vdc, verificando preventivamente tramite tester la presenza di eventuali tensioni residue pericolose",
       "listaAttivita": [
         {
           "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica stato LED, display e allarmi attivi sull'UPS",
-          "frequenza": { "tipo": "M", "valore": 1 }
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di funzionamento di tutti i dispositivi differenziali tramite tasto di prova",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
         },
         {
           "nAttivita": 2,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica temperatura ambiente e condizioni batterie",
-          "frequenza": { "tipo": "M", "valore": 3 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo presenza targa quadro, sigla identificazione quadro, schema elettrico, targhette identificazione apparecchiature ed interruttori, numerazione morsettiere, più alimentazioni.",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 3,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Prova di commutazione rete/batteria e ritorno",
-          "frequenza": { "tipo": "M", "valore": 6 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo presenza, integrità ed efficienza dei dispositivi di sicurezza apertura portelle, stato di conservazione interno/esterno armadio, ed integrità involucro",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 4,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura tensione e resistenza interna dei singoli elementi batteria",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo segni di scariche elettriche sull'involucro, o presenza bruciature su involucro o apparecchiature",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 5,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Test di autonomia batteria sotto carico nominale",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica corretto funzionamento della strumentazione di misura (se presente)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Controllo dispositivi di inserzione, integrità teleruttori, integrità fusibili di protezione, efficienza interruttori automatici, integrità scaricatori di sovratensione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo dei dispositivi di comando e segnalazione (selettori, pulsanti, spie, ecc…)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Verifica",
+          "descrizione": "controllo dei collegamenti elettrici al circuito principale di potenza, serraggio delle connessioni, verifica di situazioni di surriscaldamento, controllo integrità terminali",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Controllo dei collegamenti elettrici ai circuiti ausiliari, serraggio delle connessioni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica della efficacia delle aperture di ventilazione naturale sul quadro, e verifica del mantenimento del grado di protezione IP di progetto",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo del corretto funzionamento della ventola di raffreddamento (se presente)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo inaccesibilità del quadro alle persone non addestrate (potrella chiusa a chiave, quadro entro locale chiuso a chiave o in zona confinata alle persone non addestrate, altro)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Controllo eventuale presenza di corpi estranei all'interno del quadro",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 14,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo serraggio della bulloneria meccanica e della bulloneria elettrica",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 15,
+          "tipoAttivita": "Controllo",
+          "descrizione": "controllo dei blocchi e degli interblocchi",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 16,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica e misura di contintuità del collegamento di messa a terra e del collettore di terra del quadro",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 17,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Controllo del corretto fissaggio a pavimento/parete del quadro tale da evitare il rovesciamento/caduta",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 18,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo presenza e integrità cartellonistica di sicurezza",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 19,
+          "tipoAttivita": "Manut.",
+          "descrizione": "Pulizia parti isolanti e parti attive, aspirazione polvere",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 20,
+          "tipoAttivita": "Manut.",
+          "descrizione": "Pulizia e lubrificazione leverismi, verifica delle parti estraibili",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
         }
       ],
       "listaNormative": [
-        { "codNormativa": "CEI EN 62040", "descrizione": "Sistemi statici di continuità (UPS)" }
+        {
+          "codNormativa": "CEI 11-27",
+          "descrizione": "Lavori su impianti elettrici"
+        },
+        {
+          "codNormativa": "CEI 64-8",
+          "descrizione": "Impianti elettrici utilizzatori"
+        }
       ]
     },
     {
-      "codIntervento": "EM",
-      "nomeCompleto": "Illuminazione di Sicurezza",
-      "premessa": "Prima di effettuare qualsiasi tipo di prova sugli apparecchi di illuminazione e segnalazione di sicurezza occorre verificare con i referenti del sito l'effettiva possibilità di svolgere le prove.",
+      "codIntervento": "QMT",
+      "nomeCompleto": "Quadro Media Tensione",
+      "premessa": "Le attività sul quadro elettrico di media tensione devono essere svolte da personale addestrato ai lavori elettrici con qualifca PES come da Norma CEI 11-27, ed eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione all'interno del quadro è fondamentale sezionare la e le alimentazioni al quadro, e collegare le 3 fasi in franco cortocircuito fra loro e collegate anche verso terra. Nel caso l'alimentazione al quadro provenga dall'ente distributore, occorre preventivamente concordare il fuori tensione. Eseguire la procedura di fuori tensione svolgendo tutte le manovre necessarie per la messa in sicurezza del quadro, fra cui l'interblocco meccanico (es. tramite chiavi anellate) o elettrico, e completare con l'affissione della segnaletica di sicurezza ed avvertimento, e la modulistica per il passaggio delle consegne e delle responsabilità.",
       "listaAttivita": [
         {
           "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica accensione e stato di tutti gli apparecchi di emergenza",
-          "frequenza": { "tipo": "M", "valore": 1 }
+          "tipoAttivita": "Controlo",
+          "descrizione": "Controllo generale, installazione, integrità parti isolanti per lesioni e tracce di scarica, verifica presenza di corpi estranei all'interno del quadro e pulizia generale",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 2,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Prova di funzionamento in emergenza per almeno 1 minuto",
-          "frequenza": { "tipo": "M", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo ed esame a vista delle parti attive e puliza contatti principali di innesto e connessione, controllo serraggio della bulloneria, pulizia e serraggio morsettiere, pulizia e lubrificazione cinematismi",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 3,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Test di autonomia completa (scarica totale batterie)",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica funzionamento elettrico, e tensione circuiti ausiliari",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 4,
-          "tipoAttivita": "Manutenzione",
-          "descrizione": "Sostituzione lampade e batterie non conformi",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica intellegibilità e completezza targhe per sequenza manovre",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica dello stato di integrità elettrico e meccanico (scariche superficiali, fessurazioni, ossidazione, surriscaldamento, ecc.) di sbarre MT, connettori, cavi, e terminali cavi",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Controllo integrità calotta di protezione, sigillatura morsetti, collegamenti primari e secondari come da schema per TA, TV e TO di protezione e misura",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo integrità e collegamenti resistenza antiferrorisonanza dei TV, e integrità fusibile di protezione primario e secondario TV",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica dello stato dei relè di protezione, presenza messaggi di errore e/o guasto, versione ed eventuale aggiornamento software/firmware, corretta impostazione soglie di intervento",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica funzionalità relè di protezione integrato, controllo integrità/efficienza delle lampade di segnalazione presenza tensione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Esame a vista delle parti attive, pulizia e lubrificazione di tutti i meccanismi, controllo distanze e stato di usura dei contatti",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo generale e installazione, controllo e pulizia parti isolanti e parti attive.",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica funzionamento elettrico e tensioni ausiliarie",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Controllo blocchi e interblocchi",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 14,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Pulizia e lubrificazione meccanismi di comando ed eventuale regolazione del meccanismo di comando, se necessario",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 15,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo aperture per passaggio cavi e tamponature",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
+        },
+        {
+          "nAttivita": 16,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo dei collegamenti di terra struttura metallica, dei morsetti di messa a terra, dei collegamenti a terra circuiti secondari di TA/TO/TV, e strumenti",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
+        },
+        {
+          "nAttivita": 17,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica funzionalità dei blocchi e interblocchi elettrici e meccanici, della efficacia delle manovre, chiarezza delle relative procedure operative, inserzione delle lame di contatto e serraggio delle connessioni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
+        },
+        {
+          "nAttivita": 18,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica funzionalità relè diretto da TA integrati, funzionalità relè indiretto, verifica impostazioni e regolazioni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
+        },
+        {
+          "nAttivita": 19,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Rilievo tempi di apertura e chiusura, e confronto con dati nominaliN.B. ATTIVITA' DA SVOLGERE TRAMITE PROVA CASSETTA RELE' DA TECNICO ABILITATO ESCLUSA DA VERIFICHE PERIODICHE PROGRAMMATE",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
+        },
+        {
+          "nAttivita": 20,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Esecuzione di intervento di manutenzione straordinaria da parte del costruttore secondo quanto indicato su manuale d'uso e manutenzione, con verifica generale dell'interruttore e eventuale sostituzione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
         }
       ],
       "listaNormative": [
-        { "codNormativa": "UNI EN 1838", "descrizione": "Illuminazione di emergenza" },
-        { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" }
+        {
+          "codNormativa": "CEI 11-27",
+          "descrizione": "Lavori su impianti elettrici"
+        },
+        {
+          "codNormativa": "CEI 0-16",
+          "descrizione": "Regola tecnica di riferimento per la connessione di utenti attivi e passivi alle reti AT e MT"
+        }
       ]
     },
     {
       "codIntervento": "RI",
-      "nomeCompleto": "Rivelazione Incendi",
-      "premessa": "Il controllo periodico deve essere effettuato da tecnico qualificato. Durante le operazioni di controllo periodico, deve essere eseguito un controllo funzionale sul sistema e sul 50% di tutti i dispositivi.",
+      "nomeCompleto": "Rilevazione incendi",
+      "premessa": "Il controllo periodico deve essere effettuato da tecnico qualificato. Prima di passare alla fase esecutiva delle prove, occorre controllare la presenza dei documenti riguardanti il controllo iniziale. Durante le operazioni di controllo periodico, deve essere eseguito un controllo funzionale sul sistema, e sul 50% di tutti i dispositivi e azionamenti presenti nel sistema, essendo le verifiche semestrali, raggiungendo il 100% dei dispositivi nell'arco dei 12 mesi. Prima di procedere con le prove della parte di rivelazione degli impianti di rivelazione e spegnimento, porre le apparecchiature di comando dello spegnimento autotatico in sicurezza, per evitare l'attivazione dello spegnimento a causa delle operazioni di controllo. In modo particolare assicurarsi che gli effetti delle prove (segnalazioni e comandi) non producano situazioni di pericolo o attuazioni indesiderate, pianificando ed organizzando le prove, ed i metodi di prova, con il responsabile della sicurezza e/o con il responsabile del servizio prevenzione e protezione competente.",
       "listaAttivita": [
         {
           "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica stato centrale e assenza anomalie o allarmi",
-          "frequenza": { "tipo": "M", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Nel caso di modifiche all'impianto, controllare il firmware della centrale e dei teminali remoti ove presenti",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 2,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Prova rivelatori di fumo (50% dei dispositivi per sessione semestrale)",
-          "frequenza": { "tipo": "M", "valore": 6 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica degli eventi registrati nella centrale. Verifica che non siano presenti allarmi.",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 3,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Prova pulsanti manuali di allarme e attivazione sirene",
-          "frequenza": { "tipo": "M", "valore": 6 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica dell'efficienza, commutazione delle alimentazioni, segnalazioni, rimozione alimentazione primaria.",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 4,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Verifica trasmissione allarmi a centrale di vigilanza/VVF",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Stato delle batterie, efficienza di lampade, led e segnalazioni ottiche e digitali",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 2
+          }
         },
         {
           "nAttivita": 5,
-          "tipoAttivita": "Manutenzione",
-          "descrizione": "Pulizia camere ottiche rivelatori e sostituzione elementi esausti",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova di funzionamento delle segnalazioni ottice ed acustiche locali, verifica della capacità di ricevere gli allarmi provenienti dai dispositivi automatici e manuali",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 2
+          }
         },
         {
           "nAttivita": 6,
-          "tipoAttivita": "Misura",
-          "descrizione": "Verifica stato batterie tampone della centrale e moduli",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Verifica",
+          "descrizione": "Esecuzione del test automatico dell'impianto da parte della centrale",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo generale a vista sull'integrità esteriore, stato di conservazione e stabilità dei vari componenti dell'impianto",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica di efficienza del sistema di visualizzazione grafica e possibilità di inviare e ricevere comandi",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica di efficienza dei segnali di rinvio degli stati di allarme e guasto sui ripetitori, modem, combinatori",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica segnalazione guasto su apertura o corto circuito delle linee di rivelazione e di comando sovegliate",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
         }
       ],
       "listaNormative": [
-        { "codNormativa": "UNI 9795", "descrizione": "Sistemi fissi automatici di rivelazione e di segnalazione allarme d'incendio" },
-        { "codNormativa": "UNI 11224", "descrizione": "Controllo iniziale e manutenzione dei sistemi di rivelazione incendi" }
-      ]
-    },
-    {
-      "codIntervento": "IE",
-      "nomeCompleto": "Impianto Elettrico",
-      "premessa": "Prima di effettuare qualsiasi tipo di prova occorre verificare con i referenti del sito la effettiva possibilità di svolgere le prove. I controlli a vista devono essere svolti senza influire sulle regolari attività lavorative del sito.",
-      "listaAttivita": [
         {
-          "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Controllo a vista dell'impianto: cavi, canali, prese, interruttori",
-          "frequenza": { "tipo": "M", "valore": 1 }
+          "codNormativa": "UNI 9795",
+          "descrizione": "Sistemi fissi automatici di rivelazione e di segnalazione allarme d'incendio"
         },
         {
-          "nAttivita": 2,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica integrità coperchi cassette di derivazione e morsettiere",
-          "frequenza": { "tipo": "M", "valore": 6 }
-        },
-        {
-          "nAttivita": 3,
-          "tipoAttivita": "Misura",
-          "descrizione": "Verifica continuità dei conduttori di protezione (PE)",
-          "frequenza": { "tipo": "A", "valore": 1 }
-        },
-        {
-          "nAttivita": 4,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura della resistenza di isolamento dei circuiti",
-          "frequenza": { "tipo": "A", "valore": 1 }
-        },
-        {
-          "nAttivita": 5,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Prova di intervento interruttori differenziali con strumento",
-          "frequenza": { "tipo": "M", "valore": 6 }
-        },
-        {
-          "nAttivita": 6,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura impedenza anello di guasto sui circuiti principali",
-          "frequenza": { "tipo": "A", "valore": 2 }
+          "codNormativa": "UNI 11224",
+          "descrizione": "Controllo iniziale e manutenzione dei sistemi di rivelazione incendi"
         }
-      ],
-      "listaNormative": [
-        { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" },
-        { "codNormativa": "CEI 11-27", "descrizione": "Lavori su impianti elettrici" }
-      ]
-    },
-    {
-      "codIntervento": "FTV",
-      "nomeCompleto": "Impianto Fotovoltaico",
-      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza.",
-      "listaAttivita": [
-        {
-          "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica stato moduli: pulizia, integrità vetri, fissaggi",
-          "frequenza": { "tipo": "M", "valore": 3 }
-        },
-        {
-          "nAttivita": 2,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica stato inverter: LED, display, ventilazione",
-          "frequenza": { "tipo": "M", "valore": 1 }
-        },
-        {
-          "nAttivita": 3,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura tensione e corrente stringhe fotovoltaiche",
-          "frequenza": { "tipo": "M", "valore": 6 }
-        },
-        {
-          "nAttivita": 4,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura resistenza di isolamento lato DC",
-          "frequenza": { "tipo": "A", "valore": 1 }
-        },
-        {
-          "nAttivita": 5,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Verifica dispositivi di protezione DC (fusibili, sezionatori)",
-          "frequenza": { "tipo": "A", "valore": 1 }
-        },
-        {
-          "nAttivita": 6,
-          "tipoAttivita": "Termografia",
-          "descrizione": "Analisi termografica moduli e connessioni sotto produzione",
-          "frequenza": { "tipo": "A", "valore": 1 }
-        }
-      ],
-      "listaNormative": [
-        { "codNormativa": "CEI 82-25", "descrizione": "Guida alla realizzazione di sistemi di generazione fotovoltaica" },
-        { "codNormativa": "CEI 11-20", "descrizione": "Impianti di produzione di energia elettrica" }
-      ]
-    },
-    {
-      "codIntervento": "PEM",
-      "nomeCompleto": "Sgancio Generale di Emergenza",
-      "premessa": "Prima di effettuare qualsiasi tipo di prova sui dispositivi di sgancio di emergenza occorre verificare con i referenti del sito la effettiva possibilità di svolgere le prove.",
-      "listaAttivita": [
-        {
-          "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica stato e accessibilità dei pulsanti di sgancio",
-          "frequenza": { "tipo": "M", "valore": 1 }
-        },
-        {
-          "nAttivita": 2,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Prova di sgancio generale e verifica apertura utenze",
-          "frequenza": { "tipo": "M", "valore": 6 }
-        },
-        {
-          "nAttivita": 3,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica segnaletica di sicurezza e cartellonistica",
-          "frequenza": { "tipo": "A", "valore": 1 }
-        }
-      ],
-      "listaNormative": [
-        { "codNormativa": "CEI 64-8", "descrizione": "Impianti elettrici utilizzatori" },
-        { "codNormativa": "DM 37/08", "descrizione": "Attività di installazione degli impianti" }
       ]
     },
     {
       "codIntervento": "RIF",
       "nomeCompleto": "Rifasamento",
-      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza.",
+      "premessa": "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione del quadro occorre verificare che siano state sezionate tutte le alimentazioni elettriche con tensione superiore a 25 Vca / 60 Vdc, verificando preventivamente tramite tester la presenza di eventuali tensioni residue pericolose",
       "listaAttivita": [
         {
           "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica stato condensatori: rigonfiamenti, perdite, decolorazione",
-          "frequenza": { "tipo": "M", "valore": 3 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo dati di targa, quantità e tipologia dei condensatori",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 2,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura del fattore di potenza (cosφ) al punto di consegna",
-          "frequenza": { "tipo": "M", "valore": 6 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo presenza, integrità ed efficienza dei dispositivi di sicurezza apertura portelle.",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 3,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Verifica inserzione/disinserzione automatica gradini",
-          "frequenza": { "tipo": "M", "valore": 6 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo stato di conservazione interno/esterno armadio, ed integrità involucro / fuoriuscita elettrolito dai condensatori",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 4,
-          "tipoAttivita": "Manutenzione",
-          "descrizione": "Pulizia batteria condensatori e serraggio connessioni",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Verifica",
+          "descrizione": "Controllo segni di scariche elettriche sull'involucro, o presenza bruciature su involucro o apparecchiature",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 5,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura capacità residua dei singoli condensatori",
-          "frequenza": { "tipo": "A", "valore": 2 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo dispositivi di inserzione, integrità contattori di inserzione, integrità fusibili di protezione, efficienza interruttori automatici",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo collegamenti centralina di regolazione, stato della centralina e registrazione dei valori riportati sul display,",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica corretta taratura della centralina (C/K e cos fì)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo dei collegamenti elettrici al circuito principale di potenza, serraggio delle connessioni, verifica di situazioni di surriscaldamento",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Controllo dei collegamenti elettrici al circuito di misura, serraggio delle connessioni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica della efficacia delle aperture di ventilazione naturale sul quadro",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo del corretto funzionamento della ventola di raffreddamento, registrazione del valore di set-point del termostato interno",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo inaccessibilità del quadro alle persone non addestrate (portella chiusa a chiave, quadro entro locale chiuso a chiave o in zona confinata alle persone non addestrate, altro)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo serraggio della bulloneria meccanica e della bulloneria elettrica",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
         }
       ],
       "listaNormative": [
-        { "codNormativa": "CEI 33-7", "descrizione": "Condensatori di potenza per impianti a corrente alternata" }
+        {
+          "codNormativa": "CEI 33-7",
+          "descrizione": "Condensatori di potenza per impianti a corrente alternata"
+        }
       ]
     },
     {
-      "codIntervento": "TRFS",
-      "nomeCompleto": "Trasformatori a Secco MT/BT",
-      "premessa": "Le attività sul trasformatore MT/BT devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, ed eseguiti in totale sicurezza.",
+      "codIntervento": "RIG",
+      "nomeCompleto": "Rilevazione Gas",
+      "premessa": "Il controllo periodico deve essere effettuato da tecnico qualificato. Prima di passare alla fase esecutiva delle prove, occorre controllare la presenza dei documenti riguardanti il controllo iniziale. Durante le operazioni di controllo periodico, deve essere eseguito un controllo funzionale sul sistema, e sul 50% di tutti i dispositivi e azionamenti presenti nel sistema, essendo le verifiche semestrali, raggiungendo il 100% dei dispositivi nell'arco dei 12 mesi. Prima di procedere con le prove della parte di rivelazione degli impianti di rivelazione e spegnimento, porre le apparecchiature di comando dello spegnimento autotatico in sicurezza, per evitare l'attivazione dello spegnimento a causa delle operazioni di controllo. In modo particolare assicurarsi che gli effetti delle prove (segnalazioni e comandi) non producano situazioni di pericolo o attuazioni indesiderate, pianificando ed organizzando le prove, ed i metodi di prova, con il responsabile della sicurezza e/o con il responsabile del servizio prevenzione e protezione competente.",
       "listaAttivita": [
         {
           "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica stato generale trasformatore: pulizia, ventilazione, temperatura",
-          "frequenza": { "tipo": "M", "valore": 3 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Nel caso di modifiche all'impianto, controllare il firmware della centrale e dei teminali remoti ove presenti",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 2,
-          "tipoAttivita": "Termografia",
-          "descrizione": "Analisi termografica connessioni MT e BT sotto carico",
-          "frequenza": { "tipo": "M", "valore": 6 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica degli eventi registrati nella centrale. Verifica che non siano presenti allarmi.",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 3,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura resistenza di isolamento avvolgimenti MT e BT",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica dell'efficienza, commutazione delle alimentazioni, segnalazioni, rimozione alimentazione primaria.",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
         },
         {
           "nAttivita": 4,
-          "tipoAttivita": "Manutenzione",
-          "descrizione": "Pulizia avvolgimenti con aspirazione e soffiatura, serraggio connessioni",
-          "frequenza": { "tipo": "A", "valore": 1 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Stato delle batterie, efficienza di lampade, led e segnalazioni ottiche e digitali",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 2
+          }
         },
         {
           "nAttivita": 5,
-          "tipoAttivita": "Misura",
-          "descrizione": "Misura rapporto di trasformazione e verifica presa regolatore",
-          "frequenza": { "tipo": "A", "valore": 3 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova di funzionamento delle segnalazioni ottice ed acustiche locali, verifica della capacità di ricevere gli allarmi provenienti dai dispositivi automatici e manuali",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Esecuzione del test automatico dell'impianto da parte della centrale",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo generale a vista sull'integrità esteriore, stato di conservazione e stabilità dei vari componenti dell'impianto",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica di efficienza del sistema di visualizzazione grafica e possibilità di inviare e ricevere comandi",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica di efficienza dei segnali di rinvio degli stati di allarme e guasto sui ripetitori, modem, combinatori",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica segnalazione guasto su apertura o corto circuito delle linee di rivelazione e di comando sovegliate",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Prova dei Rivelatori di GAS Puntiformi impiegando dispositivi artificiali di produzione di gas, simulando l'insorgere di un perdita di gas in funzione delle percentuali di concentrazione impostate in centrale.",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
         }
       ],
       "listaNormative": [
-        { "codNormativa": "CEI 14-4", "descrizione": "Trasformatori di potenza" },
-        { "codNormativa": "CEI 11-27", "descrizione": "Lavori su impianti elettrici" }
+        {
+          "codNormativa": "UNI EN 50194",
+          "descrizione": "Apparecchi elettrici per la rivelazione di gas combustibili in locali ad uso domestico"
+        },
+        {
+          "codNormativa": "UNI 11224",
+          "descrizione": "Controllo iniziale e manutenzione dei sistemi di rivelazione incendi"
+        }
       ]
     },
     {
       "codIntervento": "SPD",
-      "nomeCompleto": "Limitatori di Sovratensione (SPD)",
-      "premessa": "I controlli a vista devono essere svolti senza influire sulle regolari attività lavorative del sito, mantenendo in ogni caso le condizioni di sicurezza per le persone.",
+      "nomeCompleto": "Limitatori Sovratensione",
+      "premessa": ".",
       "listaAttivita": [
         {
           "nAttivita": 1,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica indicatori di stato degli SPD (finestre di controllo)",
-          "frequenza": { "tipo": "M", "valore": 6 }
-        },
-        {
-          "nAttivita": 2,
-          "tipoAttivita": "Controllo visivo",
-          "descrizione": "Verifica serraggio connessioni e stato fusibili di backup",
-          "frequenza": { "tipo": "A", "valore": 1 }
-        },
-        {
-          "nAttivita": 3,
-          "tipoAttivita": "Prova funzionale",
-          "descrizione": "Verifica corrente di dispersione e sostituzione moduli esausti",
-          "frequenza": { "tipo": "A", "valore": 2 }
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo generale, verifica integrità delle protezioni dei limitatori di sovratensione",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
         }
       ],
       "listaNormative": [
-        { "codNormativa": "CEI EN 61643", "descrizione": "Dispositivi di protezione contro le sovratensioni" }
+        {
+          "codNormativa": "CEI EN 61643",
+          "descrizione": "Dispositivi di protezione contro le sovratensioni"
+        }
+      ]
+    },
+    {
+      "codIntervento": "TRFO",
+      "nomeCompleto": "Trasformatore MT/BT in olio",
+      "premessa": "Le attività sul trasformatore MT/BT devono essere svolte da personale addestrato ai lavori elettrici con qualifca PES come da Norma CEI11-27, ed eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione è fondamentale sezionare la/le alimentazioni al trasformatore, e collegare le 3 fasi in franco cortocircuito fra loro e collegate anche verso terra.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo dati di targa, tipo di liquido isolante, verifica dei valori di tensione e di corrente erogati al momento della verifica",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo presenza ed integrità dispositivi contro la dispersione del liquido",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo livello liquido isolante e stato dei Sali di essicazion aria",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica intervento relè Buchholz",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica e registrazione dell'indicatore di temperatura",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Pulizia e controllo dei radiatori, controllo serraggio bulloneria, controllo serraggio delle connessioni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica della efficienza del sistema di rifasamento fisso del trasformatore a vuoto e dei relativi dispositivi di protezione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Pulizia isolatori e controllo stato di conservazione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo posizione ed ossidazione aste spinterometriche (se presenti)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo serraggio bulloneria terminali MT/BT",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo rigidità dielettrica del liquido isolante (N.B. attività da fare eseguire direttamente dal costruttore del trasformatore o da tecnico specializzato, pertanto esclusa da verifiche periodiche programmate)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica di funzionamento del variatore di tensione (a vuoto)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Controllo stato dei dispositivi meccanici di movimentazione del trasformatore",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "CEI 14-4",
+          "descrizione": "Trasformatori di potenza"
+        },
+        {
+          "codNormativa": "CEI 11-27",
+          "descrizione": "Lavori su impianti elettrici"
+        }
+      ]
+    },
+    {
+      "codIntervento": "TRFS",
+      "nomeCompleto": "Trasformatore MT/BT a secco",
+      "premessa": "Le attività sul trasformatore MT/BT devono essere svolte da personale addestrato ai lavori elettrici con qualifca PES come da Norma CEI11-27, ed eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione è fondamentale sezionare la/le alimentazioni al trasformatore, e collegare le 3 fasi in franco cortocircuito fra loro e collegate anche verso terra.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo dati di targa, verifica dei valori di tensione e di corrente erogati al momento della verifica",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo funzionamento ventilatori di raffredamento e centraline di comando (se presenti)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo presenza ostruzioni nei canali di raffreddamento e verifica visiva integrità della resina",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Controllo collegamenti alle sonde di temperatura e registrazione dei valori di temperatura riportati sulla centralina termometrica",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica della efficienza del sistema di rifasamento fisso del trasformatore a vuoto e dei relativi dispositivi di protezione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Manutenzione",
+          "descrizione": "Pulizia isolatori e controllo stato di conservazione",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo posizione ed ossidazione aste spinterometriche (se presenti)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo serraggio bulloneria terminali MT/BT",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo stato dei dispositivi meccanici di movimentazione del trasformatore",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 5
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "CEI 14-4",
+          "descrizione": "Trasformatori di potenza"
+        },
+        {
+          "codNormativa": "CEI 11-27",
+          "descrizione": "Lavori su impianti elettrici"
+        }
+      ]
+    },
+    {
+      "codIntervento": "UPS",
+      "nomeCompleto": "Gruppo di continuità",
+      "premessa": "Il controllo periodico deve essere effettuato da tecnico qualificato. Prima di passare alla fase esecutiva delle prove, occorre controllare che gli effetti delle prove (black-out simulato) non producano situazioni di pericolo per le persone o di danno per l'attività, pianificando ed organizzando le prove, con i responsabili dell'attività.",
+      "listaAttivita": [
+        {
+          "nAttivita": 1,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Verifica dei dispositivi di sicurezza posti sull’apparecchiatura, di segnalazioni, allarmi e qualsiasi anomalia segnalata",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 2,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo generale a vista sull'integrità esteriore, stato di conservazione, presenza di danneggiamenti esterni, fenomeni di ossidazione, logorio, eccessivo rumore, vibrazioni",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 3,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo visivo di tutte le componenti meccaniche, elettriche (cablaggi, commutatori, fusibili, interruttori, spie, ecc.) ed elettroniche (schede, raddrizzatori, condensatori, ecc.)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 4,
+          "tipoAttivita": "Verifica",
+          "descrizione": "Misurazione della temperatura del locale di installazione UPS/SOCCORRITORE",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 5,
+          "tipoAttivita": "Prova",
+          "descrizione": "Esecuzione del test automatico di commutazione (se disponibile)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 6,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo funzionamento ventola di raffreddamento, effettivo ricircolo aria di raffreddameno ed eventuale pulizia dei componenti (ventilatori, filtri, ecc.)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 2
+          }
+        },
+        {
+          "nAttivita": 7,
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo funzionamento ventola di raffreddamento, effettivo ricircolo aria di raffreddameno ed eventuale pulizia dei componenti (ventilatori, filtri, ecc.)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 8,
+          "tipoAttivita": "Prova",
+          "descrizione": "Simulazione di Black-Out. Togliere tensione all’UPS aprendo l’interruttore corrispondente sul quadro di alimentazione. Verificare il tempo e idoneità della procedura di avvio (rete/inverter)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 9,
+          "tipoAttivita": "Prova",
+          "descrizione": "Simulazione di Ritorno Energia. Dare tensione all’UPS chiudendo il suddettointerruttore. Verificare il tempo e idoneità della procedura di ritorno in fase di carica da rete (rete/inverter)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 4
+          }
+        },
+        {
+          "nAttivita": 10,
+          "tipoAttivita": "Prova",
+          "descrizione": "Verifica del corretto funzionamento dei dispositivi di Bypass manuale",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        },
+        {
+          "nAttivita": 11,
+          "tipoAttivita": "Prova",
+          "descrizione": "Verifica del funzionamento della comunicazione verso l'esterno di anomalie, guasti, interventi",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Prova",
+          "descrizione": "Verifica del funzionamento della connessione hardware con la rete dati, e del corretto funzionamento di software di verifica e gestione esterni (se presenti)",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          }
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova AUTONOMIA con simulazione di mancanza alimentazione per almeno 5 minuti, ed alla fine della prova registrare la percentuale di carica rimanente e l'assorbimento del carico",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 14,
+          "tipoAttivita": "Manut.",
+          "descrizione": "Effettuare una pulizia generale di tutti i componenti interni",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        },
+        {
+          "nAttivita": 15,
+          "tipoAttivita": "Prova",
+          "descrizione": "Prova di funzionamento del dispositivo di sgancio di emergenza EPO (se presente)",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          }
+        }
+      ],
+      "listaNormative": [
+        {
+          "codNormativa": "CEI EN 62040",
+          "descrizione": "Sistemi statici di continuità (UPS)"
+        }
       ]
     }
   ]
 }
-
