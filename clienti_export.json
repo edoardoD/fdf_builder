@@ -1,0 +1,15 @@
+[{
+	"_id": {
+		"$oid": "6a86e3a17abbb7360bfd7b44"
+	},
+	"id": "4f579370-072b-42fa-9c2f-9fd086a64fbc",
+	"nome": "ospedali privati"
+},
+{
+	"_id": {
+		"$oid": "6a86e3a17abbb7360bfd7b47"
+	},
+	"id": "fab0cee8-216e-4393-970e-e157a70ba66c",
+	"nome": "industrial wear"
+}]
+
