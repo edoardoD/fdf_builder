@@ -29,4 +29,9 @@ interface ManutenzioneRepository {
     // --- Anagrafica Componenti ---
     suspend fun caricaComponentiStandard(): List<manutenzioni.domain.model.ComponenteStandard>
     suspend fun salvaComponenteStandard(componente: manutenzioni.domain.model.ComponenteStandard)
+
+    // --- Catalogo Approvato (ETIM & Equivalenze) ---
+    suspend fun caricaCatalogoApprovato(): List<manutenzioni.domain.model.ComponenteApprovato>
+    suspend fun salvaOAggiornaComponenteApprovato(approvato: manutenzioni.domain.model.ComponenteApprovato)
+    suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato>
 }

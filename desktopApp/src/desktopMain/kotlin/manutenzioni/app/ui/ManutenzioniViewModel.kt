@@ -2,7 +2,9 @@ package manutenzioni.app.ui
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,6 +15,13 @@ import manutenzioni.domain.model.Cantiere
 import manutenzioni.domain.model.Cliente
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.Periodo
+import manutenzioni.domain.model.InterruttoreBT
+import manutenzioni.domain.model.QuadroBT
+import manutenzioni.domain.model.ComponentCandidate
+import manutenzioni.domain.model.ComponenteApprovato
+import manutenzioni.domain.model.VarianteProdotto
+import manutenzioni.domain.service.ProductSearchApi
+import manutenzioni.app.service.EtimCatalogService
 import manutenzioni.app.strategy.HtmlToPdfStrategy
 import manutenzioni.domain.ManutenzioneRepository
 import manutenzioni.domain.service.FrequencyFilter
@@ -58,7 +67,10 @@ data class ManutenzioniUiState(
     val batchProgress: String? = null,
     /** Lista dei file generati nell'ultimo batch */
     val generatedFiles: List<File> = emptyList(),
-    val componentiStandard: List<manutenzioni.domain.model.ComponenteStandard> = emptyList()
+    val componentiStandard: List<manutenzioni.domain.model.ComponenteStandard> = emptyList(),
+    val isSearchingComponenti: Boolean = false,
+    val candidateComponents: List<ComponentCandidate> = emptyList(),
+    val catalogoApprovato: List<ComponenteApprovato> = emptyList()
 )
 
 /**
@@ -69,9 +81,11 @@ data class ManutenzioniUiState(
  */
 class ManutenzioniViewModel(
     private val repository: ManutenzioneRepository,
-    private val pdfStrategy: PdfBatchGenerator = HtmlToPdfStrategy()
+    private val pdfStrategy: PdfBatchGenerator = HtmlToPdfStrategy(),
+    private val productSearchApi: ProductSearchApi = EtimCatalogService()
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var searchJob: Job? = null
 
     private val _uiState = MutableStateFlow(ManutenzioniUiState())
     val uiState: StateFlow<ManutenzioniUiState> = _uiState.asStateFlow()
@@ -605,8 +619,151 @@ class ManutenzioniViewModel(
         loadImpianti()
         loadClienti()
         loadComponentiStandard()
+        loadCatalogoApprovato()
         _uiState.value.selectedCliente?.let {
             loadCantieriForCliente(it.id)
+        }
+    }
+
+    private fun loadCatalogoApprovato() {
+        scope.launch {
+            try {
+                val approvati = repository.caricaCatalogoApprovato()
+                _uiState.update { it.copy(catalogoApprovato = approvati) }
+            } catch (e: Exception) {
+                // Ignore or log
+            }
+        }
+    }
+
+    // === Ricerca ETIM & Approvazione Componenti ===
+
+    fun searchCandidateComponents(query: String) {
+        searchJob?.cancel()
+        if (query.isBlank()) {
+            _uiState.update { it.copy(candidateComponents = emptyList(), isSearchingComponenti = false) }
+            return
+        }
+
+        searchJob = scope.launch {
+            _uiState.update { it.copy(isSearchingComponenti = true) }
+            delay(300) // Debounce 300ms
+            try {
+                val results = productSearchApi.search(query)
+                _uiState.update { it.copy(candidateComponents = results, isSearchingComponenti = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isSearchingComponenti = false, errorMessage = "Errore ricerca componenti: ${e.message}") }
+            }
+        }
+    }
+
+    fun clearCandidateComponents() {
+        searchJob?.cancel()
+        _uiState.update { it.copy(candidateComponents = emptyList(), isSearchingComponenti = false) }
+    }
+
+    fun approvaEAssegnaComponenteAQuadro(
+        quadro: QuadroBT,
+        candidate: ComponentCandidate,
+        varianteScelta: VarianteProdotto,
+        quantita: Int,
+        siglaCircuito: String?
+    ) {
+        scope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+
+                val nowIso = java.time.LocalDate.now().toString()
+                val varianteConData = varianteScelta.copy(dataApprovazione = nowIso)
+
+                // 1. Costruisci il nuovo InterruttoreBT arricchito
+                val nuovoInterruttore = InterruttoreBT(
+                    id = java.util.UUID.randomUUID().toString(),
+                    nome = candidate.descrizioneStandard,
+                    quantita = quantita.coerceAtLeast(1),
+                    siglaCircuito = siglaCircuito?.trim()?.ifBlank { null },
+                    produttore = varianteConData.produttore,
+                    codiceArticolo = varianteConData.codice,
+                    etimClassId = candidate.etimClassId,
+                    etimClassName = candidate.etimClassName,
+                    caratteristicheTecniche = candidate.caratteristicheTecniche,
+                    note = varianteConData.serie?.let { "Serie: $it" }
+                )
+
+                // 2. Aggiorna il quadro
+                val updatedInterruttori = quadro.listaInterruttori + nuovoInterruttore
+                val updatedQuadro = quadro.copy(listaInterruttori = updatedInterruttori)
+
+                // 3. Salva su MongoDB / Repository
+                repository.salvaImpianto(updatedQuadro)
+
+                // 4. Arricchisci il Catalogo Approvato (Knowledge Base)
+                val approvato = ComponenteApprovato(
+                    etimClassId = candidate.etimClassId,
+                    etimClassName = candidate.etimClassName,
+                    descrizioneStandard = candidate.descrizioneStandard,
+                    caratteristicheTecniche = candidate.caratteristicheTecniche,
+                    variantiProduttore = mapOf(varianteConData.produttore to varianteConData),
+                    dataCreazione = nowIso
+                )
+                repository.salvaOAggiornaComponenteApprovato(approvato)
+
+                // 5. Ricarica dati
+                val approvatiAggiornati = repository.caricaCatalogoApprovato()
+                val impiantiCantiere = quadro.cantiereId?.let { repository.getImpiantiForCantiere(it) } ?: emptyList()
+                val tuttiImpianti = repository.caricaImpianti()
+
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        selectedImpianto = updatedQuadro,
+                        impiantiDelCantiere = impiantiCantiere,
+                        impianti = tuttiImpianti,
+                        catalogoApprovato = approvatiAggiornati,
+                        candidateComponents = emptyList(),
+                        statusMessage = "✓ Componente ${varianteConData.produttore} ${varianteConData.codice} approvato e aggiunto al quadro"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Errore approvazione componente: ${e.message}") }
+            }
+        }
+    }
+
+    fun sostituisciProduttoreComponente(
+        quadro: QuadroBT,
+        interruttoreId: String,
+        nuovaVariante: VarianteProdotto
+    ) {
+        scope.launch {
+            try {
+                val index = quadro.listaInterruttori.indexOfFirst { it.id == interruttoreId }
+                if (index < 0) return@launch
+
+                val corrente = quadro.listaInterruttori[index]
+                val aggiornato = corrente.copy(
+                    produttore = nuovaVariante.produttore,
+                    codiceArticolo = nuovaVariante.codice,
+                    note = nuovaVariante.serie?.let { "Serie: $it" } ?: corrente.note
+                )
+
+                val newList = quadro.listaInterruttori.toMutableList()
+                newList[index] = aggiornato
+                val updatedQuadro = quadro.copy(listaInterruttori = newList)
+
+                repository.salvaImpianto(updatedQuadro)
+                val impiantiCantiere = quadro.cantiereId?.let { repository.getImpiantiForCantiere(it) } ?: emptyList()
+
+                _uiState.update { state ->
+                    state.copy(
+                        selectedImpianto = updatedQuadro,
+                        impiantiDelCantiere = impiantiCantiere,
+                        statusMessage = "✓ Sostituito con ${nuovaVariante.produttore} ${nuovaVariante.codice}"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore sostituzione: ${e.message}") }
+            }
         }
     }
 }

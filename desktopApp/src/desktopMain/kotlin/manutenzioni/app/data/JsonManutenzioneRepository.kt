@@ -32,6 +32,7 @@ class JsonManutenzioneRepository(
     private var cacheClienti: MutableList<Cliente>? = null
     private var cacheCantieri: MutableList<Cantiere>? = null
     private var cacheComponenti: MutableList<manutenzioni.domain.model.ComponenteStandard>? = null
+    private var cacheCatalogoApprovato: MutableList<manutenzioni.domain.model.ComponenteApprovato>? = null
 
     init {
         println("📂 Database log: ${dbFile.absolutePath}")
@@ -79,7 +80,7 @@ class JsonManutenzioneRepository(
             json.decodeFromString(ManutenzioniDatabase.serializer(), content)
         } catch (e: Exception) {
             println("Errore nel caricamento del database: ${e.message}")
-            ManutenzioniDatabase(emptyList(), emptyList(), emptyList(), emptyList())
+            ManutenzioniDatabase(emptyList(), emptyList(), emptyList(), emptyList(), emptyList())
         }
     }
 
@@ -87,9 +88,10 @@ class JsonManutenzioneRepository(
         impianti: List<Impianto> = getImpiantiCache(), 
         clienti: List<Cliente> = getClientiCache(), 
         cantieri: List<Cantiere> = getCantieriCache(),
-        componenti: List<manutenzioni.domain.model.ComponenteStandard> = getComponentiCache()
+        componenti: List<manutenzioni.domain.model.ComponenteStandard> = getComponentiCache(),
+        catalogoApprovato: List<manutenzioni.domain.model.ComponenteApprovato> = getCatalogoApprovatoCache()
     ) {
-        val db = ManutenzioniDatabase(impianti, clienti, cantieri, componenti)
+        val db = ManutenzioniDatabase(impianti, clienti, cantieri, componenti, catalogoApprovato)
         dbFile.writeText(json.encodeToString(ManutenzioniDatabase.serializer(), db))
     }
 
@@ -105,6 +107,9 @@ class JsonManutenzioneRepository(
             }
             if (cacheComponenti == null) {
                 cacheComponenti = db.componenti.toMutableList()
+            }
+            if (cacheCatalogoApprovato == null) {
+                cacheCatalogoApprovato = db.catalogoApprovato.toMutableList()
             }
         }
         return cache!!
@@ -123,6 +128,9 @@ class JsonManutenzioneRepository(
             if (cacheComponenti == null) {
                 cacheComponenti = db.componenti.toMutableList()
             }
+            if (cacheCatalogoApprovato == null) {
+                cacheCatalogoApprovato = db.catalogoApprovato.toMutableList()
+            }
         }
         return cacheClienti!!
     }
@@ -135,6 +143,7 @@ class JsonManutenzioneRepository(
             getImpiantiCache()
             getClientiCache()
             getComponentiCache()
+            getCatalogoApprovatoCache()
         }
         return cacheCantieri!!
     }
@@ -147,8 +156,22 @@ class JsonManutenzioneRepository(
             getImpiantiCache()
             getClientiCache()
             getCantieriCache()
+            getCatalogoApprovatoCache()
         }
         return cacheComponenti!!
+    }
+
+    private fun getCatalogoApprovatoCache(): MutableList<manutenzioni.domain.model.ComponenteApprovato> {
+        if (cacheCatalogoApprovato == null) {
+            val db = loadFromDisk()
+            cacheCatalogoApprovato = db.catalogoApprovato.toMutableList()
+            // Assicura che anche le altre cache siano popolate
+            getImpiantiCache()
+            getClientiCache()
+            getCantieriCache()
+            getComponentiCache()
+        }
+        return cacheCatalogoApprovato!!
     }
 
     // === Impianti CRUD ===
@@ -297,5 +320,30 @@ class JsonManutenzioneRepository(
             list.add(componente)
         }
         saveToDisk()
+    }
+
+    // === Catalogo Approvato (ETIM) ===
+    override suspend fun caricaCatalogoApprovato(): List<manutenzioni.domain.model.ComponenteApprovato> = mutex.withLock {
+        return getCatalogoApprovatoCache().toList()
+    }
+
+    override suspend fun salvaOAggiornaComponenteApprovato(approvato: manutenzioni.domain.model.ComponenteApprovato) = mutex.withLock {
+        val list = getCatalogoApprovatoCache()
+        val index = list.indexOfFirst { 
+            it.etimClassId == approvato.etimClassId && it.caratteristicheTecniche == approvato.caratteristicheTecniche 
+        }
+        if (index >= 0) {
+            val esistente = list[index]
+            val variantiUnite = esistente.variantiProduttore.toMutableMap()
+            variantiUnite.putAll(approvato.variantiProduttore)
+            list[index] = esistente.copy(variantiProduttore = variantiUnite)
+        } else {
+            list.add(approvato)
+        }
+        saveToDisk()
+    }
+
+    override suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato> = mutex.withLock {
+        return getCatalogoApprovatoCache().filter { it.etimClassId == etimClassId }
     }
 }

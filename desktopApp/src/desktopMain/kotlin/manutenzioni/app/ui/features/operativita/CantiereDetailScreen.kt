@@ -34,7 +34,11 @@ fun CantiereDetailScreen(
     onGeneraPdf: () -> Unit,
     onOpenPdf: () -> Unit,
     onCreateNewImpianto: (Impianto?) -> Unit,
-    onDeleteImpianto: (String) -> Unit
+    onDeleteImpianto: (String) -> Unit,
+    onSearchComponenti: (String) -> Unit = {},
+    onClearSearchComponenti: () -> Unit = {},
+    onApprovaComponente: ((manutenzioni.domain.model.QuadroBT, manutenzioni.domain.model.ComponentCandidate, manutenzioni.domain.model.VarianteProdotto, Int, String) -> Unit)? = null,
+    onSostituisciProduttore: ((manutenzioni.domain.model.QuadroBT, String, manutenzioni.domain.model.VarianteProdotto) -> Unit)? = null
 ) {
     // Gestione visualizzazione ImpiantoEditor
     var impiantoInModifica by remember { mutableStateOf<Impianto?>(null) }
@@ -51,6 +55,13 @@ fun CantiereDetailScreen(
                     impianto = impiantoInModifica!!,
                     componentiStandard = state.componentiStandard,
                     isReadOnlyAdminFields = true,
+                    catalogoApprovato = state.catalogoApprovato,
+                    candidateComponents = state.candidateComponents,
+                    isSearchingComponenti = state.isSearchingComponenti,
+                    onSearchComponenti = onSearchComponenti,
+                    onClearSearchComponenti = onClearSearchComponenti,
+                    onApprovaComponente = onApprovaComponente,
+                    onSostituisciProduttore = onSostituisciProduttore,
                     onSave = { impianto, _ -> 
                         onSaveImpianto(impianto)
                         impiantoInModifica = null

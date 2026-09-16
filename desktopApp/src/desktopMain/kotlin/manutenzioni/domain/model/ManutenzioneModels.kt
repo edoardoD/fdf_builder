@@ -196,7 +196,44 @@ enum class MqtSwitchType(val label: String) {
 data class InterruttoreBT(
     val id: String = java.util.UUID.randomUUID().toString(),
     val nome: String,
+    val quantita: Int = 1,
+    val siglaCircuito: String? = null,
+    val produttore: String? = null,
+    val codiceArticolo: String? = null,
+    val etimClassId: String? = null,
+    val etimClassName: String? = null,
+    val caratteristicheTecniche: Map<String, String> = emptyMap(),
     val note: String? = null
+)
+
+@Serializable
+data class VarianteProdotto(
+    val produttore: String,
+    val codice: String,
+    val serie: String? = null,
+    val descrizione: String? = null,
+    val prezzoListino: Double? = null,
+    val dataApprovazione: String = ""
+)
+
+@Serializable
+data class ComponenteApprovato(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val etimClassId: String,
+    val etimClassName: String,
+    val descrizioneStandard: String,
+    val caratteristicheTecniche: Map<String, String> = emptyMap(),
+    val variantiProduttore: Map<String, VarianteProdotto> = emptyMap(),
+    val dataCreazione: String = ""
+)
+
+@Serializable
+data class ComponentCandidate(
+    val etimClassId: String,
+    val etimClassName: String,
+    val descrizioneStandard: String,
+    val caratteristicheTecniche: Map<String, String> = emptyMap(),
+    val variantiDisponibili: List<VarianteProdotto> = emptyList()
 )
 
 @Serializable

@@ -22,6 +22,7 @@ class MongoManutenzioneRepository(
     private val clientiCollection = database.getCollection<Cliente>("clienti")
     private val cantieriCollection = database.getCollection<Cantiere>("cantieri")
     private val componentiCollection = database.getCollection<manutenzioni.domain.model.ComponenteStandard>("componenti")
+    private val catalogoApprovatoCollection = database.getCollection<manutenzioni.domain.model.ComponenteApprovato>("catalogo_approvato")
 
     override suspend fun salvaImpianto(impianto: Impianto) {
         // Upsert by id
@@ -133,5 +134,33 @@ class MongoManutenzioneRepository(
             replacement = componente,
             options = ReplaceOptions().upsert(true)
         )
+    }
+
+    // --- Catalogo Approvato (ETIM & Equivalenze) ---
+    override suspend fun caricaCatalogoApprovato(): List<manutenzioni.domain.model.ComponenteApprovato> {
+        return catalogoApprovatoCollection.find().toList()
+    }
+
+    override suspend fun salvaOAggiornaComponenteApprovato(approvato: manutenzioni.domain.model.ComponenteApprovato) {
+        val esistente = catalogoApprovatoCollection.find(eq("etimClassId", approvato.etimClassId)).toList()
+            .firstOrNull { it.caratteristicheTecniche == approvato.caratteristicheTecniche }
+
+        val daSalvare = if (esistente != null) {
+            val variantiUnite = esistente.variantiProduttore.toMutableMap()
+            variantiUnite.putAll(approvato.variantiProduttore)
+            esistente.copy(variantiProduttore = variantiUnite)
+        } else {
+            approvato
+        }
+
+        catalogoApprovatoCollection.replaceOne(
+            filter = eq("id", daSalvare.id),
+            replacement = daSalvare,
+            options = ReplaceOptions().upsert(true)
+        )
+    }
+
+    override suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato> {
+        return catalogoApprovatoCollection.find(eq("etimClassId", etimClassId)).toList()
     }
 }

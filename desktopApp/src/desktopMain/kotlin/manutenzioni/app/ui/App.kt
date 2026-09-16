@@ -46,7 +46,11 @@ fun App(viewModel: ManutenzioniViewModel, onDisconnect: () -> Unit = {}) {
                                 onGeneraPdf = viewModel::generatePdf,
                                 onOpenPdf = viewModel::openPdfInSystem,
                                 onCreateNewImpianto = viewModel::createNewImpianto,
-                                onDeleteImpianto = viewModel::deleteImpianto
+                                onDeleteImpianto = viewModel::deleteImpianto,
+                                onSearchComponenti = viewModel::searchCandidateComponents,
+                                onClearSearchComponenti = viewModel::clearCandidateComponents,
+                                onApprovaComponente = viewModel::approvaEAssegnaComponenteAQuadro,
+                                onSostituisciProduttore = viewModel::sostituisciProduttoreComponente
                             )
                         }
                     }

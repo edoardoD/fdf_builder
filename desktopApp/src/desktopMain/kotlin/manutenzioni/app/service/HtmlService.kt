@@ -52,8 +52,13 @@ class HtmlService(
                     append("Ubicazione Quadro: ").append(impianto.descrizioneQuadro).append("\n")
                 }
                 if (impianto.listaInterruttori.isNotEmpty()) {
-                    append("Interruttori presenti: ")
-                    append(impianto.listaInterruttori.joinToString(", ") { it.nome })
+                    append("Interruttori e componenti presenti:\n")
+                    append(impianto.listaInterruttori.joinToString("\n") {
+                        val qta = if (it.quantita > 1) "${it.quantita}x " else ""
+                        val prod = if (!it.produttore.isNullOrBlank() && !it.codiceArticolo.isNullOrBlank()) " [${it.produttore} ${it.codiceArticolo}]" else ""
+                        val circuito = if (!it.siglaCircuito.isNullOrBlank()) " (Circuito: ${it.siglaCircuito})" else ""
+                        "• $qta${it.nome}$prod$circuito"
+                    })
                 }
             }
         }
