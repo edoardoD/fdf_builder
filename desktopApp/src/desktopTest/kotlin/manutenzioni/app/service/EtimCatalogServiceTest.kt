@@ -65,4 +65,18 @@ class EtimCatalogServiceTest {
         val results = service.search("   ")
         assertTrue(results.isEmpty())
     }
+
+    @Test
+    fun `test query utente S251 NA C 6`() = runBlocking {
+        val q = "S251 NA C 6 INTERRUTTORE AUTOMAT. 6KA 1P+N – ABB EF 070 6"
+        val results = service.search(q)
+        println("RESULTS for '$q': ${results.size}")
+        results.forEach { cand ->
+            println("  Candidate: ${cand.etimClassId} - ${cand.descrizioneStandard}")
+            cand.variantiDisponibili.forEach { v ->
+                println("    Variant: ${v.produttore} - ${v.codice} - ${v.descrizione}")
+            }
+        }
+        assertTrue(results.isNotEmpty(), "La ricerca per '$q' deve produrre risultati!")
+    }
 }
