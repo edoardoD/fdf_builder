@@ -341,11 +341,15 @@ class HtmlService(
             sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(att.tipoAttivita ?: "")}</p></td>""")
             sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(att.frequenza.label())}</p></td>""")
             sb.appendLine("""                    <td class="cell--data-empty"><p style="text-align:justify;">${escapeHtml(att.descrizione ?: "")}</p></td>""")
-            // Colonne esito con radio button
+            // Colonne esito con radio button:
+            // P, PI, NA, NP, B appartengono al radio group principale (mutuamente esclusivo tra loro).
+            // VN ha un gruppo radio separato (esito_vn_...) così non è esclusivo ed è selezionabile
+            // insieme agli altri esiti, preservando comunque l'estetica a sfera ("radio btn").
             for (esito in esiti) {
+                val fieldName = if (esito == "VN") "esito_vn_${codImpianto}_${rowNum}" else radioName
                 val id = "${radioName}_${esito.lowercase()}"
                 sb.appendLine("""                    <td class="cell--data-empty">""")
-                sb.appendLine("""                        <input type="radio" name="$radioName" id="$id" value="$esito" />""")
+                sb.appendLine("""                        <input type="radio" name="$fieldName" id="$id" value="$esito" />""")
                 sb.appendLine("""                        <label for="$id" class="visually-hidden">$esito</label>""")
                 sb.appendLine("""                    </td>""")
             }

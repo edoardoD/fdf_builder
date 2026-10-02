@@ -210,7 +210,8 @@ selectFrequenza() / generatePdf()
 | `<!-- ATTIVITA_ROWS -->` | Blocco `<tr>` dinamico | Generato |
 
 **Campi AcroForm per riga attività:**
-- `esito_{COD}_{N}` — Radio group con valori: `P`, `PI`, `NA`, `NP`, `VN`, `B`
+- `esito_{COD}_{N}` — Radio group primario (mutuamente esclusivo) con valori: `P`, `PI`, `NA`, `NP`, `B`
+- `esito_vn_{COD}_{N}` — Radio button indipendente con valore `VN` (selezionabile contemporaneamente agli altri esiti mantenendo l'estetica sferica)
 - `note_{COD}_{N}` — Input text per nota libera
 
 ---
@@ -330,7 +331,7 @@ STEP 5 → ✅ VALIDAZIONE
 | Strategy interface | `{Cosa}Strategy` | `PdfGeneratorStrategy` |
 | Strategy impl | `{Come}{Cosa}Strategy` | `HtmlToPdfStrategy` |
 | Placeholder HTML | `<!-- UPPER_SNAKE -->` | `<!-- COD_SCHEDA -->`, `<!-- ATTIVITA_ROWS -->` |
-| Campo AcroForm | `{tipo}_{codImpianto}_{numero}` | `esito_GE_1`, `note_CAB_3` |
+| Campo AcroForm | `{tipo}_{codImpianto}_{numero}` | `esito_GE_1`, `esito_vn_GE_1`, `note_CAB_3` |
 
 ---
 

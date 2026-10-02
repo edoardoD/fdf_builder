@@ -87,8 +87,10 @@ class HtmlServiceTest {
             clienteNome = null
         )
 
-        // Verifica che i radio button abbiano nomi univoci
-        assertContains(html, "esito_GE_1")
+        // Verifica che i radio button per esiti primari abbiano name="esito_GE_1"
+        assertContains(html, "name=\"esito_GE_1\"")
+        // Verifica che l'esito VN sia separato e non esclusivo con name="esito_vn_GE_1"
+        assertContains(html, "name=\"esito_vn_GE_1\"")
         // Verifica che ci siano tutti e 6 gli esiti
         listOf("P", "PI", "NA", "NP", "VN", "B").forEach { esito ->
             assertContains(html, "value=\"$esito\"")
@@ -388,6 +390,7 @@ class HtmlServiceTest {
                     // Verifica presenza dei campi form della scheda 1 e della scheda 2
                     val formFields = acroForm.allFormFields
                     assertTrue(formFields.containsKey("esito_Q_1"), "Deve contenere i radio esito della scheda 1")
+                    assertTrue(formFields.containsKey("esito_vn_Q_1"), "Deve contenere il radio VN indipendente della scheda 1")
                     assertTrue(formFields.containsKey("tasto_diff_Q_1"), "Deve contenere i radio tasto prova della scheda 2")
                     assertTrue(formFields.containsKey("misura_diff_Q_1"), "Deve contenere il campo misura della scheda 2")
                     assertTrue(formFields.containsKey("tasto_diff_Q_2"), "Deve contenere i radio tasto prova per interruttore 2")
@@ -399,4 +402,65 @@ class HtmlServiceTest {
             tempPdf.delete()
         }
     }
+
+    @Test
+    fun `buildHtml genera VN non esclusivo con name separato ed estetica radio`() {
+        val attivita = listOf(
+            Attivita(1, "Verifica", "Controllo stato generale", Periodo(TipoPeriodo.M, 1)),
+            Attivita(2, "Misura", "Misura parametri", Periodo(TipoPeriodo.M, 1))
+        )
+
+        val html = htmlService.buildHtml(
+            impianto = impiantoGE,
+            attivitaFiltrate = attivita,
+            frequenza = Periodo(TipoPeriodo.M, 1),
+            clienteNome = "Azienda Alfa"
+        )
+
+        // Per riga 1:
+        // Gli esiti primari (P, PI, NA, NP, B) appartengono a "esito_GE_1"
+        listOf("p", "pi", "na", "np", "b").forEach { esito ->
+            val expectedSnippet = """<input type="radio" name="esito_GE_1" id="esito_GE_1_$esito" value="${esito.uppercase()}" />"""
+            assertContains(html, expectedSnippet)
+        }
+
+        // L'esito VN appartiene a "esito_vn_GE_1" e mantiene type="radio" per l'estetica a sfera
+        val vnSnippet = """<input type="radio" name="esito_vn_GE_1" id="esito_GE_1_vn" value="VN" />"""
+        assertContains(html, vnSnippet)
+
+        // Per riga 2:
+        assertContains(html, """<input type="radio" name="esito_GE_2" id="esito_GE_2_p" value="P" />""")
+        assertContains(html, """<input type="radio" name="esito_vn_GE_2" id="esito_GE_2_vn" value="VN" />""")
+
+        // Verifica generazione reale del PDF e presenza dei campi form
+        val tempHtml = java.io.File.createTempFile("test_vn_", ".html")
+        val tempPdf = java.io.File.createTempFile("test_vn_", ".pdf")
+        tempHtml.writeText(html)
+        try {
+            Pdf().buildPdf(tempHtml.absolutePath, tempPdf.absolutePath)
+            com.itextpdf.kernel.pdf.PdfReader(tempPdf).use { reader ->
+                com.itextpdf.kernel.pdf.PdfDocument(reader).use { pdfDoc ->
+                    val acroForm = com.itextpdf.forms.PdfAcroForm.getAcroForm(pdfDoc, false)
+                    val fields = acroForm.allFormFields
+
+                    val primaryField = fields["esito_GE_1"]
+                    kotlin.test.assertNotNull(primaryField, "Il campo esito_GE_1 deve esistere")
+                    assertTrue(primaryField is com.itextpdf.forms.fields.PdfButtonFormField && primaryField.isRadio)
+
+                    val vnField = fields["esito_vn_GE_1"]
+                    kotlin.test.assertNotNull(vnField, "Il campo esito_vn_GE_1 deve esistere")
+                    assertTrue(vnField is com.itextpdf.forms.fields.PdfButtonFormField && vnField.isRadio)
+                }
+            }
+        } finally {
+            tempHtml.delete()
+            tempPdf.delete()
+        }
+    }
 }
+
+
+
+
+
+
