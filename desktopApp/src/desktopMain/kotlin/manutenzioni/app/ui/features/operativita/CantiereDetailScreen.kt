@@ -38,6 +38,7 @@ fun CantiereDetailScreen(
     onSearchComponenti: (String) -> Unit = {},
     onClearSearchComponenti: () -> Unit = {},
     onApprovaComponente: ((manutenzioni.domain.model.QuadroBT, manutenzioni.domain.model.ComponentCandidate, manutenzioni.domain.model.VarianteProdotto, Int, String) -> Unit)? = null,
+    onAggiungiComponenteAQuadro: ((manutenzioni.domain.model.QuadroBT, manutenzioni.domain.model.InterruttoreBT) -> Unit)? = null,
     onSostituisciProduttore: ((manutenzioni.domain.model.QuadroBT, String, manutenzioni.domain.model.VarianteProdotto) -> Unit)? = null
 ) {
     // Gestione visualizzazione ImpiantoEditor
@@ -61,6 +62,7 @@ fun CantiereDetailScreen(
                     onSearchComponenti = onSearchComponenti,
                     onClearSearchComponenti = onClearSearchComponenti,
                     onApprovaComponente = onApprovaComponente,
+                    onAggiungiComponenteAQuadro = onAggiungiComponenteAQuadro,
                     onSostituisciProduttore = onSostituisciProduttore,
                     onSave = { impianto, _ -> 
                         onSaveImpianto(impianto)

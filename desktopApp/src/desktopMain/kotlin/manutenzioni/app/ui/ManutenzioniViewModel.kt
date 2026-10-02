@@ -662,6 +662,76 @@ class ManutenzioniViewModel(
         _uiState.update { it.copy(candidateComponents = emptyList(), isSearchingComponenti = false) }
     }
 
+    fun aggiungiInterruttoreAQuadro(
+        quadro: QuadroBT,
+        interruttore: InterruttoreBT
+    ) {
+        scope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+
+                val nuovoInterruttore = interruttore.copy(
+                    id = if (interruttore.id.isBlank()) java.util.UUID.randomUUID().toString() else interruttore.id,
+                    quantita = interruttore.quantita.coerceAtLeast(1)
+                )
+
+                val updatedInterruttori = quadro.listaInterruttori + nuovoInterruttore
+                val updatedQuadro = quadro.copy(listaInterruttori = updatedInterruttori)
+
+                // 1. Salva sul repository
+                repository.salvaImpianto(updatedQuadro)
+
+                // 2. Se presenti produttore e codice, memorizza nel catalogo approvato per autocompletamento futuro
+                if (!nuovoInterruttore.produttore.isNullOrBlank() && !nuovoInterruttore.codiceArticolo.isNullOrBlank()) {
+                    val nowIso = java.time.LocalDate.now().toString()
+                    val variante = VarianteProdotto(
+                        produttore = nuovoInterruttore.produttore,
+                        codice = nuovoInterruttore.codiceArticolo,
+                        serie = nuovoInterruttore.note,
+                        dataApprovazione = nowIso
+                    )
+                    val approvato = ComponenteApprovato(
+                        etimClassId = nuovoInterruttore.etimClassId ?: "MANUALE",
+                        etimClassName = nuovoInterruttore.etimClassName ?: nuovoInterruttore.nome,
+                        descrizioneStandard = nuovoInterruttore.nome,
+                        caratteristicheTecniche = nuovoInterruttore.caratteristicheTecniche,
+                        variantiProduttore = mapOf(variante.produttore to variante),
+                        dataCreazione = nowIso
+                    )
+                    repository.salvaOAggiornaComponenteApprovato(approvato)
+                }
+
+                // 3. Ricarica dati aggiornati
+                val approvatiAggiornati = repository.caricaCatalogoApprovato()
+                val impiantiCantiere = quadro.cantiereId?.let { repository.getImpiantiForCantiere(it) } ?: emptyList()
+                val tuttiImpianti = repository.caricaImpianti()
+
+                val feedback = buildString {
+                    append("✓ Componente '${nuovoInterruttore.nome}'")
+                    if (!nuovoInterruttore.produttore.isNullOrBlank()) {
+                        append(" (${nuovoInterruttore.produttore}")
+                        if (!nuovoInterruttore.codiceArticolo.isNullOrBlank()) append(" ${nuovoInterruttore.codiceArticolo}")
+                        append(")")
+                    }
+                    append(" aggiunto al quadro")
+                }
+
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        selectedImpianto = updatedQuadro,
+                        impiantiDelCantiere = impiantiCantiere,
+                        impianti = tuttiImpianti,
+                        catalogoApprovato = approvatiAggiornati,
+                        statusMessage = feedback
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Errore aggiunta componente: ${e.message}") }
+            }
+        }
+    }
+
     fun approvaEAssegnaComponenteAQuadro(
         quadro: QuadroBT,
         candidate: ComponentCandidate,

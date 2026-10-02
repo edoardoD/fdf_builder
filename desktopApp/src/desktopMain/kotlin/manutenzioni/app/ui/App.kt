@@ -50,6 +50,7 @@ fun App(viewModel: ManutenzioniViewModel, onDisconnect: () -> Unit = {}) {
                                 onSearchComponenti = viewModel::searchCandidateComponents,
                                 onClearSearchComponenti = viewModel::clearCandidateComponents,
                                 onApprovaComponente = viewModel::approvaEAssegnaComponenteAQuadro,
+                                onAggiungiComponenteAQuadro = viewModel::aggiungiInterruttoreAQuadro,
                                 onSostituisciProduttore = viewModel::sostituisciProduttoreComponente
                             )
                         }
