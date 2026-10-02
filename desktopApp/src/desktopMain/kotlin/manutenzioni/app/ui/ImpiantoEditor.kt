@@ -44,6 +44,7 @@ fun ImpiantoEditor(
     onSearchComponenti: (String) -> Unit = {},
     onClearSearchComponenti: () -> Unit = {},
     onApprovaComponente: ((QuadroBT, ComponentCandidate, VarianteProdotto, Int, String) -> Unit)? = null,
+    onAggiungiComponenteAQuadro: ((QuadroBT, InterruttoreBT) -> Unit)? = null,
     onSostituisciProduttore: ((QuadroBT, String, VarianteProdotto) -> Unit)? = null,
     onSave: (Impianto, Boolean) -> Unit,
     onCancel: (() -> Unit)? = null,
@@ -73,32 +74,12 @@ fun ImpiantoEditor(
     if (showAggiungiComponenteDialog && impianto is QuadroBT) {
         AggiungiComponenteDialog(
             quadro = impianto,
-            candidateComponents = candidateComponents,
-            isSearching = isSearchingComponenti,
-            onSearch = onSearchComponenti,
-            onClearSearch = onClearSearchComponenti,
             onDismiss = { showAggiungiComponenteDialog = false },
-            onApprovaEAssegna = { candidate, variante, qta, circuito ->
-                val nowIso = java.time.LocalDate.now().toString()
-                val varConData = variante.copy(dataApprovazione = nowIso)
-                val nuovoInterruttore = InterruttoreBT(
-                    id = java.util.UUID.randomUUID().toString(),
-                    nome = candidate.descrizioneStandard,
-                    quantita = qta,
-                    siglaCircuito = circuito.trim().ifBlank { null },
-                    produttore = varConData.produttore,
-                    codiceArticolo = varConData.codice,
-                    etimClassId = candidate.etimClassId,
-                    etimClassName = candidate.etimClassName,
-                    caratteristicheTecniche = candidate.caratteristicheTecniche,
-                    note = varConData.serie?.let { "Serie: $it" }
-                )
-                interruttoriQuadro = interruttoriQuadro + nuovoInterruttore
-                onApprovaComponente?.invoke(impianto, candidate, varConData, qta, circuito)
-                showAggiungiComponenteDialog = false
-            },
-            onAggiungiManuale = { interruttore ->
+            onConferma = { interruttore ->
                 interruttoriQuadro = interruttoriQuadro + interruttore
+                if (onAggiungiComponenteAQuadro != null) {
+                    onAggiungiComponenteAQuadro(impianto, interruttore)
+                }
                 showAggiungiComponenteDialog = false
             }
         )
@@ -316,7 +297,7 @@ fun ImpiantoEditor(
                                 ) {
                                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Cerca & Aggiungi (ETIM)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Text("Aggiungi Componente", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -326,7 +307,7 @@ fun ImpiantoEditor(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("Nessun componente registrato per questo quadro. Clicca su 'Cerca & Aggiungi' per iniziare.", color = Color.Gray, fontSize = 12.sp)
+                                Text("Nessun componente registrato per questo quadro. Clicca su 'Aggiungi Componente' per iniziare.", color = Color.Gray, fontSize = 12.sp)
                             }
                         } else {
                             interruttoriQuadro.forEach { interruttore ->
