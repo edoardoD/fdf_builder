@@ -43,12 +43,20 @@ fun AggiungiComponenteDialog(
     var manualProduttore by remember { mutableStateOf("") }
     var manualCodice by remember { mutableStateOf("") }
 
+    // Dati per nuova variante inline
+    var newVarianteProduttore by remember { mutableStateOf("") }
+    var newVarianteCodice by remember { mutableStateOf("") }
+    var newVarianteSerie by remember { mutableStateOf("") }
+
     // Aggiorna la variante selezionata quando cambiano i candidati
     LaunchedEffect(candidateComponents) {
         if (candidateComponents.isNotEmpty()) {
             val candidate = candidateComponents.firstOrNull()
             selectedCandidateIndex = 0
             selectedVariante = candidate?.variantiDisponibili?.firstOrNull()
+            newVarianteProduttore = ""
+            newVarianteCodice = ""
+            newVarianteSerie = ""
         } else {
             selectedVariante = null
         }
@@ -246,26 +254,64 @@ fun AggiungiComponenteDialog(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        candidate.variantiDisponibili.forEach { variante ->
-                                            val isVarSelected = isCandidateSelected && selectedVariante?.codice == variante.codice
-
-                                            Button(
-                                                onClick = {
-                                                    selectedCandidateIndex = candidateComponents.indexOf(candidate)
-                                                    selectedVariante = variante
-                                                },
-                                                colors = ButtonDefaults.buttonColors(
-                                                    backgroundColor = if (isVarSelected) MaterialTheme.colors.primary else Color(0xFFF8FAFC),
-                                                    contentColor = if (isVarSelected) Color.White else Color(0xFF1E293B)
-                                                ),
-                                                border = BorderStroke(1.dp, if (isVarSelected) MaterialTheme.colors.primary else Color(0xFFCBD5E1)),
-                                                elevation = ButtonDefaults.elevation(0.dp, 0.dp),
-                                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                                                shape = RoundedCornerShape(6.dp)
-                                            ) {
-                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Text(text = variante.produttore, fontWeight = FontWeight.Bold, fontSize = 11.sp)
-                                                    Text(text = variante.codice, fontSize = 10.sp)
+                                        if (candidate.variantiDisponibili.isEmpty() && isCandidateSelected) {
+                                            Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
+                                                Text("Nessuna variante nota. Compila i dati commerciali per approvarlo:", fontSize = 11.sp, color = Color.Gray)
+                                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    OutlinedTextField(
+                                                        value = newVarianteProduttore,
+                                                        onValueChange = { 
+                                                            newVarianteProduttore = it
+                                                            selectedVariante = if (it.isNotBlank() && newVarianteCodice.isNotBlank()) VarianteProdotto(produttore = it, codice = newVarianteCodice, serie = newVarianteSerie.ifBlank { null }, dataApprovazione = "") else null
+                                                        },
+                                                        label = { Text("Produttore *", fontSize = 10.sp) },
+                                                        modifier = Modifier.weight(1f).height(52.dp),
+                                                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
+                                                    )
+                                                    OutlinedTextField(
+                                                        value = newVarianteCodice,
+                                                        onValueChange = { 
+                                                            newVarianteCodice = it
+                                                            selectedVariante = if (newVarianteProduttore.isNotBlank() && it.isNotBlank()) VarianteProdotto(produttore = newVarianteProduttore, codice = it, serie = newVarianteSerie.ifBlank { null }, dataApprovazione = "") else null
+                                                        },
+                                                        label = { Text("Codice *", fontSize = 10.sp) },
+                                                        modifier = Modifier.weight(1f).height(52.dp),
+                                                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
+                                                    )
+                                                    OutlinedTextField(
+                                                        value = newVarianteSerie,
+                                                        onValueChange = { 
+                                                            newVarianteSerie = it
+                                                            if (newVarianteProduttore.isNotBlank() && newVarianteCodice.isNotBlank()) selectedVariante = VarianteProdotto(produttore = newVarianteProduttore, codice = newVarianteCodice, serie = it.ifBlank { null }, dataApprovazione = "")
+                                                        },
+                                                        label = { Text("Serie", fontSize = 10.sp) },
+                                                        modifier = Modifier.weight(1f).height(52.dp),
+                                                        textStyle = androidx.compose.ui.text.TextStyle(fontSize = 12.sp)
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            candidate.variantiDisponibili.forEach { variante ->
+                                                val isVarSelected = isCandidateSelected && selectedVariante?.codice == variante.codice
+    
+                                                Button(
+                                                    onClick = {
+                                                        selectedCandidateIndex = candidateComponents.indexOf(candidate)
+                                                        selectedVariante = variante
+                                                    },
+                                                    colors = ButtonDefaults.buttonColors(
+                                                        backgroundColor = if (isVarSelected) MaterialTheme.colors.primary else Color(0xFFF8FAFC),
+                                                        contentColor = if (isVarSelected) Color.White else Color(0xFF1E293B)
+                                                    ),
+                                                    border = BorderStroke(1.dp, if (isVarSelected) MaterialTheme.colors.primary else Color(0xFFCBD5E1)),
+                                                    elevation = ButtonDefaults.elevation(0.dp, 0.dp),
+                                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                                    shape = RoundedCornerShape(6.dp)
+                                                ) {
+                                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                        Text(text = variante.produttore, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                                        Text(text = variante.codice, fontSize = 10.sp)
+                                                    }
                                                 }
                                             }
                                         }

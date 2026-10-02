@@ -7,6 +7,7 @@ kotlinx-serialization-json = "1.9.0"
 kotlinx-coroutines = "1.9.0"
 javafx = "21.0.2"
 mongodb-driver = "5.1.0"
+ktor = "2.3.12"
 
 [libraries]
 itext-kernel = { module = "com.itextpdf:kernel", version.ref = "itext" }
@@ -21,6 +22,11 @@ bson-kotlinx = { module = "org.mongodb:bson-kotlinx", version.ref = "mongodb-dri
 javafx-base = { module = "org.openjfx:javafx-base", version.ref = "javafx" }
 javafx-controls = { module = "org.openjfx:javafx-controls", version.ref = "javafx" }
 javafx-graphics = { module = "org.openjfx:javafx-graphics", version.ref = "javafx" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
 
 [plugins]
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
