@@ -229,7 +229,7 @@ fun CantiereDetailScreen(
                             Text("Seleziona almeno un impianto dalla lista a sinistra.", color = MaterialTheme.colors.error, style = MaterialTheme.typography.body2)
                         } else {
                             impiantiAttivi.forEach { impianto ->
-                                val frequenzeDisp = manutenzioni.domain.service.AntincendioAttivitaResolver.resolveFrequenze(impianto, state.impiantiDelCantiere)
+                                val frequenzeDisp = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(impianto, state.impiantiDelCantiere)
                                 val currentFreq = state.frequenzePerImpianto[impianto.id]
                                 val displayLabel = if (impianto is manutenzioni.domain.model.QuadroBT) "${impianto.codIntervento} - ${impianto.sigla}" else impianto.codIntervento
                                 Text(text = displayLabel, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.body2, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp))

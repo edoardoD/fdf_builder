@@ -10,6 +10,7 @@ import manutenzioni.domain.ManutenzioneRepository
 import manutenzioni.domain.model.Cantiere
 import manutenzioni.domain.model.Cliente
 import manutenzioni.domain.model.Impianto
+import manutenzioni.domain.model.normalizeType
 
 class MongoManutenzioneRepository(
     connectionString: String = "mongodb://localhost:27017",
@@ -162,67 +163,5 @@ class MongoManutenzioneRepository(
 
     override suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato> {
         return catalogoApprovatoCollection.find(eq("etimClassId", etimClassId)).toList()
-    }
-
-    private fun Impianto.normalizeType(): Impianto {
-        return when {
-            this !is manutenzioni.domain.model.ImpiantoEmergenza && codIntervento.equals("EM", ignoreCase = true) -> {
-                manutenzioni.domain.model.ImpiantoEmergenza(
-                    id = id,
-                    codIntervento = codIntervento,
-                    nomeCompleto = nomeCompleto,
-                    premessa = premessa,
-                    listaAttivita = listaAttivita,
-                    listaNormative = listaNormative,
-                    cantiereId = cantiereId,
-                    quantita = quantita,
-                    noteSpecifiche = noteSpecifiche,
-                    listaLampade = emptyList()
-                )
-            }
-            this !is manutenzioni.domain.model.QuadroBT && codIntervento.equals("Q", ignoreCase = true) -> {
-                manutenzioni.domain.model.QuadroBT(
-                    id = id,
-                    codIntervento = codIntervento,
-                    nomeCompleto = nomeCompleto,
-                    premessa = premessa,
-                    listaAttivita = listaAttivita,
-                    listaNormative = listaNormative,
-                    cantiereId = cantiereId,
-                    quantita = quantita,
-                    noteSpecifiche = noteSpecifiche,
-                    sigla = "",
-                    descrizioneQuadro = "",
-                    listaInterruttori = emptyList()
-                )
-            }
-            this !is manutenzioni.domain.model.RilevazioneAntincendio && codIntervento.equals("RI", ignoreCase = true) -> {
-                manutenzioni.domain.model.RilevazioneAntincendio(
-                    id = id,
-                    codIntervento = codIntervento,
-                    nomeCompleto = nomeCompleto,
-                    premessa = premessa,
-                    listaAttivita = listaAttivita,
-                    listaNormative = listaNormative,
-                    cantiereId = cantiereId,
-                    quantita = quantita,
-                    noteSpecifiche = noteSpecifiche
-                )
-            }
-            this !is manutenzioni.domain.model.RilevazioneGas && codIntervento.equals("RIG", ignoreCase = true) -> {
-                manutenzioni.domain.model.RilevazioneGas(
-                    id = id,
-                    codIntervento = codIntervento,
-                    nomeCompleto = nomeCompleto,
-                    premessa = premessa,
-                    listaAttivita = listaAttivita,
-                    listaNormative = listaNormative,
-                    cantiereId = cantiereId,
-                    quantita = quantita,
-                    noteSpecifiche = noteSpecifiche
-                )
-            }
-            else -> this
-        }
     }
 }

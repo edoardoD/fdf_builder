@@ -33,7 +33,7 @@ class HtmlToPdfStrategy(
         contextImpianti: List<Impianto>
     ): File {
         // 1. Filtra attività per frequenza inclusiva e componenti del cantiere
-        val attivitaFiltrate = manutenzioni.domain.service.AntincendioAttivitaResolver.resolveAttivita(
+        val attivitaFiltrate = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impianto,
             impiantiNelCantiere = contextImpianti,
             frequenza = frequenza

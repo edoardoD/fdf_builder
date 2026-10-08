@@ -2,31 +2,24 @@ package manutenzioni.domain.service
 
 import manutenzioni.domain.model.Attivita
 import manutenzioni.domain.model.Impianto
+import manutenzioni.domain.model.ImpiantoRilevazione
 import manutenzioni.domain.model.Periodo
-import manutenzioni.domain.model.RilevazioneAntincendio
-import manutenzioni.domain.model.RilevazioneGas
 
 /**
  * Resolver per calcolare le attività effettive e le frequenze per i sistemi di
- * Rilevazione e Allarme (Rilevazione Incendi "RI" e Rilevazione Gas "RIG")
+ * Rilevazione e Allarme (Rilevazione Incendi "RI", Rilevazione Gas "RIG", ecc.)
  * o qualsiasi impianto con attività condizionate (Cross-Plant Discovery)
- * in base alla composizione impiantistica del cantiere.
+ * in base alla composizione impiantistica presente nel cantiere.
  */
-object AntincendioAttivitaResolver {
-
-    /** Codici intervento noti soggetti a Cross-Plant Discovery */
-    val CROSS_PLANT_CODICI = setOf("RI", "RIG")
+object CrossPlantAttivitaResolver {
 
     /**
      * Determina se un impianto richiede la risoluzione contestuale Cross-Plant.
-     * È vero per RI, RIG, le istanze di RilevazioneAntincendio/RilevazioneGas,
-     * oppure per qualsiasi impianto con almeno un'attività che specifica `targetImpiantoCod`.
+     * È vero per [ImpiantoRilevazione] (RI, RIG) o per qualsiasi impianto
+     * che contenga almeno un'attività che specifica un [Attivita.targetImpiantoCod].
      */
     fun isCrossPlant(impianto: Impianto): Boolean {
-        val cod = impianto.codIntervento.trim().uppercase()
-        return cod in CROSS_PLANT_CODICI ||
-                impianto is RilevazioneAntincendio ||
-                impianto is RilevazioneGas ||
+        return impianto is ImpiantoRilevazione ||
                 impianto.listaAttivita.any { it.targetImpiantoCod != null }
     }
 
@@ -35,7 +28,7 @@ object AntincendioAttivitaResolver {
      * Applica prima il filtro di frequenza inclusiva, poi il filtro contestuale
      * escludendo le attività con [Attivita.targetImpiantoCod] non presente nel cantiere.
      *
-     * @param impianto L'impianto in esame (es. RI o RIG)
+     * @param impianto L'impianto in esame (es. RI, RIG o qualsiasi impianto con vincoli cross-plant)
      * @param impiantiNelCantiere Tutti gli impianti presenti nel cantiere
      * @param frequenza La frequenza selezionata per la generazione
      * @return Lista delle attività filtrate
@@ -45,15 +38,15 @@ object AntincendioAttivitaResolver {
         impiantiNelCantiere: List<Impianto>,
         frequenza: Periodo
     ): List<Attivita> {
-        // 1. Filtro base per frequenza
+        // 1. Filtro base per frequenza inclusiva
         val attivitaFrequenzaOk = FrequencyFilter.filterByFrequenza(impianto.listaAttivita, frequenza)
 
-        // Se non è un impianto soggetto a cross-plant discovery, restituisce direttamente il filtro per frequenza
-        if (!isCrossPlant(impianto)) {
+        // Se non contiene alcuna attività condizionata, restituisce direttamente la lista
+        if (impianto.listaAttivita.none { it.targetImpiantoCod != null }) {
             return attivitaFrequenzaOk
         }
 
-        // 2. Filtro contestuale impianti presenti nel cantiere
+        // 2. Filtro contestuale in base agli impianti presenti nel cantiere
         val codiciPresenti = impiantiNelCantiere.map { it.codIntervento.trim().uppercase() }.toSet()
 
         return attivitaFrequenzaOk.filter { att ->
@@ -65,14 +58,14 @@ object AntincendioAttivitaResolver {
     /**
      * Calcola le frequenze disponibili per un impianto, tenendo conto
      * degli impianti effettivamente presenti nel cantiere.
-     * Per impianti cross-plant (RI, RIG), esclude le frequenze che derivano solo da attività condizionate
+     * Esclude le frequenze che deriverebbero solo da attività condizionate
      * i cui impianti target non sono presenti nel cantiere.
      */
     fun resolveFrequenze(
         impianto: Impianto,
         impiantiNelCantiere: List<Impianto>
     ): List<Periodo> {
-        if (!isCrossPlant(impianto)) {
+        if (impianto.listaAttivita.none { it.targetImpiantoCod != null }) {
             return FrequencyFilter.frequenzeDisponibili(impianto.listaAttivita)
         }
 
@@ -87,7 +80,3 @@ object AntincendioAttivitaResolver {
         return FrequencyFilter.frequenzeDisponibili(attivitaApplicabili)
     }
 }
-
-/** Alias semantico per il resolver cross-plant universale */
-typealias CrossPlantAttivitaResolver = AntincendioAttivitaResolver
-

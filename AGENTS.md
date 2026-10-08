@@ -117,14 +117,15 @@ desktopApp/src/desktopMain/kotlin/manutenzioni/
 └── domain/                                  ← 🏛️ DOMAIN LAYER (Puro, senza dipendenze da app o framework)
     ├── ManutenzioneRepository.kt            ← Contratto completo CRUD (Clienti, Cantieri, Impianti, Componenti)
     ├── model/                               ← 🧱 ENTITÀ DI DOMINIO (@Serializable)
-    │   ├── ManutenzioneModels.kt            ← sealed class Impianto (QuadroBT, ImpiantoEmergenza,
-    │   │                                      RilevazioneAntincendio, RilevazioneGas, QuadroMQT,
-    │   │                                      ImpiantoStandard), Cliente, Cantiere, Attivita,
+    │   ├── ManutenzioneModels.kt            ← sealed class Impianto, sealed interface ImpiantoRilevazione,
+    │   │                                      QuadroBT, ImpiantoEmergenza, RilevazioneAntincendio,
+    │   │                                      RilevazioneGas, QuadroMQT, ImpiantoStandard,
+    │   │                                      normalizeType() extension, Cliente, Cantiere, Attivita,
     │   │                                      Periodo, InterruttoreBT, LampadaEmergenza, ComponenteApprovato
     │   └── BatchResult.kt                   ← Risultato batch PDF (file generati, successCount, errori)
     ├── service/
     │   ├── FrequencyFilter.kt               ← ⭐ REGOLA CORE: F.inMesi() % A.inMesi() == 0
-    │   ├── AntincendioAttivitaResolver.kt   ← ⭐ Cross-Plant Discovery: risoluzione contestuale per RI
+    │   ├── CrossPlantAttivitaResolver.kt    ← ⭐ Cross-Plant Discovery: risoluzione contestuale per RI, RIG, ecc.
     │   ├── ProductSearchApi.kt              ← Contratto per la ricerca catalogo componenti
     │   ├── Html.kt                          ← Contratto template engine HTML
     │   ├── IPdf.kt                          ← Contratto generazione PDF
@@ -173,9 +174,9 @@ Un intervento con frequenza F include un'attività A se e solo se:
 
 ---
 
-### 4.2 🚒 & 💨 Cross-Plant Discovery: Rilevazione Incendi (`RI`) e Rilevazione Gas (`RIG`) (`AntincendioAttivitaResolver` / `CrossPlantAttivitaResolver`)
+### 4.2 🚒 & 💨 Cross-Plant Discovery: Rilevazione Incendi (`RI`) e Rilevazione Gas (`RIG`) (`CrossPlantAttivitaResolver`)
 
-I sistemi di rivelazione e allarme — sia **Rilevazione Incendi (`RI`)** che **Rilevazione Gas (`RIG`)** — non hanno una lista di attività statica: le prove da eseguire dipendono dagli altri impianti presenti nel cantiere (`contextImpianti`):
+I sistemi di rivelazione e allarme — sia **Rilevazione Incendi (`RI`)** che **Rilevazione Gas (`RIG`)** (entrambi implementano `ImpiantoRilevazione`) — non hanno una lista di attività statica: le prove da eseguire dipendono dagli altri impianti presenti nel cantiere (`contextImpianti`):
 
 1. **Attività di base (`targetImpiantoCod == null`):** Controlli di centrale, firmware, batterie, efficienza alimentazioni, linee di trasmissione e segnalazioni ottico-acustiche. Vengono filtrate unicamente con la regola della frequenza.
 2. **Attività contestuali (`targetImpiantoCod != null`):** Attività mirate di verifica interfacce verso altri sistemi:
@@ -234,7 +235,7 @@ User clicca "Genera PDF" in CantiereDetailScreen
                        ▼
 ┌────────────────────────────────────────────────────────┐
 │  HtmlToPdfStrategy.generate()                          │
-│  1. AntincendioAttivitaResolver.resolveAttivita()      │
+│  1. CrossPlantAttivitaResolver.resolveAttivita()       │
 │  2. HtmlService.buildHtml()                            │
 │     ├── Inietta Header (Codice, Oggetto, Frequenza)    │
 │     ├── Inietta Nome Cliente                           │
@@ -341,6 +342,7 @@ Per qualsiasi nuova feature o modifica sostanziale, segui il ciclo vitale orches
 | `Html.fillHtml()` dead method | **RISOLTO (v3.1)** | Rimosso dall'interfaccia `Html`. Rimasto solo `buildHtml()` tipizzato. |
 | `Pdf.buildPdf()` fallimento silenzioso | **RISOLTO (v3.1)** | Rilancia esplicitamente una `RuntimeException` con causa. |
 | `PdfConfig` inutilizzato | **RISOLTO (v3.1)** | Rimosso da `Pdf.kt`. |
+| Duplicazione logica Cross-Plant RI/RIG & `normalizeType` | **RISOLTO (v3.1)** | Unificata l'interfaccia `ImpiantoRilevazione`, centralizzata `Impianto.normalizeType()` nel domain model e generalizzato `CrossPlantAttivitaResolver` (OCP, senza alias o deprecati). |
 | Thread-safety in `JsonManutenzioneRepository` | 🟡 Monitorato | La persistenza primaria è migrata a MongoDB Coroutine Driver. JSON rimane come fallback/esportazione. |
 | Anteprima PDF nativa embedded nella UI | 🟡 Aperto | Attualmente i PDF vengono aperti tramite il visualizzatore di sistema (`Desktop.getDesktop().open(file)`). |
 

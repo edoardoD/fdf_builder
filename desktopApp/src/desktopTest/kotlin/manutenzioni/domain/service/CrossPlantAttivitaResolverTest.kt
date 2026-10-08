@@ -8,7 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class AntincendioAttivitaResolverTest {
+class CrossPlantAttivitaResolverTest {
 
     private val attivitaBase = Attivita(
         nAttivita = 1,
@@ -50,7 +50,7 @@ class AntincendioAttivitaResolverTest {
 
     @Test
     fun `resolveAttivita con cantiere vuoto mostra solo base per 6 mesi`() {
-        val filtrate = AntincendioAttivitaResolver.resolveAttivita(
+        val filtrate = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impiantoRi,
             impiantiNelCantiere = emptyList(),
             frequenza = Periodo(TipoPeriodo.M, 6)
@@ -64,7 +64,7 @@ class AntincendioAttivitaResolverTest {
     fun `resolveAttivita con cantiere che ha GE mostra base e GE per 6 mesi`() {
         val ge = ImpiantoStandard(codIntervento = "GE", nomeCompleto = "Gruppo")
         
-        val filtrate = AntincendioAttivitaResolver.resolveAttivita(
+        val filtrate = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impiantoRi,
             impiantiNelCantiere = listOf(impiantoRi, ge),
             frequenza = Periodo(TipoPeriodo.M, 6)
@@ -80,7 +80,7 @@ class AntincendioAttivitaResolverTest {
         val ge = ImpiantoStandard(codIntervento = "GE", nomeCompleto = "Gruppo")
         val rig = ImpiantoStandard(codIntervento = "RIG", nomeCompleto = "Rilevazione Gas")
         
-        val filtrate = AntincendioAttivitaResolver.resolveAttivita(
+        val filtrate = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impiantoRi,
             impiantiNelCantiere = listOf(impiantoRi, ge, rig),
             frequenza = Periodo(TipoPeriodo.A, 1) // 12 mesi include 6 mesi e 12 mesi
@@ -134,7 +134,7 @@ class AntincendioAttivitaResolverTest {
 
     @Test
     fun `resolveAttivita con RIG e cantiere vuoto mostra solo base per 6 mesi`() {
-        val filtrate = AntincendioAttivitaResolver.resolveAttivita(
+        val filtrate = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impiantoRig,
             impiantiNelCantiere = emptyList(),
             frequenza = Periodo(TipoPeriodo.M, 6)
@@ -149,7 +149,7 @@ class AntincendioAttivitaResolverTest {
         val ge = ImpiantoStandard(codIntervento = "GE", nomeCompleto = "Gruppo")
         val pem = ImpiantoStandard(codIntervento = "PEM", nomeCompleto = "Pulsante Sgancio")
 
-        val filtrate = AntincendioAttivitaResolver.resolveAttivita(
+        val filtrate = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impiantoRig,
             impiantiNelCantiere = listOf(impiantoRig, ge, pem),
             frequenza = Periodo(TipoPeriodo.M, 6)
@@ -165,7 +165,7 @@ class AntincendioAttivitaResolverTest {
     fun `resolveAttivita per RIG a 1 anno include attivita con target Q se Quadro e presente`() {
         val quadro = manutenzioni.domain.model.QuadroBT(codIntervento = "Q", nomeCompleto = "Quadro BT")
 
-        val filtrate = AntincendioAttivitaResolver.resolveAttivita(
+        val filtrate = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impiantoRig,
             impiantiNelCantiere = listOf(impiantoRig, quadro),
             frequenza = Periodo(TipoPeriodo.A, 1)
@@ -178,7 +178,7 @@ class AntincendioAttivitaResolverTest {
     @Test
     fun `resolveFrequenze per RIG esclude frequenze di impianti target non presenti nel cantiere`() {
         val soloGe = ImpiantoStandard(codIntervento = "GE", nomeCompleto = "Gruppo")
-        val freq = AntincendioAttivitaResolver.resolveFrequenze(
+        val freq = CrossPlantAttivitaResolver.resolveFrequenze(
             impianto = impiantoRig,
             impiantiNelCantiere = listOf(impiantoRig, soloGe)
         )
@@ -186,7 +186,7 @@ class AntincendioAttivitaResolverTest {
         assertEquals(Periodo(TipoPeriodo.M, 6), freq.first())
 
         val conQuadro = listOf(impiantoRig, soloGe, manutenzioni.domain.model.QuadroBT(codIntervento = "Q", nomeCompleto = "Quadro"))
-        val freqConQ = AntincendioAttivitaResolver.resolveFrequenze(
+        val freqConQ = CrossPlantAttivitaResolver.resolveFrequenze(
             impianto = impiantoRig,
             impiantiNelCantiere = conQuadro
         )

@@ -107,6 +107,14 @@ data class ImpiantoEmergenza(
     )
 }
 
+/**
+ * Interfaccia per impianti di rilevazione/allarme che dispongono di conteggio o inventario
+ * dei componenti/dispositivi (es. rivelatori puntiformi, gas, ecc.).
+ */
+sealed interface ImpiantoRilevazione {
+    val quantitaComponenti: Map<String, Int>
+}
+
 @Serializable
 @SerialName("RilevazioneAntincendio")
 data class RilevazioneAntincendio(
@@ -120,8 +128,8 @@ data class RilevazioneAntincendio(
     override val quantita: Int = 1,
     override val noteSpecifiche: String? = null,
     
-    val quantitaComponenti: Map<String, Int> = emptyMap()
-) : Impianto() {
+    override val quantitaComponenti: Map<String, Int> = emptyMap()
+) : Impianto(), ImpiantoRilevazione {
     override fun copyWithBasicParams(
         id: String, codIntervento: String, nomeCompleto: String, premessa: String?, 
         listaAttivita: List<Attivita>, listaNormative: List<Normativa>, 
@@ -146,8 +154,8 @@ data class RilevazioneGas(
     override val quantita: Int = 1,
     override val noteSpecifiche: String? = null,
     
-    val quantitaComponenti: Map<String, Int> = emptyMap()
-) : Impianto() {
+    override val quantitaComponenti: Map<String, Int> = emptyMap()
+) : Impianto(), ImpiantoRilevazione {
     override fun copyWithBasicParams(
         id: String, codIntervento: String, nomeCompleto: String, premessa: String?, 
         listaAttivita: List<Attivita>, listaNormative: List<Normativa>, 
@@ -320,3 +328,71 @@ data class Cantiere(
     val nome: String,
     val clienteId: String
 )
+
+/**
+ * Normalizza il tipo concreto dell'impianto a partire dal suo codice intervento,
+ * garantendo che schede generiche caricate da JSON o MongoDB vengano istanziate
+ * come la rispettiva sottoclasse polimorfica (QuadroBT, ImpiantoEmergenza, RilevazioneAntincendio, RilevazioneGas).
+ */
+fun Impianto.normalizeType(): Impianto {
+    return when {
+        this !is ImpiantoEmergenza && codIntervento.equals("EM", ignoreCase = true) -> {
+            ImpiantoEmergenza(
+                id = id,
+                codIntervento = codIntervento,
+                nomeCompleto = nomeCompleto,
+                premessa = premessa,
+                listaAttivita = listaAttivita,
+                listaNormative = listaNormative,
+                cantiereId = cantiereId,
+                quantita = quantita,
+                noteSpecifiche = noteSpecifiche,
+                listaLampade = emptyList()
+            )
+        }
+        this !is QuadroBT && codIntervento.equals("Q", ignoreCase = true) -> {
+            QuadroBT(
+                id = id,
+                codIntervento = codIntervento,
+                nomeCompleto = nomeCompleto,
+                premessa = premessa,
+                listaAttivita = listaAttivita,
+                listaNormative = listaNormative,
+                cantiereId = cantiereId,
+                quantita = quantita,
+                noteSpecifiche = noteSpecifiche,
+                sigla = "",
+                descrizioneQuadro = "",
+                listaInterruttori = emptyList()
+            )
+        }
+        this !is RilevazioneAntincendio && codIntervento.equals("RI", ignoreCase = true) -> {
+            RilevazioneAntincendio(
+                id = id,
+                codIntervento = codIntervento,
+                nomeCompleto = nomeCompleto,
+                premessa = premessa,
+                listaAttivita = listaAttivita,
+                listaNormative = listaNormative,
+                cantiereId = cantiereId,
+                quantita = quantita,
+                noteSpecifiche = noteSpecifiche
+            )
+        }
+        this !is RilevazioneGas && codIntervento.equals("RIG", ignoreCase = true) -> {
+            RilevazioneGas(
+                id = id,
+                codIntervento = codIntervento,
+                nomeCompleto = nomeCompleto,
+                premessa = premessa,
+                listaAttivita = listaAttivita,
+                listaNormative = listaNormative,
+                cantiereId = cantiereId,
+                quantita = quantita,
+                noteSpecifiche = noteSpecifiche
+            )
+        }
+        else -> this
+    }
+}
+
