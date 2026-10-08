@@ -105,7 +105,8 @@
           "codNormativa": "CEI 11-27",
           "descrizione": "Lavori su impianti elettrici"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "BACS",
@@ -239,7 +240,8 @@
           "codNormativa": "UNI EN ISO 16484",
           "descrizione": "Building automation and control systems (BACS)"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "CAB",
@@ -526,7 +528,8 @@
           "codNormativa": "CEI 0-16",
           "descrizione": "Regola tecnica di riferimento per la connessione di utenti attivi e passivi alle reti AT e MT"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "DEG",
@@ -696,7 +699,8 @@
           "codNormativa": "CEI 11-27",
           "descrizione": "Lavori su impianti elettrici"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "DS",
@@ -754,7 +758,8 @@
           "codNormativa": "CEI 100-55",
           "descrizione": "Sistemi elettroacustici applicati ai servizi di emergenza"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "EM",
@@ -789,7 +794,9 @@
           "codNormativa": "CEI 64-8",
           "descrizione": "Impianti elettrici utilizzatori"
         }
-      ]
+      ],
+      "type": "ImpiantoEmergenza",
+      "listaLampade": []
     },
     {
       "codIntervento": "FTV",
@@ -977,7 +984,8 @@
           "codNormativa": "CEI 11-20",
           "descrizione": "Impianti di produzione di energia elettrica"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "GE",
@@ -1264,7 +1272,8 @@
           "codNormativa": "CEI 64-8",
           "descrizione": "Impianti elettrici utilizzatori"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "IE",
@@ -1452,7 +1461,8 @@
           "codNormativa": "CEI 11-27",
           "descrizione": "Lavori su impianti elettrici"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "IS",
@@ -1487,7 +1497,9 @@
           "codNormativa": "CEI 64-8",
           "descrizione": "Impianti elettrici utilizzatori"
         }
-      ]
+      ],
+      "type": "ImpiantoEmergenza",
+      "listaLampade": []
     },
     {
       "codIntervento": "PEM",
@@ -1540,7 +1552,8 @@
           "codNormativa": "DM 37/08",
           "descrizione": "Attività di installazione degli impianti"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "Q",
@@ -1737,7 +1750,11 @@
           "codNormativa": "CEI 64-8",
           "descrizione": "Impianti elettrici utilizzatori"
         }
-      ]
+      ],
+      "type": "QuadroBT",
+      "sigla": "",
+      "descrizioneQuadro": "",
+      "listaInterruttori": []
     },
     {
       "codIntervento": "QMT",
@@ -1934,7 +1951,8 @@
           "codNormativa": "CEI 0-16",
           "descrizione": "Regola tecnica di riferimento per la connessione di utenti attivi e passivi alle reti AT e MT"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "RI",
@@ -2041,7 +2059,8 @@
           "codNormativa": "UNI 11224",
           "descrizione": "Controllo iniziale e manutenzione dei sistemi di rivelazione incendi"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "RIF",
@@ -2171,7 +2190,8 @@
           "codNormativa": "CEI 33-7",
           "descrizione": "Condensatori di potenza per impianti a corrente alternata"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "RIG",
@@ -2276,6 +2296,66 @@
             "tipo": "M",
             "valore": 6
           }
+        },
+        {
+          "nAttivita": 12,
+          "tipoAttivita": "Gruppo elettrogeno",
+          "descrizione": "Prova dei Rivelatori di GAS Puntiformi asserviti al locale Gruppo Elettrogeno impiegando dispositivi artificiali di produzione di gas, simulando l'insorgere di una perdita in funzione delle soglie di allarme preimpostate",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "targetImpiantoCod": "GE"
+        },
+        {
+          "nAttivita": 13,
+          "tipoAttivita": "Sgancio generale emergenza",
+          "descrizione": "Verifica dell'intervento dell'elettrovalvola di intercettazione gas/combustibile su comando di emergenza e simulazione di allarme gas dalla centrale",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "targetImpiantoCod": "PEM"
+        },
+        {
+          "nAttivita": 14,
+          "tipoAttivita": "Rilevazione incendi",
+          "descrizione": "Verifica della trasmissione dei segnali di allarme e guasto dalla centrale Rilevazione Gas alla centrale di Rilevazione Incendi",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "targetImpiantoCod": "RI"
+        },
+        {
+          "nAttivita": 15,
+          "tipoAttivita": "Quadro elettrico",
+          "descrizione": "Verifica dell'asservimento e sgancio alimentazione quadro elettrico locale tecnico su superamento della seconda soglia di allarme concentrazione gas",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          },
+          "targetImpiantoCod": "Q"
+        },
+        {
+          "nAttivita": 16,
+          "tipoAttivita": "Limitatori Sovratensione",
+          "descrizione": "Verifica dell'integrità delle protezioni di linea e limitatori di sovratensione a monte della centrale di rivelazione gas",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "targetImpiantoCod": "SPD"
+        },
+        {
+          "nAttivita": 17,
+          "tipoAttivita": "Cabina MT/BT",
+          "descrizione": "Verifica dell'asservimento e segnalazione allarme gas presso il locale cabina elettrica",
+          "frequenza": {
+            "tipo": "A",
+            "valore": 1
+          },
+          "targetImpiantoCod": "CAB"
         }
       ],
       "listaNormative": [
@@ -2287,7 +2367,8 @@
           "codNormativa": "UNI 11224",
           "descrizione": "Controllo iniziale e manutenzione dei sistemi di rivelazione incendi"
         }
-      ]
+      ],
+      "type": "RilevazioneGas"
     },
     {
       "codIntervento": "SPD",
@@ -2309,7 +2390,8 @@
           "codNormativa": "CEI EN 61643",
           "descrizione": "Dispositivi di protezione contro le sovratensioni"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "TRFO",
@@ -2443,7 +2525,8 @@
           "codNormativa": "CEI 11-27",
           "descrizione": "Lavori su impianti elettrici"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "TRFS",
@@ -2541,7 +2624,8 @@
           "codNormativa": "CEI 11-27",
           "descrizione": "Lavori su impianti elettrici"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     },
     {
       "codIntervento": "UPS",
@@ -2689,7 +2773,8 @@
           "codNormativa": "CEI EN 62040",
           "descrizione": "Sistemi statici di continuità (UPS)"
         }
-      ]
+      ],
+      "type": "ImpiantoStandard"
     }
   ]
 }

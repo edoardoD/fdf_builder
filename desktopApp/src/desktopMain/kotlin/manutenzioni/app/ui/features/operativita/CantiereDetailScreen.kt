@@ -39,7 +39,10 @@ fun CantiereDetailScreen(
     onClearSearchComponenti: () -> Unit = {},
     onApprovaComponente: ((manutenzioni.domain.model.QuadroBT, manutenzioni.domain.model.ComponentCandidate, manutenzioni.domain.model.VarianteProdotto, Int, String) -> Unit)? = null,
     onAggiungiComponenteAQuadro: ((manutenzioni.domain.model.QuadroBT, manutenzioni.domain.model.InterruttoreBT) -> Unit)? = null,
-    onSostituisciProduttore: ((manutenzioni.domain.model.QuadroBT, String, manutenzioni.domain.model.VarianteProdotto) -> Unit)? = null
+    onSostituisciProduttore: ((manutenzioni.domain.model.QuadroBT, String, manutenzioni.domain.model.VarianteProdotto) -> Unit)? = null,
+    onAggiungiLampadaAEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, manutenzioni.domain.model.LampadaEmergenza) -> Unit)? = null,
+    onAggiungiLampadeAEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, List<manutenzioni.domain.model.LampadaEmergenza>) -> Unit)? = null,
+    onAggiornaLampadaInEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, manutenzioni.domain.model.LampadaEmergenza) -> Unit)? = null
 ) {
     // Gestione visualizzazione ImpiantoEditor
     var impiantoInModifica by remember { mutableStateOf<Impianto?>(null) }
@@ -64,6 +67,9 @@ fun CantiereDetailScreen(
                     onApprovaComponente = onApprovaComponente,
                     onAggiungiComponenteAQuadro = onAggiungiComponenteAQuadro,
                     onSostituisciProduttore = onSostituisciProduttore,
+                    onAggiungiLampadaAEmergenza = onAggiungiLampadaAEmergenza,
+                    onAggiungiLampadeAEmergenza = onAggiungiLampadeAEmergenza,
+                    onAggiornaLampadaInEmergenza = onAggiornaLampadaInEmergenza,
                     onSave = { impianto, _ -> 
                         onSaveImpianto(impianto)
                         impiantoInModifica = null

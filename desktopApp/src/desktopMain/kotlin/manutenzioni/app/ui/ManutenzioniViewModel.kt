@@ -732,6 +732,93 @@ class ManutenzioniViewModel(
         }
     }
 
+    fun aggiungiLampadaAEmergenza(
+        impianto: manutenzioni.domain.model.ImpiantoEmergenza,
+        lampada: manutenzioni.domain.model.LampadaEmergenza
+    ) {
+        aggiungiLampadeAEmergenza(impianto, listOf(lampada))
+    }
+
+    fun aggiungiLampadeAEmergenza(
+        impianto: manutenzioni.domain.model.ImpiantoEmergenza,
+        lampade: List<manutenzioni.domain.model.LampadaEmergenza>
+    ) {
+        if (lampade.isEmpty()) return
+        scope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+
+                val updatedImpianto = impianto.copy(
+                    listaLampade = impianto.listaLampade + lampade
+                )
+
+                repository.salvaImpianto(updatedImpianto)
+
+                val impiantiCantiere = impianto.cantiereId
+                    ?.let { repository.getImpiantiForCantiere(it) } ?: emptyList()
+                val tuttiImpianti = repository.caricaImpianti()
+
+                val feedback = if (lampade.size == 1) {
+                    val label = lampade.first().sigla.ifBlank { lampade.first().modello }
+                    "✓ Lampada '$label' aggiunta all'impianto di emergenza"
+                } else {
+                    val modelloFirst = lampade.first().modello
+                    val marcaFirst = lampade.first().produttore?.let { " $it" } ?: ""
+                    "✓ Aggiunte ${lampade.size} lampade$marcaFirst '$modelloFirst' all'impianto di emergenza"
+                }
+
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        selectedImpianto = updatedImpianto,
+                        impiantiDelCantiere = impiantiCantiere,
+                        impianti = tuttiImpianti,
+                        statusMessage = feedback
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Errore aggiunta lampade: ${e.message}") }
+            }
+        }
+    }
+
+    fun aggiornaLampadaInEmergenza(
+        impianto: manutenzioni.domain.model.ImpiantoEmergenza,
+        lampadaAggiornata: manutenzioni.domain.model.LampadaEmergenza
+    ) {
+        scope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+
+                val updatedImpianto = impianto.copy(
+                    listaLampade = impianto.listaLampade.map {
+                        if (it.id == lampadaAggiornata.id) lampadaAggiornata else it
+                    }
+                )
+
+                repository.salvaImpianto(updatedImpianto)
+
+                val impiantiCantiere = impianto.cantiereId
+                    ?.let { repository.getImpiantiForCantiere(it) } ?: emptyList()
+                val tuttiImpianti = repository.caricaImpianti()
+
+                val label = lampadaAggiornata.sigla.ifBlank { lampadaAggiornata.modello }
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        selectedImpianto = updatedImpianto,
+                        impiantiDelCantiere = impiantiCantiere,
+                        impianti = tuttiImpianti,
+                        statusMessage = "✓ Lampada '$label' modificata con successo"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Errore modifica lampada: ${e.message}") }
+            }
+        }
+    }
+
+
     fun approvaEAssegnaComponenteAQuadro(
         quadro: QuadroBT,
         candidate: ComponentCandidate,

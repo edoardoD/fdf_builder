@@ -25,6 +25,7 @@ class JsonManutenzioneRepository(
         prettyPrint = true
         ignoreUnknownKeys = true
         encodeDefaults = true
+        classDiscriminator = "type"
     }
 
     /** Cache in-memory del database */
@@ -98,7 +99,7 @@ class JsonManutenzioneRepository(
     private fun getImpiantiCache(): MutableList<Impianto> {
         if (cache == null) {
             val db = loadFromDisk()
-            cache = db.impianti.toMutableList()
+            cache = db.impianti.map { it.normalizeType() }.toMutableList()
             if (cacheClienti == null) {
                 cacheClienti = db.clienti.toMutableList()
             }
@@ -120,7 +121,7 @@ class JsonManutenzioneRepository(
             val db = loadFromDisk()
             cacheClienti = db.clienti.toMutableList()
             if (cache == null) {
-                cache = db.impianti.toMutableList()
+                cache = db.impianti.map { it.normalizeType() }.toMutableList()
             }
             if (cacheCantieri == null) {
                 cacheCantieri = db.cantieri.toMutableList()
@@ -345,5 +346,67 @@ class JsonManutenzioneRepository(
 
     override suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato> = mutex.withLock {
         return getCatalogoApprovatoCache().filter { it.etimClassId == etimClassId }
+    }
+
+    private fun Impianto.normalizeType(): Impianto {
+        return when {
+            this !is manutenzioni.domain.model.ImpiantoEmergenza && codIntervento.equals("EM", ignoreCase = true) -> {
+                manutenzioni.domain.model.ImpiantoEmergenza(
+                    id = id,
+                    codIntervento = codIntervento,
+                    nomeCompleto = nomeCompleto,
+                    premessa = premessa,
+                    listaAttivita = listaAttivita,
+                    listaNormative = listaNormative,
+                    cantiereId = cantiereId,
+                    quantita = quantita,
+                    noteSpecifiche = noteSpecifiche,
+                    listaLampade = emptyList()
+                )
+            }
+            this !is manutenzioni.domain.model.QuadroBT && codIntervento.equals("Q", ignoreCase = true) -> {
+                manutenzioni.domain.model.QuadroBT(
+                    id = id,
+                    codIntervento = codIntervento,
+                    nomeCompleto = nomeCompleto,
+                    premessa = premessa,
+                    listaAttivita = listaAttivita,
+                    listaNormative = listaNormative,
+                    cantiereId = cantiereId,
+                    quantita = quantita,
+                    noteSpecifiche = noteSpecifiche,
+                    sigla = "",
+                    descrizioneQuadro = "",
+                    listaInterruttori = emptyList()
+                )
+            }
+            this !is manutenzioni.domain.model.RilevazioneAntincendio && codIntervento.equals("RI", ignoreCase = true) -> {
+                manutenzioni.domain.model.RilevazioneAntincendio(
+                    id = id,
+                    codIntervento = codIntervento,
+                    nomeCompleto = nomeCompleto,
+                    premessa = premessa,
+                    listaAttivita = listaAttivita,
+                    listaNormative = listaNormative,
+                    cantiereId = cantiereId,
+                    quantita = quantita,
+                    noteSpecifiche = noteSpecifiche
+                )
+            }
+            this !is manutenzioni.domain.model.RilevazioneGas && codIntervento.equals("RIG", ignoreCase = true) -> {
+                manutenzioni.domain.model.RilevazioneGas(
+                    id = id,
+                    codIntervento = codIntervento,
+                    nomeCompleto = nomeCompleto,
+                    premessa = premessa,
+                    listaAttivita = listaAttivita,
+                    listaNormative = listaNormative,
+                    cantiereId = cantiereId,
+                    quantita = quantita,
+                    noteSpecifiche = noteSpecifiche
+                )
+            }
+            else -> this
+        }
     }
 }

@@ -1,6 +1,7 @@
 package manutenzioni.app.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -17,6 +18,8 @@ import androidx.compose.ui.unit.sp
 import manutenzioni.domain.model.*
 import manutenzioni.app.data.ManutenzioniDatabase
 import manutenzioni.app.ui.features.operativita.AggiungiComponenteDialog
+import manutenzioni.app.ui.features.operativita.AggiungiLampadaDialog
+import manutenzioni.app.ui.features.operativita.ModificaLampadaDialog
 
 /**
  * Editor universale per impianti — gestisce sia creazione che modifica.
@@ -46,11 +49,16 @@ fun ImpiantoEditor(
     onApprovaComponente: ((QuadroBT, ComponentCandidate, VarianteProdotto, Int, String) -> Unit)? = null,
     onAggiungiComponenteAQuadro: ((QuadroBT, InterruttoreBT) -> Unit)? = null,
     onSostituisciProduttore: ((QuadroBT, String, VarianteProdotto) -> Unit)? = null,
+    onAggiungiLampadaAEmergenza: ((ImpiantoEmergenza, LampadaEmergenza) -> Unit)? = null,
+    onAggiungiLampadeAEmergenza: ((ImpiantoEmergenza, List<LampadaEmergenza>) -> Unit)? = null,
+    onAggiornaLampadaInEmergenza: ((ImpiantoEmergenza, LampadaEmergenza) -> Unit)? = null,
     onSave: (Impianto, Boolean) -> Unit,
     onCancel: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var showAggiungiComponenteDialog by remember { mutableStateOf(false) }
+    var showAggiungiLampadaDialog by remember { mutableStateOf(false) }
+    var lampadaInModifica by remember { mutableStateOf<LampadaEmergenza?>(null) }
 
     // Stato locale mutabile per l'editing
     var codIntervento by remember(impianto) { mutableStateOf(impianto.codIntervento) }
@@ -64,6 +72,9 @@ fun ImpiantoEditor(
     var descrizioneQuadro by remember(impianto) { mutableStateOf((impianto as? QuadroBT)?.descrizioneQuadro ?: "") }
     var interruttoriQuadro by remember(impianto) { mutableStateOf((impianto as? QuadroBT)?.listaInterruttori ?: emptyList()) }
 
+    // Stato per ImpiantoEmergenza
+    var lampadeEmergenza by remember(impianto) { mutableStateOf((impianto as? ImpiantoEmergenza)?.listaLampade ?: emptyList<LampadaEmergenza>()) }
+
     // Stato per la propagazione globale
     var propagaModifiche by remember { mutableStateOf(false) }
 
@@ -71,16 +82,83 @@ fun ImpiantoEditor(
     var codInterventoError by remember { mutableStateOf(false) }
     var nomeCompletoError by remember { mutableStateOf(false) }
 
-    if (showAggiungiComponenteDialog && impianto is QuadroBT) {
+    // Determinazione dinamica della tipologia di impianto (anche se originariamente ImpiantoStandard)
+    val isQuadro = impianto is QuadroBT || codIntervento.trim().equals("Q", ignoreCase = true) || (codIntervento.trim().startsWith("Q", ignoreCase = true) && !codIntervento.trim().equals("QMT", ignoreCase = true))
+    val isEmergenza = impianto is ImpiantoEmergenza || codIntervento.trim().equals("EM", ignoreCase = true)
+
+    val currentQuadro = (impianto as? QuadroBT) ?: QuadroBT(
+        id = impianto.id,
+        codIntervento = codIntervento.trim().ifBlank { "Q" },
+        nomeCompleto = nomeCompleto.trim().ifBlank { "Quadro" },
+        premessa = premessa.ifBlank { null },
+        listaAttivita = attivitaList,
+        listaNormative = impianto.listaNormative,
+        cantiereId = impianto.cantiereId,
+        quantita = 1,
+        noteSpecifiche = noteSpecifiche.ifBlank { null },
+        sigla = siglaQuadro.trim(),
+        descrizioneQuadro = descrizioneQuadro.trim(),
+        listaInterruttori = interruttoriQuadro
+    )
+
+    val currentEmergenza = (impianto as? ImpiantoEmergenza) ?: ImpiantoEmergenza(
+        id = impianto.id,
+        codIntervento = codIntervento.trim().ifBlank { "EM" },
+        nomeCompleto = nomeCompleto.trim().ifBlank { "Illuminazione emergenza" },
+        premessa = premessa.ifBlank { null },
+        listaAttivita = attivitaList,
+        listaNormative = impianto.listaNormative,
+        cantiereId = impianto.cantiereId,
+        quantita = 1,
+        noteSpecifiche = noteSpecifiche.ifBlank { null },
+        listaLampade = lampadeEmergenza
+    )
+
+    if (showAggiungiComponenteDialog && isQuadro) {
         AggiungiComponenteDialog(
-            quadro = impianto,
+            quadro = currentQuadro.copy(
+                sigla = siglaQuadro.trim(),
+                descrizioneQuadro = descrizioneQuadro.trim(),
+                listaInterruttori = interruttoriQuadro
+            ),
             onDismiss = { showAggiungiComponenteDialog = false },
             onConferma = { interruttore ->
                 interruttoriQuadro = interruttoriQuadro + interruttore
-                if (onAggiungiComponenteAQuadro != null) {
-                    onAggiungiComponenteAQuadro(impianto, interruttore)
-                }
+                onAggiungiComponenteAQuadro?.invoke(currentQuadro, interruttore)
                 showAggiungiComponenteDialog = false
+            }
+        )
+    }
+
+    if (showAggiungiLampadaDialog && isEmergenza) {
+        AggiungiLampadaDialog(
+            impianto = currentEmergenza.copy(listaLampade = lampadeEmergenza),
+            onDismiss = { showAggiungiLampadaDialog = false },
+            onConferma = { nuoveLampade ->
+                val aggiornata = lampadeEmergenza + nuoveLampade
+                lampadeEmergenza = aggiornata
+                if (onAggiungiLampadeAEmergenza != null) {
+                    onAggiungiLampadeAEmergenza.invoke(currentEmergenza.copy(listaLampade = aggiornata), nuoveLampade)
+                } else if (onAggiungiLampadaAEmergenza != null) {
+                    nuoveLampade.forEach { lampada ->
+                        onAggiungiLampadaAEmergenza.invoke(currentEmergenza.copy(listaLampade = aggiornata), lampada)
+                    }
+                }
+                showAggiungiLampadaDialog = false
+            }
+        )
+    }
+
+    if (lampadaInModifica != null && isEmergenza) {
+        ModificaLampadaDialog(
+            impianto = currentEmergenza.copy(listaLampade = lampadeEmergenza),
+            lampada = lampadaInModifica!!,
+            onDismiss = { lampadaInModifica = null },
+            onConferma = { aggiornata ->
+                val nuovaLista = lampadeEmergenza.map { if (it.id == aggiornata.id) aggiornata else it }
+                lampadeEmergenza = nuovaLista
+                onAggiornaLampadaInEmergenza?.invoke(currentEmergenza.copy(listaLampade = nuovaLista), aggiornata)
+                lampadaInModifica = null
             }
         )
     }
@@ -125,20 +203,52 @@ fun ImpiantoEditor(
                         nomeCompletoError = nomeCompleto.isBlank()
     
                         if (!codInterventoError && !nomeCompletoError) {
-                            var updated = impianto.copyWithBasicParams(
-                                codIntervento = codIntervento.trim(),
-                                nomeCompleto = nomeCompleto.trim(),
-                                premessa = premessa.ifBlank { null },
-                                quantita = 1,
-                                noteSpecifiche = noteSpecifiche.ifBlank { null },
-                                listaAttivita = attivitaList
-                            )
-                            if (updated is QuadroBT) {
-                                updated = updated.copy(
-                                    sigla = siglaQuadro.trim(),
-                                    descrizioneQuadro = descrizioneQuadro.trim(),
-                                    listaInterruttori = interruttoriQuadro
-                                )
+                            val savedCod = codIntervento.trim()
+                            val savedNome = nomeCompleto.trim()
+                            val savedPremessa = premessa.ifBlank { null }
+                            val savedNote = noteSpecifiche.ifBlank { null }
+
+                            val updated: Impianto = when {
+                                isQuadro -> {
+                                    QuadroBT(
+                                        id = impianto.id,
+                                        codIntervento = savedCod,
+                                        nomeCompleto = savedNome,
+                                        premessa = savedPremessa,
+                                        listaAttivita = attivitaList,
+                                        listaNormative = impianto.listaNormative,
+                                        cantiereId = impianto.cantiereId,
+                                        quantita = 1,
+                                        noteSpecifiche = savedNote,
+                                        sigla = siglaQuadro.trim(),
+                                        descrizioneQuadro = descrizioneQuadro.trim(),
+                                        listaInterruttori = interruttoriQuadro
+                                    )
+                                }
+                                isEmergenza -> {
+                                    ImpiantoEmergenza(
+                                        id = impianto.id,
+                                        codIntervento = savedCod,
+                                        nomeCompleto = savedNome,
+                                        premessa = savedPremessa,
+                                        listaAttivita = attivitaList,
+                                        listaNormative = impianto.listaNormative,
+                                        cantiereId = impianto.cantiereId,
+                                        quantita = 1,
+                                        noteSpecifiche = savedNote,
+                                        listaLampade = lampadeEmergenza
+                                    )
+                                }
+                                else -> {
+                                    impianto.copyWithBasicParams(
+                                        codIntervento = savedCod,
+                                        nomeCompleto = savedNome,
+                                        premessa = savedPremessa,
+                                        quantita = 1,
+                                        noteSpecifiche = savedNote,
+                                        listaAttivita = attivitaList
+                                    )
+                                }
                             }
                             onSave(updated, propagaModifiche)
                         }
@@ -213,7 +323,7 @@ fun ImpiantoEditor(
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 4
                 )
-                if (impianto is QuadroBT) {
+                if (isQuadro) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         OutlinedTextField(
                             value = siglaQuadro,
@@ -246,7 +356,7 @@ fun ImpiantoEditor(
             }
         }
         }
-        if (impianto is QuadroBT) {
+        if (isQuadro) {
             item {
                 Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -414,7 +524,7 @@ fun ImpiantoEditor(
                                                         alternative.forEach { alt ->
                                                             DropdownMenuItem(
                                                                 onClick = {
-                                                                    val q = impianto as QuadroBT
+                                                                    val q = (impianto as? QuadroBT) ?: currentQuadro
                                                                     onSostituisciProduttore?.invoke(q, interruttore.id, alt)
                                                                     val idx = interruttoriQuadro.indexOfFirst { it.id == interruttore.id }
                                                                     if (idx >= 0) {
@@ -447,6 +557,186 @@ fun ImpiantoEditor(
                                             onClick = {
                                                 interruttoriQuadro = interruttoriQuadro - interruttore
                                             },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(Icons.Default.Delete, contentDescription = "Rimuovi", modifier = Modifier.size(16.dp), tint = Color(0xFFDC2626))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sezione Lampade di Emergenza (ImpiantoEmergenza)
+        if (isEmergenza) {
+            item {
+                Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text("Lampade di Emergenza (${lampadeEmergenza.size})", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text("Luci di emergenza installate in questo impianto", style = MaterialTheme.typography.caption, color = Color.Gray)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (lampadeEmergenza.isNotEmpty()) {
+                                    TextButton(
+                                        onClick = { lampadeEmergenza = emptyList() },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text("Svuota (${lampadeEmergenza.size})", color = Color(0xFFDC2626), fontSize = 11.sp)
+                                    }
+                                }
+                                Button(
+                                    onClick = { showAggiungiLampadaDialog = true },
+                                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary, contentColor = Color.White),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text("Aggiungi Lampade", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+
+                        if (lampadeEmergenza.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "Nessuna lampada registrata. Clicca 'Aggiungi Lampade' per iniziare.",
+                                    color = Color.Gray, fontSize = 12.sp
+                                )
+                            }
+                        } else {
+                            lampadeEmergenza.forEach { lampada ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { lampadaInModifica = lampada },
+                                    backgroundColor = Color(0xFFF8FAFC),
+                                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        // Badge Sigla
+                                        Surface(
+                                            color = MaterialTheme.colors.primary.copy(alpha = 0.12f),
+                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+                                        ) {
+                                            Text(
+                                                text = lampada.sigla.ifBlank { "—" },
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colors.primary,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                        Spacer(Modifier.width(10.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                if (!lampada.produttore.isNullOrBlank()) {
+                                                    Text(
+                                                        text = lampada.produttore,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 13.sp,
+                                                        color = Color(0xFF0F172A)
+                                                    )
+                                                    Spacer(Modifier.width(6.dp))
+                                                }
+                                                Text(
+                                                    text = lampada.modello,
+                                                    fontSize = 12.sp,
+                                                    color = Color(0xFF334155)
+                                                )
+                                            }
+                                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                // Badge Autonomia
+                                                Surface(
+                                                    color = Color(0xFFE8F5E9),
+                                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "⏱ ${lampada.autonomia}",
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = Color(0xFF2E7D32),
+                                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                                if (!lampada.posizione.isNullOrBlank()) {
+                                                    Text(
+                                                        text = "📍 ${lampada.posizione}",
+                                                        fontSize = 10.sp,
+                                                        color = Color(0xFF64748B)
+                                                    )
+                                                }
+                                                if (!lampada.dataUltimoCambioBatteria.isNullOrBlank()) {
+                                                    Surface(
+                                                        color = Color(0xFFFFF3E0),
+                                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "🔋 ${lampada.dataUltimoCambioBatteria}",
+                                                            fontSize = 10.sp,
+                                                            fontWeight = FontWeight.SemiBold,
+                                                            color = Color(0xFFE65100),
+                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        // Modifica lampada
+                                        IconButton(
+                                            onClick = { lampadaInModifica = lampada },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Edit,
+                                                contentDescription = "Modifica lampada",
+                                                modifier = Modifier.size(16.dp),
+                                                tint = MaterialTheme.colors.primary
+                                            )
+                                        }
+                                        Spacer(Modifier.width(2.dp))
+                                        // Clona lampada con sigla successiva
+                                        IconButton(
+                                            onClick = {
+                                                val nextSigla = manutenzioni.app.ui.features.operativita.LampadaGeneratorHelper.findNextSiglaForClone(
+                                                    baseSigla = lampada.sigla,
+                                                    existing = lampadeEmergenza,
+                                                    defaultPrefix = codIntervento
+                                                )
+                                                val duplicata = lampada.copy(
+                                                    id = java.util.UUID.randomUUID().toString(),
+                                                    sigla = nextSigla
+                                                )
+                                                val nuovaLista = lampadeEmergenza + duplicata
+                                                lampadeEmergenza = nuovaLista
+                                                if (onAggiungiLampadeAEmergenza != null) {
+                                                    onAggiungiLampadeAEmergenza.invoke(currentEmergenza.copy(listaLampade = nuovaLista), listOf(duplicata))
+                                                } else {
+                                                    onAggiungiLampadaAEmergenza?.invoke(currentEmergenza.copy(listaLampade = nuovaLista), duplicata)
+                                                }
+                                            },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(Icons.Default.Add, contentDescription = "Clona lampada", modifier = Modifier.size(16.dp), tint = MaterialTheme.colors.primary)
+                                        }
+                                        Spacer(Modifier.width(2.dp))
+                                        IconButton(
+                                            onClick = { lampadeEmergenza = lampadeEmergenza - lampada },
                                             modifier = Modifier.size(28.dp)
                                         ) {
                                             Icon(Icons.Default.Delete, contentDescription = "Rimuovi", modifier = Modifier.size(16.dp), tint = Color(0xFFDC2626))

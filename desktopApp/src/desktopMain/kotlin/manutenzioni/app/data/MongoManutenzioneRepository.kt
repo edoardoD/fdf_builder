@@ -34,7 +34,7 @@ class MongoManutenzioneRepository(
     }
 
     override suspend fun caricaImpianti(): List<Impianto> {
-        return impiantiCollection.find().toList()
+        return impiantiCollection.find().toList().map { it.normalizeType() }
     }
 
     override suspend fun eliminaImpianto(id: String) {
@@ -42,7 +42,7 @@ class MongoManutenzioneRepository(
     }
 
     override suspend fun getImpianto(codIntervento: String): Impianto? {
-        return impiantiCollection.find(eq("codIntervento", codIntervento)).firstOrNull()
+        return impiantiCollection.find(eq("codIntervento", codIntervento)).firstOrNull()?.normalizeType()
     }
 
     override suspend fun aggiornaImpiantiGlobalmente(impiantoTemplate: Impianto) {
@@ -100,7 +100,7 @@ class MongoManutenzioneRepository(
     }
 
     override suspend fun getImpiantiForCantiere(cantiereId: String): List<Impianto> {
-        return impiantiCollection.find(eq("cantiereId", cantiereId)).toList()
+        return impiantiCollection.find(eq("cantiereId", cantiereId)).toList().map { it.normalizeType() }
     }
 
     override suspend fun salvaCantiere(cantiere: Cantiere) {
@@ -162,5 +162,67 @@ class MongoManutenzioneRepository(
 
     override suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato> {
         return catalogoApprovatoCollection.find(eq("etimClassId", etimClassId)).toList()
+    }
+
+    private fun Impianto.normalizeType(): Impianto {
+        return when {
+            this !is manutenzioni.domain.model.ImpiantoEmergenza && codIntervento.equals("EM", ignoreCase = true) -> {
+                manutenzioni.domain.model.ImpiantoEmergenza(
+                    id = id,
+                    codIntervento = codIntervento,
+                    nomeCompleto = nomeCompleto,
+                    premessa = premessa,
+                    listaAttivita = listaAttivita,
+                    listaNormative = listaNormative,
+                    cantiereId = cantiereId,
+                    quantita = quantita,
+                    noteSpecifiche = noteSpecifiche,
+                    listaLampade = emptyList()
+                )
+            }
+            this !is manutenzioni.domain.model.QuadroBT && codIntervento.equals("Q", ignoreCase = true) -> {
+                manutenzioni.domain.model.QuadroBT(
+                    id = id,
+                    codIntervento = codIntervento,
+                    nomeCompleto = nomeCompleto,
+                    premessa = premessa,
+                    listaAttivita = listaAttivita,
+                    listaNormative = listaNormative,
+                    cantiereId = cantiereId,
+                    quantita = quantita,
+                    noteSpecifiche = noteSpecifiche,
+                    sigla = "",
+                    descrizioneQuadro = "",
+                    listaInterruttori = emptyList()
+                )
+            }
+            this !is manutenzioni.domain.model.RilevazioneAntincendio && codIntervento.equals("RI", ignoreCase = true) -> {
+                manutenzioni.domain.model.RilevazioneAntincendio(
+                    id = id,
+                    codIntervento = codIntervento,
+                    nomeCompleto = nomeCompleto,
+                    premessa = premessa,
+                    listaAttivita = listaAttivita,
+                    listaNormative = listaNormative,
+                    cantiereId = cantiereId,
+                    quantita = quantita,
+                    noteSpecifiche = noteSpecifiche
+                )
+            }
+            this !is manutenzioni.domain.model.RilevazioneGas && codIntervento.equals("RIG", ignoreCase = true) -> {
+                manutenzioni.domain.model.RilevazioneGas(
+                    id = id,
+                    codIntervento = codIntervento,
+                    nomeCompleto = nomeCompleto,
+                    premessa = premessa,
+                    listaAttivita = listaAttivita,
+                    listaNormative = listaNormative,
+                    cantiereId = cantiereId,
+                    quantita = quantita,
+                    noteSpecifiche = noteSpecifiche
+                )
+            }
+            else -> this
+        }
     }
 }

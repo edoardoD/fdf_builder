@@ -239,8 +239,13 @@ data class ComponentCandidate(
 @Serializable
 data class LampadaEmergenza(
     val id: String = java.util.UUID.randomUUID().toString(),
-    val modello: String,
-    val autonomia: String // es. "1h", "3h"
+    val sigla: String = "",                         // es. "EM-01", "EM-02" — identificativo univoco per impianto
+    val modello: String,                            // es. "Beghelli Ecoled 3h"
+    val produttore: String? = null,                 // es. "Beghelli", "Schneider Electric"
+    val autonomia: String = "1h",                   // es. "1h", "3h" — autonomia dichiarata
+    val posizione: String? = null,                  // es. "Corridoio Piano 1", "Sala Macchine"
+    val dataUltimoCambioBatteria: String? = null,   // ISO: "2024-03-15"
+    val note: String? = null
 )
 
 @Serializable

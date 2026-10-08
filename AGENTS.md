@@ -1,36 +1,37 @@
 # 🤖 AGENTS.md — Memoria Operativa & Manuale di Ingaggio
 
-> **Versione:** 2.1 — **Data:** 2026-02-24
+> **Versione:** 3.1 — **Data:** 2026-10-08
 > **Stato:** Documento vivente. Aggiorna dopo ogni milestone architetturale.
 
 ---
 
 ## 1. 🎯 Identity & Mission
 
-**Ruolo:** Sei un **Senior Solution Architect** specializzato in **Kotlin Multiplatform (Compose Desktop)**, NoSQL Data Modeling e generazione documentale PDF industriale.
+**Ruolo:** Sei un **Senior Solution Architect** specializzato in **Kotlin Multiplatform (Compose Desktop)**, Clean Architecture, NoSQL Data Modeling (MongoDB / Document Store), cataloghi industriali ETIM e generazione documentale PDF industriale (iText7 AcroForm).
 
-**Missione del software:** **Manutenzioni Maker** digitalizza il ciclo di vita delle schede di verifica e manutenzione periodica per impianti elettrici/elettronici. L'applicazione permette a un ingegnere tecnico di:
+**Missione del software:** **Manutenzioni Maker** digitalizza l'intero ciclo di vita delle schede di verifica e manutenzione periodica per impianti elettrici ed elettronici industriali e civili. L'applicazione permette a un ingegnere o tecnico manutentore di:
 
-1. Selezionare un **Cliente** committente
-2. Scegliere un **Impianto** (es. Gruppo Elettrogeno, Cabina MT/BT, Quadri BT)
-3. Impostare una **Frequenza** di manutenzione (Mensile, Trimestrale, Semestrale, Annuale, Biennale…)
-4. Generare automaticamente uno o N **PDF compilabile (AcroForm)** con radio button per esiti e campi testo per note
-
-Il PDF prodotto è una scheda professionale conforme alle normative CEI/UNI, pronta per la compilazione in cantiere.
+1. Gestire l'anagrafica di **Clienti** e relativi **Cantieri / Sedi operative**
+2. Configurare gli **Impianti del Cantiere** da un catalogo globale polimorfico (Quadri BT con interruttori, Illuminazione d'emergenza con registro lampade, Rilevazione Incendi interconnessa, Cabine MT/BT, Gruppi Elettrogeni, Fotovoltaico, ecc.)
+3. Arricchire i componenti con specifiche tecniche e codici commerciali tramite ricerca live su **Catalogo ETIM International API**
+4. Impostare la **Frequenza di manutenzione** specifica per ciascun impianto del cantiere
+5. Generare automaticamente **schede PDF compilabili (AcroForm)** conformi alle normative CEI/UNI, corredate da **Fogli Tecnici Allegati (Foglio 2+)** per verifiche strumentali (differenziali di quadro, prove di autonomia lampade secondo UNI 11222, ecc.).
 
 **Stack definitivo:**
 
-| Layer | Tecnologia | Versione | Modulo Gradle |
+| Layer | Tecnologia | Versione | Dettaglio / Modulo Gradle |
 |---|---|---|---|
-| Linguaggio | Kotlin | `2.1.0` | — |
+| Linguaggio | Kotlin | `2.1.0` | Target JVM 17 |
 | UI Framework | Compose Desktop (KMP) | `1.6.11` | `compose.desktop.currentOs` |
-| Database (target) | Realm Kotlin SDK | — | Futuro |
-| Database (attuale) | JSON locale + cache in-memory | — | `kotlinx-serialization-json 1.9.0` |
-| PDF Engine | iText7 `kernel` + `layout` + `forms` | `9.4.0` | `com.itextpdf:kernel` |
-| HTML→PDF | iText `html2pdf` | `6.3.0` | `com.itextpdf:html2pdf` |
-| Concorrenza | `kotlinx-coroutines-core` + `swing` | `1.9.0` | `kotlinx-coroutines-*` |
-| Build System | Gradle KTS + Version Catalog | — | `libs.versions.toml` |
-| JVM Target | **17** | — | `jvmToolchain(17)` |
+| Database Primario | MongoDB | `5.1.0` | `mongodb-driver-kotlin-coroutine` + `bson-kotlinx` |
+| Database Locale / Fallback | JSON locale + cache in-memory | — | `kotlinx-serialization-json 1.9.0` |
+| PDF Engine | iText7 `kernel` + `layout` + `forms` | `9.4.0` | `com.itextpdf:kernel`, `forms` |
+| HTML→PDF Engine | iText `html2pdf` | `6.3.0` | `com.itextpdf:html2pdf` (AcroForm abilitati) |
+| HTTP Client (API ETIM) | Ktor Client | `2.3.12` | `cio`, `content-negotiation`, `auth`, `serialization-json` |
+| Visual Component Support | OpenJFX (JavaFX) | `21.0.2` | `javafx-base`, `controls`, `graphics` |
+| Concorrenza | `kotlinx-coroutines` | `1.9.0` | `core`, `swing`, `test` |
+| Build System | Gradle KTS + Version Catalog | — | `gradle/libs.versions.toml` |
+| Application Version | SemVer Desktop | **3.1.0** | `packageVersion = "3.1.0"` |
 
 ---
 
@@ -42,21 +43,22 @@ Ogni agente — umano o AI — che interviene su questo codebase **DEVE** rispet
 
 | Vincolo | Motivazione | Impatto |
 |---|---|---|
-| **NoSQL / Realm** | Il database target è Realm Kotlin SDK. Il JSON locale è un bridge temporaneo. | Niente tabelle relazionali, niente JOIN. Modellare con **embedding** e denormalizzazione. |
-| **Offline-first** | L'app deve funzionare senza connessione internet. Zero dipendenze da servizi remoti nel percorso critico. | Ogni dato è persistito localmente prima di qualsiasi sync futuro. |
-| **Immutabilità dello storico** | Le attività sono embedded nella scheda generata. | Modificare un'attività nel master **NON deve** alterare storici già prodotti. |
-| **Retrocompatibilità JSON** | Il file `manutenzioni_db.json` può essere condiviso tra versioni. | Ogni nuovo campo in `ManutenzioniDatabase` **DEVE** avere un valore di default. `ignoreUnknownKeys = true` è mandatorio. |
-| **Cloud-ready** | Il codice deve essere predisposto per future integrazioni (es. Google Drive API). | Disaccoppiare I/O e logica di business tramite interfacce. |
+| **Clean Architecture Rigorosa** | Il `domain` non deve dipendere da nessun layer esterno (`app.data`, `app.service`, `app.ui`). | I model di entità risiedono tassativamente in `manutenzioni.domain.model.*`. Il dominio espone interfacce pure (`ManutenzioneRepository`, `ProductSearchApi`, `IPdf`, `Html`). |
+| **NoSQL Document Model** | I dati sono strutturati per documenti ricchi (MongoDB). | Entità composite ad alto accoppiamento (es. `InterruttoreBT` nel `QuadroBT`, `LampadaEmergenza` nell'`ImpiantoEmergenza`) sono **embedded**. La relazione Cantiere ↔ Impianti usa il discriminante `cantiereId`. |
+| **Template Globali vs Istanze Cantiere** | Un impianto con `cantiereId == null` è un master/template globale; con `cantiereId != null` appartiene a un cantiere specifico. | Modificare un impianto di un cantiere non deve intaccare il template globale né altri cantieri. |
+| **Offline-first & Resilienza Connessione** | L'app supporta sia MongoDB (locale/cloud) sia fallback/migrazione su file JSON. | In avvio, `ConnectionScreen` effettua un handshake con timeout a 5s. La configurazione di connessione è cifrata via AES in `~/.manutenzioni_maker/config.json`. |
+| **Open-Closed Principle (OCP) per Allegati** | Fogli tecnici secondari (Foglio 2+) sono estensibili senza modificare il template engine centrale. | Ogni nuovo tipo di allegato implementa `TechnicalAttachmentProvider` e viene registrato in `HtmlService`. |
+| **Retrocompatibilità JSON** | La serializzazione JSON deve supportare migrazioni senza rotture. | Ogni nuovo campo deve avere un default. `ignoreUnknownKeys = true` è mandatorio in tutti i serializzatori. |
 
 ### 2.2 Vincoli di Codice
 
 | Vincolo | Regola |
 |---|---|
-| **Type-safety ossessiva** | Usare `enum class TipoPeriodo`, `data class Periodo`, `sealed class` per stati. **MAI** stringhe libere per stati, tipologie o ID semantici. |
-| **Kotlin idiomatico** | `when` expressions, extension functions, scope functions (`let`, `also`, `apply`), `copy()` su data class. Niente getter/setter Java-style. |
-| **Functional-oriented** | Funzioni pure, immutabilità, `List.filter`/`map`/`sortedBy`. Evitare loop imperativi con mutazione esterna. |
-| **Compose puro** | I `@Composable` sono funzioni di rendering senza side-effect. Lo stato è gestito **esclusivamente** nel ViewModel via `StateFlow`. |
-| **`@Serializable` su ogni model persistito** | `kotlinx.serialization` è il serializzatore unico. Niente `Gson`, niente `Jackson`. |
+| **Type-safety ossessiva** | Usare gerarchie polimorfiche (`sealed class Impianto`), enum (`TipoPeriodo`, `MqtSwitchType`, `CellTextAlign`) e data class dedicate. Mai stringhe libere per stati o tipologie. |
+| **Kotlin idiomatico** | `when` expressions esaustive su `sealed class`, funzioni pure, immutabilità con `copy()`. Evitare mutazioni imperative di collezioni. |
+| **Compose puro & UDF** | I `@Composable` non hanno side-effect. Lo stato risiede in `ManutenzioniViewModel` esposto tramite `StateFlow<ManutenzioniUiState>`. |
+| **`@Serializable` su ogni model** | `kotlinx.serialization` è l'unico serializzatore consentito (compatibile anche con BSON tramite `bson-kotlinx`). |
+| **Safe Coroutine Scopes** | Operazioni I/O, database e chiamate HTTP esterne girano esclusivamente su `Dispatchers.IO`. La UI consuma su `Dispatchers.Main`. |
 
 ---
 
@@ -65,65 +67,78 @@ Ogni agente — umano o AI — che interviene su questo codebase **DEVE** rispet
 ```
 desktopApp/src/desktopMain/kotlin/manutenzioni/
 │
-├── app/
-│   ├── Main.kt                              ← Entry point. Crea Repository, ViewModel, Window.
+├── app/                                     ← 📦 LAYER APPLICATIVO & INFRASTRUTTURA
+│   ├── Main.kt                              ← Entry point: setup crash log, connection timeout, Window, Theme
 │   │
-│   ├── data/                                ← 📦 DATA LAYER
-│   │   ├── ManutenzioneModels.kt            ←   TUTTI i model @Serializable:
-│   │   │                                         Impianto, Attivita, Periodo, TipoPeriodo,
-│   │   │                                         Normativa, Cliente, ManutenzioniDatabase
-│   │   └── JsonManutenzioneRepository.kt    ←   Repository concreto: JSON file + cache in-memory
-│   │                                             Implementa ManutenzioneRepository (CRUD Impianti + Clienti)
+│   ├── data/                                ← 💾 DATA ACCESS & PERSISTENCE
+│   │   ├── MongoManutenzioneRepository.kt   ← Implementazione MongoDB (coroutine driver + BSON kotlinx)
+│   │   ├── JsonManutenzioneRepository.kt    ← Implementazione JSON file + cache in-memory
+│   │   ├── AppConfigRepository.kt           ← Storage cifrato AES credenziali di connessione (~/.manutenzioni_maker)
+│   │   ├── DataMigrator.kt                  ← Utility di migrazione dati tra JSON e MongoDB
+│   │   └── ManutenzioneModels.kt            ← Wrapper JSON: ManutenzioniDatabase
 │   │
-│   ├── service/                             ← ⚙️ SERVICE LAYER (infrastruttura)
-│   │   ├── HtmlService.kt                  ←   Template engine: scheletro.html → HTML dinamico
-│   │   │                                         Placeholder replacement + generazione <tr> attività
-│   │   │                                         Iniezione nome cliente nell'header
-│   │   │                                         Implementa interfaccia Html (domain)
-│   │   └── Pdf.kt                          ←   Wrapper iText7 html2pdf → PDF con AcroForm
-│   │                                             ConverterProperties.setCreateAcroForm(true)
-│   │                                             Implementa interfaccia IPdf (domain)
+│   ├── service/                             ← ⚙️ SERVIZI ESTERNI & ENGINES
+│   │   ├── HtmlService.kt                  ← Template engine primario: placeholder replacement + allegati
+│   │   ├── Pdf.kt                          ← Wrapper iText7 html2pdf con AcroForm abilitati
+│   │   ├── EtimCatalogService.kt           ← Client Ktor: OAuth2 Bearer token caching + API ETIM v2 Search
+│   │   └── attachments/                    ← 📑 Technical Attachment Providers
+│   │       ├── TechnicalSheetHtmlRenderer.kt   ← Renderer HTML per fogli tecnici tabellari (Foglio 2+)
+│   │       ├── QuadroBtAttachmentProvider.kt   ← Provider Foglio 2: Interruttori Differenziali (ELENCO DIFF)
+│   │       └── EmergenzaAttachmentProvider.kt  ← Provider Foglio 2: Registro Lampade UNI 11222 (ELENCO EM)
 │   │
 │   ├── strategy/                            ← 🎯 STRATEGY LAYER
-│   │   └── HtmlToPdfStrategy.kt            ←   Strategia concreta: FrequencyFilter → HtmlService → Pdf
-│   │                                             Implementa PdfGeneratorStrategy (domain)
+│   │   └── HtmlToPdfStrategy.kt            ← Strategia PDF: Antincendio Resolver → HtmlService → PdfEngine
 │   │
-│   └── ui/                                  ← 🖥️ PRESENTATION LAYER
-│       ├── App.kt                           ←   Root @Composable: Layout 25/75 + StatusBar + MaterialTheme
-│       ├── Sidebar.kt                       ←   Dropdown Cliente/Impianto/Frequenza, azioni, toggle vista
-│       │                                         ClienteDropdown (con "➕ Aggiungi Nuovo"), NuovoClienteDialog
-│       │                                         ImpiantoDropdown (con "➕ Aggiungi Nuovo Impianto")
-│       ├── MainContent.kt                   ←   Area principale: WelcomeScreen / PdfPreviewPanel / ImpiantoEditor
-│       ├── ImpiantoEditor.kt                ←   Editor universale: creazione nuovo impianto + editing esistente
-│       │                                         CRUD attività inline, validazione campi obbligatori
-│       └── ManutenzioniViewModel.kt         ←   ViewModel + ManutenzioniUiState (data class immutabile)
-│                                                 StateFlow + CoroutineScope(SupervisorJob + Dispatchers.Default)
+│   └── ui/                                  ← 🖥️ PRESENTATION LAYER (Compose Desktop)
+│       ├── App.kt                           ← Root Composable: StatusBar + MainScaffold + routing sezioni
+│       ├── ManutenzioniViewModel.kt         ← StateFlow + UDF: gestione Cantieri, Impianti, ETIM, Batch PDF
+│       ├── ImpiantoEditor.kt                ← Editor universale attività e parametri impianto
+│       ├── ImpiantoSelectionList.kt         ← Lista selezione impianti per cantiere
+│       ├── layout/
+│       │   └── MainScaffold.kt              ← NavigationRail: switch tra "Operatività" e "Database"
+│       ├── theme/
+│       │   └── Theme.kt                     ← Palette "Modern Desktop Industrial" e MaterialTheme
+│       └── features/
+│           ├── config/
+│           │   └── ConnectionScreen.kt      ← Form credenziali MongoDB, test ping, configurazione
+│           ├── operativita/                 ← 🏢 Sezione Cantiere & Operatività Tecnica
+│           │   ├── OperativitaScreen.kt     ← Selezione Cliente e Cantiere di lavoro
+│           │   ├── CantiereDetailScreen.kt  ← Dashboard cantiere: gestione moduli, frequenze, genera PDF
+│           │   ├── AggiungiComponenteDialog.kt ← Modale aggiunta rapida manuale interruttore quadro
+│           │   ├── AggiungiLampadaDialog.kt    ← Modale aggiunta singola / massiva lampade emergenza
+│           │   ├── MassiveQuadroCreationDialog.kt ← Wizard clonazione e creazione massiva quadri
+│           │   └── NuovoImpiantoDialog.kt   ← Modale aggiunta nuovo modulo d'impianto al cantiere
+│           └── amministrazione/             ← 🗄️ Sezione Anagrafiche Globali
+│               ├── AdminDashboardScreen.kt  ← Dashboard gestione dati master con tabs
+│               ├── AdminClientiTab.kt       ← CRUD Clienti globali
+│               ├── AdminCantieriTab.kt      ← CRUD Cantieri globali
+│               └── AdminImpiantiGlobaliTab.kt ← Gestione template impianti e normative master
 │
-└── domain/                                  ← 🏛️ DOMAIN LAYER (contratti + logica pura)
-    ├── ManutenzioneRepository.kt            ←   Interfaccia CRUD: Impianti + Clienti (suspend fun)
+└── domain/                                  ← 🏛️ DOMAIN LAYER (Puro, senza dipendenze da app o framework)
+    ├── ManutenzioneRepository.kt            ← Contratto completo CRUD (Clienti, Cantieri, Impianti, Componenti)
+    ├── model/                               ← 🧱 ENTITÀ DI DOMINIO (@Serializable)
+    │   ├── ManutenzioneModels.kt            ← sealed class Impianto (QuadroBT, ImpiantoEmergenza,
+    │   │                                      RilevazioneAntincendio, RilevazioneGas, QuadroMQT,
+    │   │                                      ImpiantoStandard), Cliente, Cantiere, Attivita,
+    │   │                                      Periodo, InterruttoreBT, LampadaEmergenza, ComponenteApprovato
+    │   └── BatchResult.kt                   ← Risultato batch PDF (file generati, successCount, errori)
     ├── service/
-    │   ├── FrequencyFilter.kt               ←   ⭐ REGOLA CORE: F.inMesi() % A.inMesi() == 0
-    │   ├── Html.kt                          ←   Interfaccia template engine (fillHtml)
-    │   └── IPdf.kt                          ←   Interfaccia PDF engine (buildPdf)
+    │   ├── FrequencyFilter.kt               ← ⭐ REGOLA CORE: F.inMesi() % A.inMesi() == 0
+    │   ├── AntincendioAttivitaResolver.kt   ← ⭐ Cross-Plant Discovery: risoluzione contestuale per RI
+    │   ├── ProductSearchApi.kt              ← Contratto per la ricerca catalogo componenti
+    │   ├── Html.kt                          ← Contratto template engine HTML
+    │   ├── IPdf.kt                          ← Contratto generazione PDF
+    │   └── attachments/
+    │       └── TechnicalAttachment.kt       ← Contratti e modelli dichiarativi fogli allegati
     └── strategy/
-        └── PdfGeneratorStrategy.kt          ←   Interfaccia Strategy: generate(impianto, frequenza, path, clienteNome?)
+        ├── PdfBatchGenerator.kt             ← Interfaccia unificata per la generazione batch
+        ├── AbstractPdfGeneratorStrategy.kt  ← Orchestrazione batch (loop, copie progressive, progress report)
+        └── PdfGeneratorStrategy.kt          ← Alias del contratto Strategy
 
 common/                                      ← 📚 MODULO KMP CONDIVISO
-├── src/commonMain/.../PdfService.kt         ←   expect class PdfService (fillAcroForm)
-└── src/desktopMain/.../PdfService.kt        ←   actual class PdfService (iText7 PdfAcroForm)
+├── src/commonMain/.../PdfService.kt         ← expect class PdfService (fillAcroForm)
+└── src/desktopMain/.../PdfService.kt        ← actual class PdfService (iText7 PdfAcroForm)
 ```
-
-### Responsabilità chiare per ogni layer
-
-| Layer | Responsabilità | Dipende da | **Non può** dipendere da |
-|---|---|---|---|
-| `domain` | Interfacce, regole di business, contratti | Model (`app.data` ¹ | `ui`, `strategy` impl, `service` impl |
-| `data` | Model `@Serializable`, persistenza JSON, I/O | `domain` | `ui`, `strategy` |
-| `service` | Rendering HTML, conversione PDF | `domain`, `data` | `ui` |
-| `strategy` | Orchestrazione della pipeline di generazione | `domain`, `service` | `ui` |
-| `ui` | Composable, ViewModel, stato | Tutti i layer | — |
-
-> ¹ **Debito tecnico noto:** I model vivono in `app.data` ma `domain` li importa. In un refactoring futuro, i model puri dovrebbero migrare in `domain.model`.
 
 ---
 
@@ -131,7 +146,7 @@ common/                                      ← 📚 MODULO KMP CONDIVISO
 
 ### 4.1 ⭐ La Regola Fondamentale: Calcolo Frequenze Inclusive
 
-Implementata in `FrequencyFilter.filterByFrequenza()` — questa è la **Stella Polare** dell'intero sistema.
+Implementata in `FrequencyFilter.filterByFrequenza()` — questa è la **Stella Polare** del sistema di calcolo:
 
 ```
 Un intervento con frequenza F include un'attività A se e solo se:
@@ -140,7 +155,7 @@ Un intervento con frequenza F include un'attività A se e solo se:
 ```
 
 **Conversione `Periodo` → Mesi:**
-- `TipoPeriodo.M` → `valore` diretto (M3 = 3 mesi, M6 = 6 mesi)
+- `TipoPeriodo.M` → `valore` diretto (M1 = 1 mese, M6 = 6 mesi)
 - `TipoPeriodo.A` → `valore * 12` (A1 = 12 mesi, A2 = 24 mesi)
 
 **Matrice di inclusione:**
@@ -154,347 +169,223 @@ Un intervento con frequenza F include un'attività A se e solo se:
 | 2 Anni | 24 | 1, 2, 3, 4, 6, 8, 12, 24 |
 | 3 Anni | 36 | 1, 2, 3, 4, 6, 9, 12, 18, 36 |
 
-**Ordinamento risultante:** Le attività filtrate sono ordinate per `frequenza.inMesi()` crescente, poi per `nAttivita` crescente.
+> ⚠️ **Questa regola NON si tocca.** Qualsiasi modifica a `FrequencyFilter` richiede test formali su tutti i casi.
 
-> ⚠️ **Questa regola NON si tocca.** Qualsiasi modifica a `FrequencyFilter` richiede review esplicita e test su tutti i casi della matrice.
+---
 
-### 4.2 Gestione Clienti — Decorrelazione Intenzionale
+### 4.2 🚒 & 💨 Cross-Plant Discovery: Rilevazione Incendi (`RI`) e Rilevazione Gas (`RIG`) (`AntincendioAttivitaResolver` / `CrossPlantAttivitaResolver`)
 
-- I **Clienti non sono legati agli Impianti** nel modello dati. Non esiste un campo `clienteId` in `Impianto`.
-- Il cliente è selezionato **a livello di sessione UI** e iniettato nel PDF solo al momento della generazione.
-- La relazione è intenzionalmente **lassa**: lo stesso impianto può essere usato per clienti diversi.
-- Il nome del cliente viene sostituito nel template HTML: `<p>Cliente</p>` → `<p>Cliente: {NOME}</p>`.
-- I clienti sono persistiti nell'array `clienti` di `ManutenzioniDatabase` con `id` = `UUID.randomUUID()`.
+I sistemi di rivelazione e allarme — sia **Rilevazione Incendi (`RI`)** che **Rilevazione Gas (`RIG`)** — non hanno una lista di attività statica: le prove da eseguire dipendono dagli altri impianti presenti nel cantiere (`contextImpianti`):
 
-### 4.3 Pipeline di Generazione PDF
+1. **Attività di base (`targetImpiantoCod == null`):** Controlli di centrale, firmware, batterie, efficienza alimentazioni, linee di trasmissione e segnalazioni ottico-acustiche. Vengono filtrate unicamente con la regola della frequenza.
+2. **Attività contestuali (`targetImpiantoCod != null`):** Attività mirate di verifica interfacce verso altri sistemi:
+   - **Per `RI`:** Sgancio per `CAB`, rivelazione lineari per `QMT`, rivelazione calore per `Q`, aspirazione per `PEM`, interfaccia con rivelazione gas `RIG`, ecc.
+   - **Per `RIG`:** Rivelatori gas nel locale `GE` (Gruppo Elettrogeno), asservimento ed elettrovalvola di intercettazione combustibile su emergenza `PEM`, interfaccia e trasmissione allarme alla centrale incendi `RI`, sgancio alimentazione quadro locale gas `Q`, asservimento in `CAB` e protezioni di linea `SPD`.
+   - L'attività viene inserita nel PDF **solo se** l'impianto con `codIntervento == targetImpiantoCod` è presente nella configurazione del cantiere.
+3. **Risoluzione Frequenze Cantiere (`resolveFrequenze`):** Calcola per `RI` e `RIG` solo le frequenze le cui attività appartengono a impianti effettivamente presenti nel cantiere, evitando frequenze vuote nella UI.
+
+---
+
+### 4.3 📑 Fogli Tecnici Allegati OCP (`TechnicalAttachmentProvider`)
+
+Per impianti complessi che richiedono verifiche strumentali puntuali su componenti, il sistema genera un **secondo foglio tecnico allegato (Foglio 2+)** conforme all'Open-Closed Principle:
+
+1. **`QuadroBtAttachmentProvider`:**
+   - Gestisce impianti `QuadroBT`.
+   - Inietta nella premessa del Foglio 1 il conteggio e l'elenco riassuntivo degli interruttori.
+   - Genera il **Foglio 2: Elenco Interruttori Differenziali**, con srotolamento automatico delle quantità maggiori di 1 (suffissi `.1`, `.2`), dati di targa e campi AcroForm per prova del tasto di test e misura del tempo/corrente di scatto.
+2. **`EmergenzaAttachmentProvider`:**
+   - Gestisce impianti `ImpiantoEmergenza`.
+   - Inietta nella premessa del Foglio 1 il sommario delle lampade installate, autonomie dichiarate e posizioni.
+   - Genera il **Foglio 2: Registro Lampade di Emergenza (UNI 11222)**, con colonne per ubicazione, autonomia dichiarata, data ultimo cambio batteria e campi compilabili per verifica funzionale e autonomia reale.
+3. **`TechnicalSheetHtmlRenderer`:**
+   - Costruisce dinamicamente la tabella HTML a larghezza millimetrica (18.4 cm), supportando colonne con sub-colonne, radio button AcroForm e text field univoci.
+
+---
+
+### 4.4 🔍 Integrazione Catalogo ETIM (`EtimCatalogService`)
+
+Il modulo `service/EtimCatalogService.kt` implementa il contratto di dominio `ProductSearchApi` per connettersi all'API internazionale ETIM:
+- **Autenticazione OAuth2 automatica:** Scambia `clientId` e `clientSecret` sull'endpoint token e memorizza il Bearer Token con scadenza, protetto da `Mutex` per garantire la thread-safety.
+- **Client HTTP Ktor (CIO):** Esegue chiamate asincrone all'endpoint di ricerca classi ETIM.
+- **Equivalenze & Approvazione:** Permette di catalogare componenti approvati aziendali (`ComponenteApprovato`), suggerendo varianti commerciali equivalenti in fase di composizione del quadro.
+
+---
+
+### 4.5 🚀 Pipeline di Generazione Batch PDF
 
 ```
-selectFrequenza() / generatePdf()
-    │
-    ▼
-┌─────────────────────────────────────────────────┐
-│  ManutenzioniViewModel.generatePdf()            │
-│  1. Legge state.selectedImpianto                │
-│  2. Legge state.selectedFrequenza               │
-│  3. Legge state.selectedCliente?.nome           │
-│  4. Delega a pdfStrategy.generate(...)          │
-└──────────────────────┬──────────────────────────┘
+User clicca "Genera PDF" in CantiereDetailScreen
+                       │
                        ▼
-┌─────────────────────────────────────────────────┐
-│  HtmlToPdfStrategy.generate()                   │
-│  1. FrequencyFilter.filterByFrequenza()         │
-│     → Filtra attività per frequenza inclusiva   │
-│  2. HtmlService.buildHtml()                     │
-│     → Carica scheletro.html dal classpath       │
-│     → Replace placeholder: COD_SCHEDA, OGGETTO, │
-│       PERIODICITA, PREMESSA, Cliente            │
-│     → Genera <tr> con radio AcroForm per esiti  │
-│  3. File.createTempFile() → Scrive HTML temp    │
-│  4. Pdf.buildPdf()                              │
-│     → iText7 HtmlConverter + AcroForm = true    │
-│  5. Cleanup: tempHtml.delete() in finally       │
-└──────────────────────┬──────────────────────────┘
+┌────────────────────────────────────────────────────────┐
+│  ManutenzioniViewModel.generatePdf()                   │
+│  - Cicla su tutti gli impianti selezionati nel cantiere│
+│  - Legge la frequenza specifica impostata per ciascuno │
+│  - Invoca pdfStrategy.generateBatch(copies = 1)        │
+└──────────────────────┬─────────────────────────────────┘
                        ▼
-              output/{COD}_{FREQ}.pdf
+┌────────────────────────────────────────────────────────┐
+│  AbstractPdfGeneratorStrategy.generateBatch()          │
+│  - Gestisce il naming: {COD}_{FREQ}.pdf (o _copia_{i}) │
+│  - Notifica callback di progresso alla UI              │
+│  - Chiama la specifica implementazione:               │
+└──────────────────────┬─────────────────────────────────┘
+                       ▼
+┌────────────────────────────────────────────────────────┐
+│  HtmlToPdfStrategy.generate()                          │
+│  1. AntincendioAttivitaResolver.resolveAttivita()      │
+│  2. HtmlService.buildHtml()                            │
+│     ├── Inietta Header (Codice, Oggetto, Frequenza)    │
+│     ├── Inietta Nome Cliente                           │
+│     ├── Genera righe Tabella Attività con AcroForm     │
+│     ├── TechnicalAttachmentProvider.buildPremessa...   │
+│     └── TechnicalAttachmentProvider.buildSheetData...  │
+│  3. File.createTempFile() → Scrive HTML                │
+│  4. Pdf.buildPdf()                                     │
+│     └── iText7 ConverterProperties(createAcroForm=true)│
+│  5. Cleanup file temporaneo in finally                 │
+└────────────────────────────────────────────────────────┘
 ```
-
-### 4.4 Struttura del Template HTML (`scheletro.html`)
-
-| Placeholder | Dato iniettato | Tipo |
-|---|---|---|
-| `<!-- COD_SCHEDA -->` | `impianto.codIntervento` | Statico |
-| `<!-- OGGETTO -->` | `impianto.nomeCompleto` | Statico |
-| `<!-- PERIODICITA -->` | `frequenza.label()` | Statico |
-| `<!-- PREMESSA -->` | `impianto.premessa` | Statico |
-| `<p>Cliente</p>` | `Cliente: {nome}` | Replace diretto |
-| `<!-- ATTIVITA_ROWS -->` | Blocco `<tr>` dinamico | Generato |
-
-**Campi AcroForm per riga attività:**
-- `esito_{COD}_{N}` — Radio group primario (mutuamente esclusivo) con valori: `P`, `PI`, `NA`, `NP`, `B`
-- `esito_vn_{COD}_{N}` — Radio button indipendente con valore `VN` (selezionabile contemporaneamente agli altri esiti mantenendo l'estetica sferica)
-- `note_{COD}_{N}` — Input text per nota libera
 
 ---
 
 ## 5. 🎨 Vibe & UI Standards
 
 ### 5.1 Estetica: Modern Desktop Industrial
+- **Palette colori:**
+  - Primary: `#3366FF` (Electric Blue) — Bottoni principali, accenti, selezioni attive
+  - Primary Variant: `#1A3DB8` — Hover / pressed
+  - Background: `#F8FAFC` (Slate Canvas)
+  - Surface: `#FFFFFF` con bordi sottili `#E2E8F0`
+  - Feedback Successo: Verde `#2E7D32` su sfondo `#E8F5E9`
+  - Feedback Errore: Rosso `#D32F2F` su sfondo `#FFEBEE`
+- **Tipografia:** Tipografia di sistema pulita, pesi `FontWeight.SemiBold` per i titoli di sezione, `12.sp` per i dettagli e `10.sp` per etichette secondarie.
 
-L'interfaccia è pensata per un **ingegnere tecnico**: efficienza > estetica, minimizzazione dei click, chiarezza del dato.
-
-**Palette (definita in `App.kt` → `MaterialTheme`):**
-
-| Ruolo | Colore | Hex | Uso |
-|---|---|---|---|
-| Primary | Blu elettrico | `#3366FF` | Titoli, bottoni primari, accent |
-| Primary Variant | Blu scuro | `#1A3DB8` | Hover, pressed states |
-| Secondary | Azzurro tenue | `#B4C6E7` | Bordi secondari |
-| Background | Grigio chiarissimo | `#F5F5F5` | Sfondo area principale |
-| Sidebar BG | Blu ghiaccio | `#F0F4FA` | Sfondo sidebar |
-| Successo | Verde | `#2E7D32` su `#E8F5E9` | StatusBar positiva, PDF generato |
-| Errore | Rosso | `#D32F2F` su `#FFEBEE` | StatusBar errore, campi mancanti |
-| Info | Blu tenue | `#E3F2FD` | Card conteggio attività |
-
-### 5.2 Layout
-
-- **Sidebar fissa (25%):** Dropdown sequenziali (Cliente → Impianto → Frequenza) + Info card + Azioni + Toggle vista
-- **Area principale (75%):** Stato duale gestito da `ViewMode` enum:
-  - `PDF_PREVIEW`: WelcomeScreen → PdfPreviewPanel (info impianto + attività + card PDF + normative)
-  - `IMPIANTO_EDITOR`: ImpiantoEditor con CRUD inline delle attività
-
-### 5.3 Pattern di Stato e Feedback
-
-| Pattern | Implementazione | Dove |
-|---|---|---|
-| **Unidirectional Data Flow** | `User → ViewModel.method() → _uiState.update{copy()} → StateFlow → collectAsState() → Recomposition` | Tutto il progetto |
-| **UiState immutabile** | `data class ManutenzioniUiState` — ogni campo ha un default, ogni mutazione produce una nuova istanza via `copy()` | `ManutenzioniViewModel.kt` |
-| **StatusBar reattiva** | Barra superiore colorata (verde/rosso) con `statusMessage` / `errorMessage` + spinner `CircularProgressIndicator` | `App.kt` |
-| **Error Boundary visivo** | `isError = true` su `OutlinedTextField` → bordo rosso `#D32F2F` + testo errore sotto il campo | `Sidebar.kt` (ClienteDropdown) |
-| **Loading globale** | `isLoading` in UiState → spinner in MainContent + StatusBar + bottoni disabilitati | Trasversale |
-| **Dialog modale** | `AlertDialog` con validazione locale per la creazione rapida (es. `NuovoClienteDialog`) | `Sidebar.kt` |
-
-### 5.4 Convenzioni UI
-
-- Dropdown: `ExposedDropdownMenuBox` + `OutlinedTextField(readOnly = true)` + `ExposedDropdownMenuDefaults.TrailingIcon`
-- Testo nei dropdown: `12.sp`, sotto-etichette `10.sp`, titoli sezione `subtitle2` + `FontWeight.SemiBold`
-- Card: `elevation = 2.dp` (contenuto primario), `1.dp` (secondario), `0.dp` (info)
-- Bottone primario: `Button` con `backgroundColor = primary`, `contentColor = White`
-- Bottone secondario: `OutlinedButton`
-- Stato locale UI-only (es. `expanded`, `showDialog`): `remember { mutableStateOf() }` — MAI nel ViewModel
+### 5.2 Struttura di Navigazione Desktop
+1. **Top StatusBar:** Fornisce sempre feedback immediato (messaggio operativo, errore bloccante, progress indicator rotante).
+2. **NavigationRail (`MainScaffold`):**
+   - **Operatività (`AppSection.OPERATIVITA`):** Flusso primario per tecnici di cantiere.
+     - `OperativitaScreen`: Selezione cliente committente e cantiere.
+     - `CantiereDetailScreen`: Vista espansa con lista impianti, interruttori/lampade inline, selezione frequenze per impianto, generazione e apertura rapida dei PDF generati.
+   - **Database (`AppSection.DATABASE`):** Gestione amministrativa globale.
+     - `AdminDashboardScreen` con schede per Clienti, Cantieri e Impianti Template Master.
+3. **Connection Gateway (`ConnectionScreen`):**
+   - Schermata protetta per configurare host, porta, credenziali MongoDB o testare la connettività.
 
 ---
 
-## 6. ⚙️ Operational Workflow — Come Gestire Interventi
+## 6. ⚙️ Operational Workflow — Il Processo Multi-Agente `/develop`
 
-### 6.1 ✅ Checklist per Nuove Feature
-
-Segui questo ordine **rigorosamente**. Non saltare step.
+Per qualsiasi nuova feature o modifica sostanziale, segui il ciclo vitale orchestrato dallo skill `/develop`:
 
 ```
-STEP 1 → 🏛️ DOMAIN FIRST
-   ├── Definisci l'interfaccia/contratto nel package domain/
-   ├── Se serve un nuovo model → data class @Serializable
-   └── Se il model va nel DB → aggiungi campo a ManutenzioniDatabase CON DEFAULT
-
-STEP 2 → 📦 DATA LAYER
-   ├── Estendi ManutenzioneRepository con i nuovi metodi suspend
-   ├── Implementa in JsonManutenzioneRepository
-   └── Aggiorna entrambe le cache + saveToDisk() atomicamente
-
-STEP 3 → ⚙️ SERVICE / STRATEGY (se tocca la generazione PDF)
-   ├── Aggiorna PdfGeneratorStrategy.generate() (firma)
-   ├── Propaga nelle implementazioni concrete (HtmlToPdfStrategy)
-   └── Aggiorna HtmlService per nuovi placeholder nel template HTML
-
-STEP 4 → 🖥️ UI LAYER (per ultimo!)
-   ├── Aggiungi campi a ManutenzioniUiState (sempre con default)
-   ├── Crea/aggiorna metodi nel ViewModel (verbi imperativi: select, add, load, generate)
-   ├── Costruisci i @Composable in Sidebar / MainContent
-   └── Collega i callback in App.kt
-
-STEP 5 → ✅ VALIDAZIONE
-   ├── ./gradlew :desktopApp:compileKotlinDesktop
-   └── Verifica retrocompatibilità JSON (il vecchio DB deve ancora caricarsi)
+              ┌────────────────────────────────────────┐
+              │          /develop (Orchestrator)       │
+              └───────────────────┬────────────────────┘
+                                  │
+         ┌────────────────────────┼────────────────────────┐
+         ▼                        ▼                        ▼
+ 1. 🏛️ model_agent        2. ⚙️ controller_agent      3. 🎨 view_agent
+ (Data & Domain Layer)    (Logic, Service, ViewModel) (Compose Desktop UI)
 ```
 
-### 6.2 🔧 Checklist per Refactoring
+### Sequenza Obbligatoria di Intervento:
 
-```
-1. Non toccare la firma di PdfGeneratorStrategy.generate() senza aggiornare
-   TUTTE le implementazioni e TUTTI i punti di chiamata nel ViewModel.
+1. **🏛️ Fase 1: Domain & Model First (`model_agent`)**
+   - Definisci il model in `manutenzioni.domain.model.*` (`@Serializable`).
+   - Se l'entità è persistita, aggiorna l'interfaccia `ManutenzioneRepository`.
+   - Implementa i metodi sia in `MongoManutenzioneRepository` sia in `JsonManutenzioneRepository`.
+   - Garantisci retrocompatibilità (default arguments su tutti i campi).
 
-2. Se sposti un model tra package, verifica tutti gli import in domain/ —
-   il domain NON deve mai dipendere da app.ui o app.strategy.
+2. **⚙️ Fase 2: Logic & Service (`controller_agent`)**
+   - Se l'aggiornamento impatta la generazione PDF, estendi o crea un `TechnicalAttachmentProvider` o aggiorna `HtmlService`.
+   - Aggiorna i metodi e i flussi in `ManutenzioniViewModel`.
+   - Mantieni l'immutabilità dello `UiState` via `_uiState.update { it.copy(...) }`.
 
-3. Se cambi la struttura di ManutenzioniDatabase:
-   ├── I nuovi campi DEVONO avere default
-   ├── ignoreUnknownKeys = true DEVE restare attivo nel Json builder
-   └── Il file JSON demo in resources/ DEVE essere aggiornato
+3. **🎨 Fase 3: Presentation (`view_agent`)**
+   - Costruisci o aggiorna i Composable in `app.ui.features.*`.
+   - Usa solo lo stato proveniente dal ViewModel tramite StateFlow.
+   - Non eseguire mai I/O o computazioni pesanti all'interno dei `@Composable`.
 
-4. Se aggiungi una dipendenza esterna:
-   ├── Aggiungi versione in libs.versions.toml
-   ├── Aggiungi library alias in [libraries]
-   └── Referenzia come implementation(libs.tua.libreria) nel build.gradle.kts
-```
-
-### 6.3 📐 Convenzioni di Naming
-
-| Elemento | Pattern | Esempio |
-|---|---|---|
-| Data class | Sostantivo singolare, PascalCase | `Impianto`, `Cliente`, `Attivita` |
-| Enum | PascalCase, valori UPPER_SNAKE o PascalCase | `TipoPeriodo.M`, `ViewMode.PDF_PREVIEW` |
-| Repository interface | `{Dominio}Repository` | `ManutenzioneRepository` |
-| Repository impl | `{Storage}{Dominio}Repository` | `JsonManutenzioneRepository` |
-| ViewModel method | Verbo imperativo, camelCase | `selectImpianto()`, `addCliente()`, `generatePdf()` |
-| UiState field | Sostantivo/aggettivo, camelCase | `selectedImpianto`, `frequenzeDisponibili`, `isLoading` |
-| Composable function | PascalCase, sostantivo | `Sidebar`, `ClienteDropdown`, `NuovoClienteDialog` |
-| Strategy interface | `{Cosa}Strategy` | `PdfGeneratorStrategy` |
-| Strategy impl | `{Come}{Cosa}Strategy` | `HtmlToPdfStrategy` |
-| Placeholder HTML | `<!-- UPPER_SNAKE -->` | `<!-- COD_SCHEDA -->`, `<!-- ATTIVITA_ROWS -->` |
-| Campo AcroForm | `{tipo}_{codImpianto}_{numero}` | `esito_GE_1`, `esito_vn_GE_1`, `note_CAB_3` |
+4. **✅ Fase 4: Validazione e Test**
+   - Esegui i test di unità e di integrazione:
+     ```bash
+     ./gradlew :desktopApp:compileKotlinDesktop
+     ./gradlew :desktopApp:test
+     ```
 
 ---
 
 ## 7. 🚫 Anti-Pattern — Cosa NON Fare MAI
 
-### 7.1 Architettura
-
-| ❌ VIETATO | ✅ CORRETTO | Perché |
+| ❌ VIETATO | ✅ CORRETTO | Motivazione |
 |---|---|---|
-| Usare SQL `JOIN` o logica relazionale | Embedding NoSQL, denormalizzazione | Il target è Realm, non PostgreSQL |
-| Dipendenze circolari `domain` ↔ `app` | `domain` definisce contratti; `app` implementa | Clean Architecture |
-| Logica di business nei `@Composable` | Tutta la logica nel ViewModel o nel domain layer | Separation of Concerns |
-| `GlobalScope` o `runBlocking` | `CoroutineScope(SupervisorJob() + Dispatchers.Default)` | Lifecycle management |
-| Mutare `_uiState.value` direttamente | `_uiState.update { it.copy(...) }` | Thread-safety, UDF |
-| `var` per liste nel ViewModel | `List` immutabili dentro UiState immutabile | Unidirectional Data Flow |
-
-### 7.2 Modelli e Tipi
-
-| ❌ VIETATO | ✅ CORRETTO | Perché |
-|---|---|---|
-| Stringhe per frequenze: `"mensile"` | `Periodo(TipoPeriodo.M, 1)` con `inMesi()` | Type-safety, no typo |
-| `Int` magic numbers per stati | `enum class ViewMode`, `enum class TipoPeriodo` | Semantica esplicita |
-| Model senza `@Serializable` | Annotare con `@Serializable` ogni data class persistita | `kotlinx.serialization` è il contratto |
-| Campi obbligatori senza default nel wrapper DB | `val nuovoCampo: Tipo = default` | Retrocompatibilità JSON |
-| `Gson` o `Jackson` per JSON | `kotlinx.serialization.json.Json` | Unico serializzatore del progetto |
-
-### 7.3 UI
-
-| ❌ VIETATO | ✅ CORRETTO | Perché |
-|---|---|---|
-| `remember { mutableStateOf() }` per stato globale | `StateFlow` nel ViewModel | Lo stato globale vive nel ViewModel |
-| `println()` per errori utente | `_uiState.update { it.copy(errorMessage = ...) }` | Feedback visivo nella StatusBar |
-| Colori hardcoded senza semantica | `MaterialTheme.colors.primary` o costanti nominate | Consistenza visiva |
-| Callback chain > 2 livelli | Passare callback via parametri Composable, max 2 livelli | Leggibilità |
-| Side-effect nei `@Composable` (I/O, network) | `LaunchedEffect` o delegate al ViewModel | Compose è per rendering |
-
-### 7.4 PDF e Template
-
-| ❌ VIETATO | ✅ CORRETTO | Perché |
-|---|---|---|
-| Generare PDF con iText API diretta (celle manuali) | Flusso: HTML Template → `html2pdf` → AcroForm | Manutenibilità del layout |
-| Hardcodare contenuti nel codice Kotlin | Placeholder in `scheletro.html`, replacement dinamico | Separazione layout/dati |
-| Dimenticare `setCreateAcroForm(true)` | Sempre abilitato in `ConverterProperties` | I PDF DEVONO essere compilabili |
-| Non pulire file temporanei HTML | `try { ... } finally { tempHtml.delete() }` | Niente leak su filesystem |
-| Ignorare errori nella conversione PDF | Propagare eccezioni al ViewModel → `errorMessage` | L'utente DEVE sapere se qualcosa è andato storto |
+| Importare `manutenzioni.app.*` dentro il package `domain` | Il domain dipende solo dalla standard library o KMP sharing | Clean Architecture pura |
+| Usare logica relazionale / JOIN SQL | NoSQL document embedding (`cantiereId`, embedded lists) | MongoDB è il document store primario |
+| Modificare la regola `F.inMesi() % A.inMesi() == 0` | Mantenere la formula intatta | È il fondamento matematico dell'inclusione periodica |
+| Hardcodare campi HTML senza AcroForm | Usare `<input type="radio">` e `<input type="text">` univoci | Le schede DEVONO essere compilabili su tablet in cantiere |
+| Silenziare eccezioni nella pipeline PDF con `println` | Lanciare eccezioni tipizzate o propagarle a `UiState.errorMessage` | L'utente deve conoscere lo stato esatto della generazione |
+| Memorizzare password in chiaro su file | Cifrare le credenziali con AES in `AppConfigRepository` | Sicurezza delle credenziali aziendali del database |
+| Mutare collezioni esterne dentro i `@Composable` | Emettere eventi verso il ViewModel (`onEvent(...)`) | Unidirectional Data Flow (UDF) |
 
 ---
 
-## 8. 📋 Debiti Tecnici & Roadmap
+## 8. 📋 Stato dei Debiti Tecnici & Roadmap
 
-### 8.1 Debiti Tecnici Aperti
+### 8.1 Debiti Tecnici — Stato di Risoluzione
 
-| Priorità | Debito | Impatto | File |
-|---|---|---|---|
-| 🔴 Alta | **Inversione dipendenza domain → data:** I model (`Impianto`, `Attivita`) sono in `app.data` ma importati da `domain`. Dovrebbero migrare in `domain.model`. | Il domain dipende dal layer applicativo | `domain/*.kt` |
-| 🟡 Media | **`Html.fillHtml()` è un dead method:** L'interfaccia legacy non è usata. `HtmlService.buildHtml()` è il metodo type-safe reale. | Codice morto, confusione | `Html.kt`, `HtmlService.kt` |
-| 🟡 Media | **`Pdf.buildPdf()` fallisce silenziosamente:** Stampa su `println` e ritorna senza lanciare eccezione. | Errori PDF invisibili all'utente | `Pdf.kt` |
-| 🟡 Media | **Thread-safety cache repository:** `JsonManutenzioneRepository` non è thread-safe. Race condition possibili. | Corruzione dati con accessi concorrenti | `JsonManutenzioneRepository.kt` |
-| 🟢 Bassa | **`PdfConfig` è inutilizzato:** Data class definita in `Pdf.kt` ma mai referenziata. | Codice morto | `Pdf.kt` |
+| Debito Originale | Stato | Risoluzione applicata |
+|---|---|---|
+| Inversione dipendenza domain → data | **RISOLTO (v3.0)** | Tutti i modelli (`Impianto`, `Attivita`, `Cliente`, `Cantiere`) sono migrati nel package `manutenzioni.domain.model.*`. |
+| `Html.fillHtml()` dead method | **RISOLTO (v3.1)** | Rimosso dall'interfaccia `Html`. Rimasto solo `buildHtml()` tipizzato. |
+| `Pdf.buildPdf()` fallimento silenzioso | **RISOLTO (v3.1)** | Rilancia esplicitamente una `RuntimeException` con causa. |
+| `PdfConfig` inutilizzato | **RISOLTO (v3.1)** | Rimosso da `Pdf.kt`. |
+| Thread-safety in `JsonManutenzioneRepository` | 🟡 Monitorato | La persistenza primaria è migrata a MongoDB Coroutine Driver. JSON rimane come fallback/esportazione. |
+| Anteprima PDF nativa embedded nella UI | 🟡 Aperto | Attualmente i PDF vengono aperti tramite il visualizzatore di sistema (`Desktop.getDesktop().open(file)`). |
 
 ### 8.2 Roadmap Feature
 
-| Fase | Feature | Stato |
+| Milestone | Descrizione | Stato |
 |---|---|---|
-| ✅ v1.0 | Selezione Impianto + Frequenza + Generazione PDF AcroForm | Completata |
-| ✅ v2.0 | Editor Impianto inline (CRUD attività) | Completata |
-| ✅ v2.1 | Gestione Clienti (Dropdown + Dialog + Iniezione PDF) | Completata |
-| ✅ v2.2 | Creazione Nuovo Impianto da Dropdown + Editor universale | Completata |
-| 🔲 v3.0 | Migrazione da JSON a **Realm Kotlin SDK** | Pianificata |
-| 🔲 v3.1 | **Google Drive API** per upload/sync PDF generati | Pianificata |
-| 🔲 v3.2 | Anteprima PDF embedded nell'area principale (rendering nativo) | Pianificata |
-| 🔲 v4.0 | Gestione multi-sede per cliente | Pianificata |
-| 🔲 v4.1 | Skeleton Loaders per il caricamento iniziale | Pianificata |
-| 🔲 v4.2 | Storico interventi con timestamp e archiviazione | Pianificata |
+| **v1.0** | Selezione Impianto, Frequenza, Template HTML e generazione AcroForm iniziale | ✅ Completata |
+| **v2.0** | Editor Impianto inline e CRUD attività | ✅ Completata |
+| **v2.1** | Gestione Clienti e iniezione automatica cliente nell'header | ✅ Completata |
+| **v2.2** | Creazione impianti master da UI | ✅ Completata |
+| **v3.0** | **Cantiere-First Architecture:** Introduzione entità Cantiere, separazione template/istanze, gerarchia polimorfica `Impianto`, Cross-Plant Discovery Antincendio (`RI`), backend MongoDB | ✅ Completata |
+| **v3.1** | **Fogli Tecnici Allegati OCP:** Secondo foglio per Quadri BT (differenziali) e Impianti Emergenza (lampade UNI 11222), integrazione Ktor con Catalogo ETIM International | ✅ Completata |
+| **v3.2** | Viewer PDF embedded nativo nell'area principale (anteprima prima della stampa) | 🔲 Pianificata |
+| **v3.3** | Sync Cloud Storage (Google Drive API / S3 per archiviazione automatica schede) | 🔲 Pianificata |
+| **v4.0** | Firma Grafometrica digitale integrata e sincronizzazione offline bidirezionale | 🔲 Pianificata |
 
 ---
 
 ## 9. 🔑 Comandi Essenziali
 
 ```bash
-# Compilazione
+# Compilazione desktop
 ./gradlew :desktopApp:compileKotlinDesktop
 
-# Esecuzione
+# Esecuzione dell'applicazione
 ./gradlew :desktopApp:run
 
-# Package nativo macOS
+# Esecuzione di tutta la suite di test
+./gradlew :desktopApp:test
+
+# Esecuzione di un test specifico
+./gradlew :desktopApp:test --tests "manutenzioni.app.service.attachments.TechnicalAttachmentTest"
+
+# Creazione installer nativo per macOS (.dmg)
 ./gradlew :desktopApp:packageDmg
 
-# Package nativo Windows (solo su Windows)
+# Creazione installer nativo per Windows (.msi)
 ./gradlew :desktopApp:packageMsi
 
-# Package nativo Linux (solo su Linux)
+# Creazione installer nativo per Linux (.deb)
 ./gradlew :desktopApp:packageDeb
-
-# Clean
-./gradlew clean
 ```
 
 ---
 
-## 10. 🚀 CI/CD — GitHub Actions
-
-### Workflow: `.github/workflows/release.yml`
-
-**Trigger:** Push di un tag semver (`v*`) oppure dispatch manuale.
-
-**Flusso:**
-
-```
-git tag v1.0.0 && git push origin v1.0.0
-        │
-        ▼
-┌──────────────────────────────────────────────────────────┐
-│  GitHub Actions — Job "build" (matrix)                   │
-│  ├── macos   → packageDmg + packageUberJar → .dmg + .jar │
-│  ├── windows → packageMsi + packageUberJar → .msi + .jar │
-│  └── linux   → packageDeb + packageUberJar → .deb + .jar │
-└──────────────────────────┬───────────────────────────────┘
-                           ▼
-┌──────────────────────────────────────────────────────────┐
-│  Job "release"                                           │
-│  → Scarica tutti gli artifact                            │
-│  → Crea GitHub Release "v1.0.0"                         │
-│  → Allega .dmg + .msi + .deb + .jar (Fat JAR)            │
-└──────────────────────────────────────────────────────────┘
-```
-
-**Output per SO:**
-
-| Runner | Task Gradle | Installer | Fat JAR |
-|---|---|---|---|
-| `macos-latest` | `packageDmg`, `packageUberJar...` | `.dmg` | `.jar` |
-| `windows-latest` | `packageMsi`, `packageUberJar...` | `.msi` | `.jar` |
-| `ubuntu-latest` | `packageDeb`, `packageUberJar...` | `.deb` | `.jar` |
-
-**Note sui Fat JAR:**
-- Localizzati in `desktopApp/build/compose/binaries/main/uberjar/`
-- Utili per il debug e come alternativa se gli installer nativi falliscono.
-- Richiedono un JRE 17 installato localmente: `java -jar nomefile.jar`.
-
-**Requisiti:** JDK 17 (Temurin), `jpackage` nativo (incluso nel JDK).
-
----
-
-## 11. 🤖 Ecosistema Multi-Agente (Skills)
-
-Il progetto utilizza un setup agentico specializzato per mantenere la Clean Architecture. Nella directory `.agents/skills/` sono definiti i seguenti ruoli:
-
-1. **`model_agent`:** Focus sul Data Layer, Domain Layer, Persistenza e @Serializable. Nessuna dipendenza UI consentita.
-2. **`controller_agent`:** Focus sui ViewModel, StateFlow e Service/Strategy Layer. Gestisce le logiche asincrone e di business, senza toccare Compose.
-3. **`view_agent`:** Focus esclusivo sulle View in Compose Desktop (UI, layout, interazioni). Non altera lo stato globale direttamente.
-4. **`refactoring_agent`:** Focus trasversale sulla qualità del codice, risoluzione debiti tecnici e applicazione dello stile Kotlin idiomatico.
-5. **`develop` (Orchestratore):** Invocando l'azione `/develop` questo skill coordina in sequenza logica Model -> Controller -> View per implementare aggiornamenti complessi rispettando il ciclo vitale.
-
-Quando affronti un task, adotta mentalmente il ruolo appropriato o invoca lo skill specifico.
-
----
-
-> **📌 Nota finale per il prossimo agente:**
-> Prima di iniziare qualsiasi task, leggi questo file **per intero**.
-> Se il task modifica la struttura dei dati → Sezione 6.1 (Checklist Nuove Feature).
-> Se il task è un refactoring → Sezione 6.2.
-> Se hai un dubbio su una scelta architetturale → Sezione 2 (Guardrails) e Sezione 7 (Anti-Pattern).
-> Verifica quale **Agente/Skill** è più adatto al tuo task attuale.
-> La regola `F.inMesi() % A.frequenza.inMesi() == 0` in `FrequencyFilter.kt` è la **Stella Polare**. Non si tocca senza review esplicita.
+> **📌 Promemoria per gli Agenti:**
+> Consulta sempre questo manuale prima di iniziare un task. Se una modifica tocca il flusso dati o l'architettura, consulta la sezione **6 (Il Processo Multi-Agente)** e mantieni la **Clean Architecture** senza compromessi.
