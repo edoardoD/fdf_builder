@@ -120,8 +120,8 @@ desktopApp/src/desktopMain/kotlin/manutenzioni/
     │   ├── ManutenzioneModels.kt            ← sealed class Impianto, sealed interface ImpiantoRilevazione,
     │   │                                      QuadroBT, ImpiantoEmergenza, RilevazioneAntincendio,
     │   │                                      RilevazioneGas, QuadroMQT, ImpiantoStandard,
-    │   │                                      normalizeType() extension, Cliente, Cantiere, Attivita,
-    │   │                                      Periodo, InterruttoreBT, LampadaEmergenza, ComponenteApprovato
+    │   │                                      normalizeType() extension, Cliente, Cantiere (con dataInizioIntervento, nomeManutentore),
+    │   │                                      Attivita, Periodo, InterruttoreBT, LampadaEmergenza, ComponenteApprovato
     │   └── BatchResult.kt                   ← Risultato batch PDF (file generati, successCount, errori)
     ├── service/
     │   ├── FrequencyFilter.kt               ← ⭐ REGOLA CORE: F.inMesi() % A.inMesi() == 0

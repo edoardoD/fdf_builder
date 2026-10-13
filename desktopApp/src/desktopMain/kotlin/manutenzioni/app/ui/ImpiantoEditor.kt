@@ -85,6 +85,11 @@ fun ImpiantoEditor(
     // Determinazione dinamica della tipologia di impianto (anche se originariamente ImpiantoStandard)
     val isQuadro = impianto is QuadroBT || codIntervento.trim().equals("Q", ignoreCase = true) || (codIntervento.trim().startsWith("Q", ignoreCase = true) && !codIntervento.trim().equals("QMT", ignoreCase = true))
     val isEmergenza = impianto is ImpiantoEmergenza || codIntervento.trim().equals("EM", ignoreCase = true)
+    val isQuadroMQT = impianto is QuadroMQT || codIntervento.trim().equals("QMT", ignoreCase = true)
+
+    var tipoInterruttoreMQT by remember(impianto) {
+        mutableStateOf((impianto as? QuadroMQT)?.tipoInterruttore ?: MqtSwitchType.SF6)
+    }
 
     val currentQuadro = (impianto as? QuadroBT) ?: QuadroBT(
         id = impianto.id,
@@ -239,6 +244,27 @@ fun ImpiantoEditor(
                                         listaLampade = lampadeEmergenza
                                     )
                                 }
+                                isQuadroMQT -> {
+                                    val baseMqt = (impianto as? QuadroMQT) ?: QuadroMQT(
+                                        id = impianto.id,
+                                        codIntervento = savedCod,
+                                        nomeCompleto = savedNome,
+                                        premessa = savedPremessa,
+                                        listaAttivita = attivitaList,
+                                        listaNormative = impianto.listaNormative,
+                                        cantiereId = impianto.cantiereId,
+                                        quantita = 1,
+                                        noteSpecifiche = savedNote
+                                    )
+                                    baseMqt.copy(
+                                        codIntervento = savedCod,
+                                        nomeCompleto = savedNome,
+                                        premessa = savedPremessa,
+                                        quantita = 1,
+                                        noteSpecifiche = savedNote,
+                                        listaAttivita = attivitaList
+                                    ).withTipoInterruttore(tipoInterruttoreMQT)
+                                }
                                 else -> {
                                     impianto.copyWithBasicParams(
                                         codIntervento = savedCod,
@@ -355,6 +381,59 @@ fun ImpiantoEditor(
                 }
             }
         }
+        }
+        if (isQuadroMQT) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 2.dp,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Tipologia Interruttore Media Tensione (MT)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colors.primary
+                        )
+                        Text(
+                            text = "Seleziona la tecnologia dell'interruttore (SF6, ISV, IVOR). Le attività associate adegueranno automaticamente la colonna Zona/Impianto nel PDF.",
+                            style = MaterialTheme.typography.caption,
+                            color = Color.Gray
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            MqtSwitchType.values().forEach { switchType ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .clickable { tipoInterruttoreMQT = switchType }
+                                        .padding(vertical = 4.dp, horizontal = 4.dp)
+                                ) {
+                                    RadioButton(
+                                        selected = tipoInterruttoreMQT == switchType,
+                                        onClick = { tipoInterruttoreMQT = switchType },
+                                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary)
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Text(
+                                        text = switchType.label,
+                                        fontWeight = if (tipoInterruttoreMQT == switchType) FontWeight.Bold else FontWeight.Normal,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
         if (isQuadro) {
             item {
@@ -801,6 +880,7 @@ private fun AttivitaCard(
     onDelete: () -> Unit
 ) {
     var tipoAttivita by remember(attivita) { mutableStateOf(attivita.tipoAttivita ?: "") }
+    var zona by remember(attivita) { mutableStateOf(attivita.zona ?: "") }
     var descrizione by remember(attivita) { mutableStateOf(attivita.descrizione ?: "") }
     var tipoPeriodo by remember(attivita) { mutableStateOf(attivita.frequenza.tipo) }
     var valorePeriodo by remember(attivita) { mutableStateOf(attivita.frequenza.valore.toString()) }
@@ -838,6 +918,18 @@ private fun AttivitaCard(
                     },
                     label = { Text("Tipo", fontSize = 11.sp) },
                     modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.copy(fontSize = 12.sp)
+                )
+
+                OutlinedTextField(
+                    value = zona,
+                    onValueChange = {
+                        zona = it
+                        onUpdate(attivita.copy(zona = it.ifBlank { null }))
+                    },
+                    label = { Text("Zona/Componente", fontSize = 11.sp) },
+                    modifier = Modifier.weight(1.2f),
                     singleLine = true,
                     textStyle = LocalTextStyle.current.copy(fontSize = 12.sp)
                 )

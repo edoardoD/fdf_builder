@@ -7,6 +7,7 @@ import manutenzioni.domain.model.Attivita
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.Periodo
 import manutenzioni.domain.model.QuadroBT
+import manutenzioni.domain.model.QuadroMQT
 import manutenzioni.domain.service.Html
 import manutenzioni.domain.service.attachments.TechnicalAttachmentProvider
 import java.io.File
@@ -79,7 +80,7 @@ class HtmlService(
         html = html.replace("<p>Cliente</p>", "<p>$clienteText</p>")
 
         // Generazione righe dinamiche delle attività
-        val rows = buildAttivitaRows(attivitaFiltrate, impianto.codIntervento)
+        val rows = buildAttivitaRows(attivitaFiltrate, impianto)
         html = html.replace("<!-- ATTIVITA_ROWS -->", rows)
 
         // Generazione fogli tecnici allegati (secondo foglio: differenziali, lampade, ecc.)
@@ -124,18 +125,33 @@ class HtmlService(
      * Genera le righe <tr> HTML per ogni attività, con radio button per esiti
      * e campo testo per le note. I nomi dei campi sono univoci per riga.
      */
-    private fun buildAttivitaRows(attivita: List<Attivita>, codImpianto: String): String {
+    private fun buildAttivitaRows(attivita: List<Attivita>, impianto: Impianto): String {
         val sb = StringBuilder()
         val esiti = listOf("P", "PI", "NA", "NP", "VN", "B")
+        val codImpianto = impianto.codIntervento
 
         attivita.forEachIndexed { index, att ->
             val rowNum = index + 1
             val radioName = "esito_${codImpianto}_${rowNum}"
 
+            // Risoluzione testo colonna Zona / Impianto:
+            // Se att.zona è presente, usa la zona.
+            // Se l'impianto è un QuadroMQT e la zona è "Interruttore", sostituisci con la sigla scelta dal tecnico (SF6, ISV, IVOR).
+            val colImpiantoText = when {
+                !att.zona.isNullOrBlank() -> {
+                    if (att.zona.equals("interruttore", ignoreCase = true) && impianto is QuadroMQT) {
+                        impianto.tipoInterruttore?.label ?: "SF6"
+                    } else {
+                        att.zona
+                    }
+                }
+                else -> att.frequenza.label()
+            }
+
             sb.appendLine("""                <tr class="row--data">""")
             sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(att.nAttivita.toString())}</p></td>""")
             sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(att.tipoAttivita ?: "")}</p></td>""")
-            sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(att.frequenza.label())}</p></td>""")
+            sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(colImpiantoText)}</p></td>""")
             sb.appendLine("""                    <td class="cell--data-empty"><p style="text-align:justify;">${escapeHtml(att.descrizione ?: "")}</p></td>""")
             // Colonne esito con radio button:
             // P, PI, NA, NP, B appartengono al radio group principale (mutuamente esclusivo tra loro).

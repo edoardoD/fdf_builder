@@ -221,6 +221,14 @@ fun CantiereCard(
                 style = MaterialTheme.typography.h6,
                 color = MaterialTheme.colors.onSurface
             )
+            cantiere.indirizzo?.let { indirizzo ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "📍 $indirizzo",
+                    style = MaterialTheme.typography.body2,
+                    color = MaterialTheme.colors.secondary
+                )
+            }
             Spacer(modifier = Modifier.height(24.dp))
             
             Button(
@@ -233,7 +241,7 @@ fun CantiereCard(
                 ),
                 elevation = ButtonDefaults.elevation(0.dp, 0.dp)
             ) {
-                Text("Gestisci Impianti", fontWeight = FontWeight.SemiBold)
+                Text("Gestione Verifiche Periodiche", fontWeight = FontWeight.SemiBold)
             }
         }
     }

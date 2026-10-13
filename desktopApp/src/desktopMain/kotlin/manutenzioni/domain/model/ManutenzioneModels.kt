@@ -171,8 +171,8 @@ data class RilevazioneGas(
 @SerialName("QuadroMQT")
 data class QuadroMQT(
     override val id: String = java.util.UUID.randomUUID().toString(),
-    override val codIntervento: String,
-    override val nomeCompleto: String,
+    override val codIntervento: String = "QMT",
+    override val nomeCompleto: String = "Quadro Media Tensione",
     override val premessa: String? = null,
     override val listaAttivita: List<Attivita> = emptyList(),
     override val listaNormative: List<Normativa> = emptyList(),
@@ -189,15 +189,36 @@ data class QuadroMQT(
     ): Impianto = copy(
         id = id, codIntervento = codIntervento, nomeCompleto = nomeCompleto, 
         premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative, 
-        cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche
+        cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche,
+        tipoInterruttore = tipoInterruttore
     )
+
+    /**
+     * Sostituisce la keyword "Interruttore" (o precedente switch type) nella colonna "zona"
+     * delle attività con la tipologia di interruttore specificata (es. SF6, ISV, IVOR).
+     */
+    fun withTipoInterruttore(tipo: MqtSwitchType?): QuadroMQT {
+        val targetKeyword = tipo?.label ?: "Interruttore"
+        val switchLabels = setOf("Interruttore", "interruttore", "ISF6", "SF6", "ISV", "IVOR")
+        val updatedAttivita = listaAttivita.map { att ->
+            if (att.zona != null && switchLabels.any { it.equals(att.zona, ignoreCase = true) }) {
+                att.copy(zona = targetKeyword)
+            } else {
+                att
+            }
+        }
+        return copy(
+            tipoInterruttore = tipo,
+            listaAttivita = updatedAttivita
+        )
+    }
 }
 
 @Serializable
 enum class MqtSwitchType(val label: String) {
     SF6("SF6"),
-    VUOTO("Vuoto"),
-    ARIA("Aria")
+    ISV("ISV"),
+    IVOR("IVOR")
 }
 
 @Serializable
@@ -280,7 +301,8 @@ data class Attivita(
     val frequenza: Periodo, // Ordinamento basato su questo oggetto
     val visibile: Boolean = true, // Per gestire la visibilità condizionale (es. attività custom Antincendio)
     val componentRef: String? = null, // ID del componente che attiva questa attività
-    val targetImpiantoCod: String? = null // Codice impianto bersaglio per discovery cross-plant (es. "GE", "PEM")
+    val targetImpiantoCod: String? = null, // Codice impianto bersaglio per discovery cross-plant (es. "GE", "PEM")
+    val zona: String? = null // Sotto-sistema/zona dell'impianto (es. "Q.M.T.", "SEZ.", "Interruttore", "SF6", "ISV", "IVOR")
 )
 
 @Serializable
@@ -326,7 +348,11 @@ data class Cliente(
 data class Cantiere(
     val id: String,
     val nome: String,
-    val clienteId: String
+    val clienteId: String,
+    val dataInizioIntervento: String? = null,
+    val nomeManutentore: String? = null,
+    /** Indirizzo della sede operativa / cantiere (R3). Opzionale per retrocompatibilità. */
+    val indirizzo: String? = null
 )
 
 /**
@@ -390,6 +416,20 @@ fun Impianto.normalizeType(): Impianto {
                 cantiereId = cantiereId,
                 quantita = quantita,
                 noteSpecifiche = noteSpecifiche
+            )
+        }
+        this !is QuadroMQT && codIntervento.equals("QMT", ignoreCase = true) -> {
+            QuadroMQT(
+                id = id,
+                codIntervento = codIntervento,
+                nomeCompleto = nomeCompleto,
+                premessa = premessa,
+                listaAttivita = listaAttivita,
+                listaNormative = listaNormative,
+                cantiereId = cantiereId,
+                quantita = quantita,
+                noteSpecifiche = noteSpecifiche,
+                tipoInterruttore = (this as? QuadroMQT)?.tipoInterruttore
             )
         }
         else -> this

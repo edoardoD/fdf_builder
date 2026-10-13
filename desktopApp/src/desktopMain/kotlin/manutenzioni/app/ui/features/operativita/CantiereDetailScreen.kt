@@ -1,21 +1,26 @@
 package manutenzioni.app.ui.features.operativita
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.Periodo
 import manutenzioni.app.ui.ImpiantoEditor
@@ -42,7 +47,10 @@ fun CantiereDetailScreen(
     onSostituisciProduttore: ((manutenzioni.domain.model.QuadroBT, String, manutenzioni.domain.model.VarianteProdotto) -> Unit)? = null,
     onAggiungiLampadaAEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, manutenzioni.domain.model.LampadaEmergenza) -> Unit)? = null,
     onAggiungiLampadeAEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, List<manutenzioni.domain.model.LampadaEmergenza>) -> Unit)? = null,
-    onAggiornaLampadaInEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, manutenzioni.domain.model.LampadaEmergenza) -> Unit)? = null
+    onAggiornaLampadaInEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, manutenzioni.domain.model.LampadaEmergenza) -> Unit)? = null,
+    onUpdateDatiIntervento: (String?, String?) -> Unit = { _, _ -> },
+    onUpdateMqtSwitchType: ((String, manutenzioni.domain.model.MqtSwitchType) -> Unit)? = null,
+    onAddImpiantiFromTemplates: (List<Impianto>) -> Unit = { templates -> templates.forEach { onCreateNewImpianto(it) } }
 ) {
     // Gestione visualizzazione ImpiantoEditor
     var impiantoInModifica by remember { mutableStateOf<Impianto?>(null) }
@@ -87,14 +95,20 @@ fun CantiereDetailScreen(
         NuovoImpiantoDialog(
             impiantiGlobali = state.impiantiGlobali,
             onDismiss = { showNuovoImpiantoDialog = false },
-            onConfirm = { template ->
-                onCreateNewImpianto(template)
+            onConfirmMultiple = { templates ->
+                // R6: i Quadri BT richiedono il wizard di creazione massiva (sigle QG, Q1, ...),
+                // tutti gli altri template vengono aggiunti in blocco con un solo click.
+                val (quadri, altri) = templates.partition { it.isQuadroBtTemplate() }
+                if (altri.isNotEmpty()) onAddImpiantiFromTemplates(altri)
                 showNuovoImpiantoDialog = false
+                quadri.firstOrNull()?.let { quadroTemplate ->
+                    selectedQuadroTemplate = quadroTemplate
+                    showMassiveQuadroDialog = true
+                }
             },
-            onMassiveQuadroRequested = { template ->
-                selectedQuadroTemplate = template
+            onCreateEmpty = {
+                onCreateNewImpianto(null)
                 showNuovoImpiantoDialog = false
-                showMassiveQuadroDialog = true
             }
         )
     }
@@ -154,7 +168,7 @@ fun CantiereDetailScreen(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Torna indietro")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Torna indietro")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
@@ -164,7 +178,7 @@ fun CantiereDetailScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Gestione moduli e generazione schede",
+                        text = state.selectedCantiere?.indirizzo?.let { "📍 $it" } ?: "Gestione verifiche periodiche e generazione schede",
                         style = MaterialTheme.typography.caption,
                         color = MaterialTheme.colors.secondary
                     )
@@ -172,7 +186,98 @@ fun CantiereDetailScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Banner / Card Dati Intervento e Manutentore
+        var dataInizio by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataInizioIntervento) {
+            mutableStateOf(state.selectedCantiere?.dataInizioIntervento ?: "")
+        }
+        var nomeManutentore by remember(state.selectedCantiere?.id, state.selectedCantiere?.nomeManutentore) {
+            mutableStateOf(state.selectedCantiere?.nomeManutentore ?: "")
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = 0.dp,
+            border = BorderStroke(1.dp, SlateBorder),
+            shape = RoundedCornerShape(8.dp),
+            backgroundColor = MaterialTheme.colors.surface
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Engineering,
+                            contentDescription = null,
+                            tint = MaterialTheme.colors.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Dati Sessione Intervento",
+                            style = MaterialTheme.typography.subtitle1,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Text(
+                        text = "Storicizzazione automatica nel database",
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.secondary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    OutlinedTextField(
+                        value = dataInizio,
+                        onValueChange = {
+                            dataInizio = it
+                            onUpdateDatiIntervento(it, nomeManutentore)
+                        },
+                        label = { Text("Data Inizio Intervento") },
+                        placeholder = { Text("GG/MM/AAAA (es. 08/10/2026)") },
+                        leadingIcon = {
+                            Icon(Icons.Default.DateRange, contentDescription = null, tint = MaterialTheme.colors.primary)
+                        },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = MaterialTheme.colors.primary,
+                            unfocusedBorderColor = SlateBorder
+                        )
+                    )
+
+                    OutlinedTextField(
+                        value = nomeManutentore,
+                        onValueChange = {
+                            nomeManutentore = it
+                            onUpdateDatiIntervento(dataInizio, it)
+                        },
+                        label = { Text("Nome Manutentore / Tecnico") },
+                        placeholder = { Text("Nome e Cognome (es. Mario Rossi)") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colors.primary)
+                        },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = MaterialTheme.colors.primary,
+                            unfocusedBorderColor = SlateBorder
+                        )
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             // Colonna 1: Impianti del cantiere
@@ -182,11 +287,11 @@ fun CantiereDetailScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Impianti in questo cantiere", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
+                    Text("Attività di verifica in questo cantiere", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
                     Button(onClick = { showNuovoImpiantoDialog = true }) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Aggiungi Impianto")
+                        Text("Aggiungi Attività di Verifica")
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
@@ -234,6 +339,39 @@ fun CantiereDetailScreen(
                                 val displayLabel = if (impianto is manutenzioni.domain.model.QuadroBT) "${impianto.codIntervento} - ${impianto.sigla}" else impianto.codIntervento
                                 Text(text = displayLabel, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.body2, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp))
                                 
+                                if (impianto is manutenzioni.domain.model.QuadroMQT) {
+                                    Text(
+                                        text = "Tecnologia Interruttore MT:",
+                                        style = MaterialTheme.typography.caption,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colors.primary,
+                                        modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        manutenzioni.domain.model.MqtSwitchType.values().forEach { st ->
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.clickable {
+                                                    onUpdateMqtSwitchType?.invoke(impianto.id, st)
+                                                }
+                                            ) {
+                                                RadioButton(
+                                                    selected = (impianto.tipoInterruttore ?: manutenzioni.domain.model.MqtSwitchType.SF6) == st,
+                                                    onClick = { onUpdateMqtSwitchType?.invoke(impianto.id, st) },
+                                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary),
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                                Spacer(Modifier.width(2.dp))
+                                                Text(st.label, fontSize = 12.sp)
+                                            }
+                                        }
+                                    }
+                                }
+
                                 if (frequenzeDisp.isEmpty()) {
                                     Text("Nessuna attività registrata per questo modulo.", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.error)
                                 } else {
@@ -265,7 +403,7 @@ fun CantiereDetailScreen(
                     backgroundColor = MaterialTheme.colors.surface
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
-                        Text("2. Generazione PDF", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
+                        Text("2. Generazione Schede di Verifica", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         val impiantiAttiviIdsForGen = state.impiantiSelezionati.filter { it.value }.keys
@@ -276,7 +414,7 @@ fun CantiereDetailScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary, contentColor = Color.White)
                         ) {
-                            Text("Genera PDF", fontWeight = FontWeight.Bold)
+                            Text("Genera Schede di Verifica", fontWeight = FontWeight.Bold)
                         }
                         
                         if (state.pdfFile != null) {

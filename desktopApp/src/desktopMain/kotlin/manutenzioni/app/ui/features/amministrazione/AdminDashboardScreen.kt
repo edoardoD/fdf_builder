@@ -49,7 +49,7 @@ fun AdminDashboardScreen(
                 Tab(
                     selected = state.currentAdminTab == tab,
                     onClick = { onTabSelected(tab) },
-                    text = { Text(tab.name.replace("_", " ")) }
+                    text = { Text(tab.label) }
                 )
             }
         }
@@ -63,7 +63,7 @@ fun AdminDashboardScreen(
                     AdminClientiTab(
                         clienti = state.clienti,
                         onAddCliente = { viewModel.addCliente(it) }, // Passare viewModel in qualche modo o delegare
-                        onRenameCliente = { id, name -> viewModel.renameCliente(id, name) },
+                        onUpdateCliente = viewModel::updateCliente,
                         onDeleteCliente = { viewModel.deleteCliente(it) }
                     )
                 }
@@ -74,7 +74,7 @@ fun AdminDashboardScreen(
                         cantieri = state.cantieriDisponibili,
                         onClienteSelected = { viewModel.selectCliente(it) },
                         onAddCantiere = { viewModel.addCantiere(it) },
-                        onRenameCantiere = { id, name -> viewModel.renameCantiere(id, name) }
+                        onUpdateCantiere = { cantiere -> viewModel.updateCantiere(cantiere.id, cantiere.nome, cantiere.indirizzo) }
                     )
                 }
                 AdminTab.IMPIANTI_GLOBALI -> {

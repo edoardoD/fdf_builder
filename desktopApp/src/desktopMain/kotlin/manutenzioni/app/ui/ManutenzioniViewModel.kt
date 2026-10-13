@@ -17,6 +17,8 @@ import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.Periodo
 import manutenzioni.domain.model.InterruttoreBT
 import manutenzioni.domain.model.QuadroBT
+import manutenzioni.domain.model.QuadroMQT
+import manutenzioni.domain.model.MqtSwitchType
 import manutenzioni.domain.model.ComponentCandidate
 import manutenzioni.domain.model.ComponenteApprovato
 import manutenzioni.domain.model.VarianteProdotto
@@ -35,11 +37,12 @@ enum class AppSection {
     DATABASE
 }
 
-/** Tabs della sezione amministrazione */
-enum class AdminTab {
-    CLIENTI,
-    CANTIERI,
-    IMPIANTI_GLOBALI
+/** Tabs della sezione amministrazione, con etichetta visualizzata nella TabRow */
+enum class AdminTab(val label: String) {
+    CLIENTI("CLIENTI"),
+    CANTIERI("CANTIERI"),
+    /** Template master globali delle schede (R1: ex "Impianti Locali / Globali") */
+    IMPIANTI_GLOBALI("MASTER SCHEDE DI VERIFICA")
 }
 
 /**
@@ -72,6 +75,20 @@ data class ManutenzioniUiState(
     val candidateComponents: List<ComponentCandidate> = emptyList(),
     val catalogoApprovato: List<ComponenteApprovato> = emptyList()
 )
+
+/**
+ * Funzione pura: istanzia un template globale come copia indipendente per un cantiere.
+ * Genera un nuovo id, assegna il `cantiereId` e resetta la quantità a 1.
+ * Per i Quadri MT applica la tecnologia interruttore di default (SF6) se non impostata.
+ */
+internal fun instantiateTemplateForCantiere(template: Impianto, cantiereId: String?): Impianto {
+    val copy = template.copyWithBasicParams(
+        id = java.util.UUID.randomUUID().toString(),
+        cantiereId = cantiereId,
+        quantita = 1
+    )
+    return if (copy is QuadroMQT) copy.withTipoInterruttore(copy.tipoInterruttore ?: MqtSwitchType.SF6) else copy
+}
 
 /**
  * ViewModel che gestisce lo stato dell'applicazione.
@@ -171,6 +188,41 @@ class ManutenzioniViewModel(
         }
     }
 
+    /**
+     * Aggiorna nome e indirizzo di un cantiere (R3) preservando i metadati di intervento
+     * (data inizio, manutentore) presenti nello stato corrente.
+     */
+    fun updateCantiere(id: String, nome: String, indirizzo: String?) {
+        if (nome.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Il nome del cantiere è obbligatorio") }
+            return
+        }
+        val state = _uiState.value
+        val current = state.cantieriDisponibili.find { it.id == id }
+            ?: state.selectedCantiere?.takeIf { it.id == id }
+            ?: return
+        val updated = current.copy(
+            nome = nome.trim(),
+            indirizzo = indirizzo?.trim()?.ifBlank { null }
+        )
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) { repository.salvaCantiere(updated) }
+                val cantieri = withContext(Dispatchers.IO) { repository.getCantieriForCliente(updated.clienteId) }
+                _uiState.update {
+                    it.copy(
+                        cantieriDisponibili = if (it.selectedCliente?.id == updated.clienteId) cantieri else it.cantieriDisponibili,
+                        selectedCantiere = if (it.selectedCantiere?.id == updated.id) updated else it.selectedCantiere,
+                        statusMessage = "✓ Cantiere ${updated.nome} aggiornato",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore aggiornamento cantiere: ${e.message}") }
+            }
+        }
+    }
+
     private fun loadCantieriForCliente(clienteId: String) {
         scope.launch {
             try {
@@ -213,6 +265,35 @@ class ManutenzioniViewModel(
                 refresh()
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Errore ridenominazione cliente: ${e.message}") }
+            }
+        }
+    }
+
+    /** Aggiorna l'anagrafica completa di un cliente: nome, indirizzo e partita IVA (R2) */
+    fun updateCliente(cliente: Cliente) {
+        if (cliente.nome.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Il nome del cliente è obbligatorio") }
+            return
+        }
+        val normalized = cliente.copy(
+            nome = cliente.nome.trim(),
+            indirizzo = cliente.indirizzo?.trim()?.ifBlank { null },
+            partitaIva = cliente.partitaIva?.trim()?.ifBlank { null }
+        )
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) { repository.salvaCliente(normalized) }
+                val clienti = withContext(Dispatchers.IO) { repository.caricaClienti() }
+                _uiState.update {
+                    it.copy(
+                        clienti = clienti,
+                        selectedCliente = if (it.selectedCliente?.id == normalized.id) normalized else it.selectedCliente,
+                        statusMessage = "✓ Cliente ${normalized.nome} aggiornato",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore aggiornamento cliente: ${e.message}") }
             }
         }
     }
@@ -287,6 +368,28 @@ class ManutenzioniViewModel(
             )
         }
         loadImpiantiForCantiere(cantiere.id)
+    }
+
+    /** Aggiorna e storicizza nel database la data di inizio intervento e il nome del manutentore per il cantiere attivo */
+    fun updateDatiInterventoCantiere(dataInizio: String?, manutentore: String?) {
+        val currentCantiere = _uiState.value.selectedCantiere ?: return
+        val updated = currentCantiere.copy(
+            dataInizioIntervento = dataInizio?.trim()?.ifBlank { null },
+            nomeManutentore = manutentore?.trim()?.ifBlank { null }
+        )
+        _uiState.update { state ->
+            state.copy(
+                selectedCantiere = updated,
+                cantieriDisponibili = state.cantieriDisponibili.map { if (it.id == updated.id) updated else it }
+            )
+        }
+        scope.launch(Dispatchers.IO) {
+            try {
+                repository.salvaCantiere(updated)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore salvataggio dati intervento: ${e.message}") }
+            }
+        }
     }
 
     private fun loadImpiantiForCantiere(cantiereId: String) {
@@ -479,15 +582,50 @@ class ManutenzioniViewModel(
     }
 
     /**
+     * Aggiunge in blocco più template globali al cantiere selezionato (R6 — selezione multipla).
+     * Ogni template viene istanziato come copia indipendente (nuovo id, `cantiereId` del cantiere)
+     * senza alterare il master globale. Un solo ricaricamento finale della lista del cantiere.
+     */
+    fun addImpiantiFromTemplates(templates: List<Impianto>) {
+        val cantiereId = _uiState.value.selectedCantiere?.id
+        if (cantiereId == null) {
+            _uiState.update { it.copy(errorMessage = "Seleziona un cantiere prima di aggiungere attività di verifica") }
+            return
+        }
+        if (templates.isEmpty()) return
+        val nuoviImpianti = templates.map { instantiateTemplateForCantiere(it, cantiereId) }
+
+        scope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                val impiantiDelCantiere = withContext(Dispatchers.IO) {
+                    nuoviImpianti.forEach { repository.salvaImpianto(it) }
+                    repository.getImpiantiForCantiere(cantiereId)
+                }
+                _uiState.update {
+                    it.copy(
+                        impiantiDelCantiere = if (it.selectedCantiere?.id == cantiereId) impiantiDelCantiere else it.impiantiDelCantiere,
+                        isLoading = false,
+                        statusMessage = "✓ ${nuoviImpianti.size} attività di verifica aggiunte: " +
+                            nuoviImpianti.joinToString(", ") { imp -> imp.codIntervento },
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isLoading = false, errorMessage = "Errore aggiunta attività di verifica: ${e.message}")
+                }
+            }
+        }
+    }
+
+    /**
      * Crea un nuovo impianto vuoto, lo seleziona e apre l'editor.
      * Se è passato un template, lo persiste direttamente per il cantiere.
      */
     fun createNewImpianto(template: Impianto? = null) {
-        val newImpianto = template?.copyWithBasicParams(
-            id = java.util.UUID.randomUUID().toString(),
-            cantiereId = _uiState.value.selectedCantiere?.id,
-            quantita = 1
-        ) ?: manutenzioni.domain.model.ImpiantoStandard(
+        val baseImpianto = template?.let { instantiateTemplateForCantiere(it, _uiState.value.selectedCantiere?.id) }
+        val newImpianto = baseImpianto ?: manutenzioni.domain.model.ImpiantoStandard(
             id = java.util.UUID.randomUUID().toString(),
             codIntervento = "",
             nomeCompleto = "",
@@ -510,16 +648,29 @@ class ManutenzioniViewModel(
         }
     }
 
+    /** Aggiorna la tecnologia dell'interruttore MT per un QuadroMQT e persiste la modifica */
+    fun updateMqtSwitchType(impiantoId: String, switchType: MqtSwitchType) {
+        val currentImpianto = _uiState.value.impiantiDelCantiere.find { it.id == impiantoId } as? QuadroMQT ?: return
+        val updated = currentImpianto.withTipoInterruttore(switchType)
+        saveImpianto(updated)
+    }
+
     /** Salva un impianto (nuovo o modificato) e aggiorna la lista */
     fun saveImpianto(impianto: Impianto) {
+        val impiantoToSave = if (impianto is QuadroMQT && impianto.tipoInterruttore != null) {
+            impianto.withTipoInterruttore(impianto.tipoInterruttore)
+        } else {
+            impianto
+        }
+
         // Validazione campi obbligatori
-        if (impianto.id.isBlank()) {
+        if (impiantoToSave.id.isBlank()) {
             _uiState.update {
                 it.copy(errorMessage = "Il codice intervento è obbligatorio")
             }
             return
         }
-        if (impianto.nomeCompleto.isBlank()) {
+        if (impiantoToSave.nomeCompleto.isBlank()) {
             _uiState.update {
                 it.copy(errorMessage = "Il nome completo è obbligatorio")
             }
@@ -528,7 +679,7 @@ class ManutenzioniViewModel(
 
         scope.launch {
             try {
-                repository.salvaImpianto(impianto)
+                repository.salvaImpianto(impiantoToSave)
                 val impiantiAggiornati = repository.caricaImpianti()
                 loadImpiantiGlobali()
                 // Aggiorna la lista degli impianti del cantiere corrente
@@ -540,8 +691,8 @@ class ManutenzioniViewModel(
                     it.copy(
                         impianti = impiantiAggiornati,
                         impiantiDelCantiere = impiantiDelCantiereAggiornati, // Fix: ricarica lista
-                        selectedImpianto = impianto,
-                        statusMessage = "✓ Impianto ${impianto.id} salvato",
+                        selectedImpianto = impiantoToSave,
+                        statusMessage = "✓ Impianto ${impiantoToSave.id} salvato",
                         errorMessage = null
                     )
                 }

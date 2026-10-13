@@ -12,6 +12,8 @@ import manutenzioni.domain.model.Cliente
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.normalizeType
 
+import manutenzioni.domain.model.QuadroMQT
+
 class MongoManutenzioneRepository(
     connectionString: String = "mongodb://localhost:27017",
     dbName: String = "manutenzioni_db"
@@ -48,18 +50,23 @@ class MongoManutenzioneRepository(
 
     override suspend fun aggiornaImpiantiGlobalmente(impiantoTemplate: Impianto) {
         // Update all impianti with the same codIntervento
-        val impianti = impiantiCollection.find(eq("codIntervento", impiantoTemplate.codIntervento)).toList()
+        val impianti = impiantiCollection.find(eq("codIntervento", impiantoTemplate.codIntervento)).toList().map { it.normalizeType() }
         var hasGlobal = false
         for (imp in impianti) {
             if (imp.cantiereId == null) {
                 hasGlobal = true
             }
-            val updated = impiantoTemplate.copyWithBasicParams(
+            val baseUpdated = impiantoTemplate.copyWithBasicParams(
                 id = imp.id, 
                 cantiereId = imp.cantiereId, 
                 quantita = imp.quantita, 
                 noteSpecifiche = imp.noteSpecifiche
             )
+            val updated = if (baseUpdated is QuadroMQT && imp is QuadroMQT && imp.tipoInterruttore != null) {
+                baseUpdated.withTipoInterruttore(imp.tipoInterruttore)
+            } else {
+                baseUpdated
+            }
             salvaImpianto(updated)
         }
         if (!hasGlobal) {

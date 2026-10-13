@@ -84,6 +84,16 @@ fun ImpiantoSelectionList(
                             )
                         }
 
+                        if (impianto is manutenzioni.domain.model.QuadroMQT && impianto.tipoInterruttore != null) {
+                            Text(
+                                text = "Interruttore: ${impianto.tipoInterruttore.label}",
+                                style = MaterialTheme.typography.caption,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colors.primary,
+                                modifier = Modifier.padding(end = 12.dp)
+                            )
+                        }
+
                         Row {
                             IconButton(onClick = { onEditImpianto(impianto) }) {
                                 Icon(
