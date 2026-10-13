@@ -54,6 +54,23 @@ class HtmlServiceTest {
     }
 
     @Test
+    fun `buildHtml per QuadroBT inietta descrizioneQuadro specifica nel cartiglio`() {
+        val quadro = QuadroBT(
+            codIntervento = "Q",
+            nomeCompleto = "Quadro elettrico",
+            sigla = "QG",
+            descrizioneQuadro = "Quadro Generale Reparto Presse"
+        )
+        val html = htmlService.buildHtml(
+            impianto = quadro,
+            attivitaFiltrate = emptyList(),
+            frequenza = Periodo(TipoPeriodo.A, 1),
+            clienteNome = null
+        )
+        assertContains(html, "Quadro Generale Reparto Presse - QG")
+    }
+
+    @Test
     fun `buildHtml inietta nome cliente`() {
         val html = htmlService.buildHtml(
             impianto = impiantoGE,

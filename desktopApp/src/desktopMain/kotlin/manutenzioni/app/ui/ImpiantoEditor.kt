@@ -16,8 +16,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import manutenzioni.domain.model.*
-import manutenzioni.app.data.ManutenzioniDatabase
+import manutenzioni.app.ui.components.TechnicalAttachmentSection
+import manutenzioni.app.ui.components.SiglaCloneHelper
 import manutenzioni.app.ui.features.operativita.AggiungiComponenteDialog
+import manutenzioni.app.ui.features.operativita.ModificaComponenteDialog
 import manutenzioni.app.ui.features.operativita.AggiungiLampadaDialog
 import manutenzioni.app.ui.features.operativita.ModificaLampadaDialog
 
@@ -57,6 +59,7 @@ fun ImpiantoEditor(
     modifier: Modifier = Modifier
 ) {
     var showAggiungiComponenteDialog by remember { mutableStateOf(false) }
+    var interruttoreInModifica by remember { mutableStateOf<InterruttoreBT?>(null) }
     var showAggiungiLampadaDialog by remember { mutableStateOf(false) }
     var lampadaInModifica by remember { mutableStateOf<LampadaEmergenza?>(null) }
 
@@ -131,6 +134,28 @@ fun ImpiantoEditor(
                 interruttoriQuadro = interruttoriQuadro + interruttore
                 onAggiungiComponenteAQuadro?.invoke(currentQuadro, interruttore)
                 showAggiungiComponenteDialog = false
+            }
+        )
+    }
+
+    if (interruttoreInModifica != null && isQuadro) {
+        ModificaComponenteDialog(
+            quadro = currentQuadro.copy(
+                sigla = siglaQuadro.trim(),
+                descrizioneQuadro = descrizioneQuadro.trim(),
+                listaInterruttori = interruttoriQuadro
+            ),
+            interruttore = interruttoreInModifica!!,
+            onDismiss = { interruttoreInModifica = null },
+            onConferma = { modificato ->
+                val idx = interruttoriQuadro.indexOfFirst { it.id == modificato.id }
+                if (idx >= 0) {
+                    val mList = interruttoriQuadro.toMutableList()
+                    mList[idx] = modificato
+                    interruttoriQuadro = mList
+                    onAggiungiComponenteAQuadro?.invoke(currentQuadro.copy(listaInterruttori = mList), modificato)
+                }
+                interruttoreInModifica = null
             }
         )
     }
@@ -437,215 +462,149 @@ fun ImpiantoEditor(
         }
         if (isQuadro) {
             item {
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text("Interruttori & Componenti (${interruttoriQuadro.size})", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                                Text("Componenti associati a questo quadro con codifica ETIM", style = MaterialTheme.typography.caption, color = Color.Gray)
-                            }
-
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                // Dropdown per aggiungere componenti standard se presenti
-                                val interruttoriStandard = componentiStandard.filter { it.tipo == manutenzioni.domain.model.TipoComponenteStandard.INTERRUTTORE_BT }
-                                if (interruttoriStandard.isNotEmpty()) {
-                                    var espandiDropdown by remember { mutableStateOf(false) }
-                                    Box {
-                                        OutlinedButton(
-                                            onClick = { espandiDropdown = true },
-                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
-                                        ) {
-                                            Text("Da Standard", fontSize = 12.sp)
-                                        }
-                                        DropdownMenu(
-                                            expanded = espandiDropdown,
-                                            onDismissRequest = { espandiDropdown = false }
-                                        ) {
-                                            interruttoriStandard.forEach { comp ->
-                                                DropdownMenuItem(
-                                                    onClick = {
-                                                        interruttoriQuadro = interruttoriQuadro + InterruttoreBT(nome = comp.nome)
-                                                        espandiDropdown = false
-                                                    }
-                                                ) {
-                                                    Text(comp.nome, fontSize = 12.sp)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Button(
-                                    onClick = { showAggiungiComponenteDialog = true },
-                                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary, contentColor = Color.White),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                                ) {
-                                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Aggiungi Componente", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-
-                        if (interruttoriQuadro.isEmpty()) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                                contentAlignment = Alignment.Center
+                TechnicalAttachmentSection(
+                    title = "Interruttori Differenziali e Componenti",
+                    subtitle = "Componenti associati a questo quadro con verifiche strumentali (Foglio 2)",
+                    items = interruttoriQuadro,
+                    itemTitle = { interruttore ->
+                        listOfNotNull(interruttore.produttore, interruttore.codiceArticolo).joinToString(" ").ifBlank { interruttore.nome }
+                    },
+                    itemSubtitle = { interruttore ->
+                        if (interruttore.nome.isNotBlank() && interruttore.nome != interruttore.codiceArticolo) interruttore.nome else ""
+                    },
+                    badgeText = { interruttore ->
+                        interruttore.siglaCircuito?.ifBlank { "${interruttore.quantita}x" } ?: "${interruttore.quantita}x"
+                    },
+                    extraBadges = { interruttore ->
+                        if (interruttore.quantita > 1 && !interruttore.siglaCircuito.isNullOrBlank()) {
+                            Surface(
+                                color = MaterialTheme.colors.primary.copy(alpha = 0.12f),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
                             ) {
-                                Text("Nessun componente registrato per questo quadro. Clicca su 'Aggiungi Componente' per iniziare.", color = Color.Gray, fontSize = 12.sp)
+                                Text(
+                                    text = "${interruttore.quantita}x",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colors.primary,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                )
                             }
-                        } else {
-                            interruttoriQuadro.forEach { interruttore ->
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    backgroundColor = Color(0xFFF8FAFC),
-                                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().padding(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                        }
+                        val taratura = interruttore.caratteristicheTecniche["taratura"]
+                            ?: interruttore.caratteristicheTecniche["Idn"]
+                            ?: interruttore.caratteristicheTecniche["IΔn"]
+                            ?: interruttore.caratteristicheTecniche["taraturaDiff"]
+                        if (!taratura.isNullOrBlank()) {
+                            Surface(
+                                color = Color(0xFFFEF3C7),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
+                            ) {
+                                Text(
+                                    text = "⚡ $taratura",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFB45309),
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                )
+                            }
+                        }
+                        if (!interruttore.note.isNullOrBlank()) {
+                            Text(
+                                text = interruttore.note,
+                                fontSize = 10.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                        if (!interruttore.etimClassId.isNullOrBlank()) {
+                            Text(
+                                text = "ETIM: ${interruttore.etimClassId}${if (!interruttore.etimClassName.isNullOrBlank()) " (${interruttore.etimClassName})" else ""}",
+                                fontSize = 10.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                    },
+                    customActions = { interruttore ->
+                        if (!interruttore.etimClassId.isNullOrBlank()) {
+                            val approvato = catalogoApprovato.firstOrNull { it.etimClassId == interruttore.etimClassId }
+                            val alternative = approvato?.variantiProduttore?.values?.filter { it.produttore != interruttore.produttore } ?: emptyList()
+
+                            if (alternative.isNotEmpty()) {
+                                var menuAlternativeExpanded by remember { mutableStateOf(false) }
+                                Box {
+                                    OutlinedButton(
+                                        onClick = { menuAlternativeExpanded = true },
+                                        modifier = Modifier.height(28.dp),
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                                     ) {
-                                        // Badge Quantità
-                                        Surface(
-                                            color = MaterialTheme.colors.primary.copy(alpha = 0.12f),
-                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
-                                        ) {
-                                            Text(
-                                                text = "${interruttore.quantita}x",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 12.sp,
-                                                color = MaterialTheme.colors.primary,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                            )
-                                        }
-
-                                        Spacer(Modifier.width(10.dp))
-
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                if (!interruttore.produttore.isNullOrBlank()) {
-                                                    Text(
-                                                        text = interruttore.produttore,
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 13.sp,
-                                                        color = Color(0xFF0F172A)
-                                                    )
-                                                    Spacer(Modifier.width(6.dp))
-                                                }
-                                                if (!interruttore.codiceArticolo.isNullOrBlank()) {
-                                                    Text(
-                                                        text = "• ${interruttore.codiceArticolo}",
-                                                        fontSize = 12.sp,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        color = Color(0xFF2563EB)
-                                                    )
-                                                    Spacer(Modifier.width(6.dp))
-                                                }
-                                                if (!interruttore.siglaCircuito.isNullOrBlank()) {
-                                                    Surface(color = Color(0xFFFEF3C7), shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)) {
-                                                        Text(
-                                                            text = interruttore.siglaCircuito,
-                                                            fontSize = 10.sp,
-                                                            fontWeight = FontWeight.Bold,
-                                                            color = Color(0xFFB45309),
-                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                        Text("🔄 Cambia Marca", fontSize = 10.sp)
+                                    }
+                                    DropdownMenu(
+                                        expanded = menuAlternativeExpanded,
+                                        onDismissRequest = { menuAlternativeExpanded = false }
+                                    ) {
+                                        Text(
+                                            text = "Alternative approvate per ETIM ${interruttore.etimClassId}:",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                                        )
+                                        Divider()
+                                        alternative.forEach { alt ->
+                                            DropdownMenuItem(
+                                                onClick = {
+                                                    val q = (impianto as? QuadroBT) ?: currentQuadro
+                                                    onSostituisciProduttore?.invoke(q, interruttore.id, alt)
+                                                    val idx = interruttoriQuadro.indexOfFirst { it.id == interruttore.id }
+                                                    if (idx >= 0) {
+                                                        val mList = interruttoriQuadro.toMutableList()
+                                                        mList[idx] = interruttore.copy(
+                                                            produttore = alt.produttore,
+                                                            codiceArticolo = alt.codice,
+                                                            note = alt.serie?.let { "Serie: $it" } ?: interruttore.note
                                                         )
+                                                        interruttoriQuadro = mList
+                                                    }
+                                                    menuAlternativeExpanded = false
+                                                }
+                                            ) {
+                                                Column {
+                                                    Text("${alt.produttore} — ${alt.codice}", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                                    if (alt.prezzoListino != null) {
+                                                        Text("Listino indicativo: ${alt.prezzoListino} €", fontSize = 10.sp, color = Color.Gray)
                                                     }
                                                 }
                                             }
-
-                                            Text(
-                                                text = interruttore.nome,
-                                                fontSize = 12.sp,
-                                                color = Color(0xFF334155)
-                                            )
-
-                                            if (!interruttore.etimClassId.isNullOrBlank()) {
-                                                Text(
-                                                    text = "ETIM: ${interruttore.etimClassId}${if (!interruttore.etimClassName.isNullOrBlank()) " (${interruttore.etimClassName})" else ""}",
-                                                    fontSize = 10.sp,
-                                                    color = Color(0xFF64748B)
-                                                )
-                                            }
-                                        }
-
-                                        // Menu Sostituzione Marca / Equivalenti (se presente etimClassId)
-                                        if (!interruttore.etimClassId.isNullOrBlank()) {
-                                            val approvato = catalogoApprovato.firstOrNull { it.etimClassId == interruttore.etimClassId }
-                                            val alternative = approvato?.variantiProduttore?.values?.filter { it.produttore != interruttore.produttore } ?: emptyList()
-
-                                            if (alternative.isNotEmpty()) {
-                                                var menuAlternativeExpanded by remember { mutableStateOf(false) }
-                                                Box {
-                                                    OutlinedButton(
-                                                        onClick = { menuAlternativeExpanded = true },
-                                                        modifier = Modifier.height(28.dp),
-                                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                                                    ) {
-                                                        Text("🔄 Cambia Marca", fontSize = 10.sp)
-                                                    }
-                                                    DropdownMenu(
-                                                        expanded = menuAlternativeExpanded,
-                                                        onDismissRequest = { menuAlternativeExpanded = false }
-                                                    ) {
-                                                        Text(
-                                                            text = "Alternative approvate per ETIM ${interruttore.etimClassId}:",
-                                                            fontSize = 11.sp,
-                                                            fontWeight = FontWeight.Bold,
-                                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                                                        )
-                                                        Divider()
-                                                        alternative.forEach { alt ->
-                                                            DropdownMenuItem(
-                                                                onClick = {
-                                                                    val q = (impianto as? QuadroBT) ?: currentQuadro
-                                                                    onSostituisciProduttore?.invoke(q, interruttore.id, alt)
-                                                                    val idx = interruttoriQuadro.indexOfFirst { it.id == interruttore.id }
-                                                                    if (idx >= 0) {
-                                                                        val mList = interruttoriQuadro.toMutableList()
-                                                                        mList[idx] = interruttore.copy(
-                                                                            produttore = alt.produttore,
-                                                                            codiceArticolo = alt.codice,
-                                                                            note = alt.serie?.let { "Serie: $it" } ?: interruttore.note
-                                                                        )
-                                                                        interruttoriQuadro = mList
-                                                                    }
-                                                                    menuAlternativeExpanded = false
-                                                                }
-                                                            ) {
-                                                                Column {
-                                                                    Text("${alt.produttore} — ${alt.codice}", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                                                    if (alt.prezzoListino != null) {
-                                                                        Text("Listino indicativo: ${alt.prezzoListino} €", fontSize = 10.sp, color = Color.Gray)
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                Spacer(Modifier.width(8.dp))
-                                            }
-                                        }
-
-                                        IconButton(
-                                            onClick = {
-                                                interruttoriQuadro = interruttoriQuadro - interruttore
-                                            },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Rimuovi", modifier = Modifier.size(16.dp), tint = Color(0xFFDC2626))
                                         }
                                     }
                                 }
+                                Spacer(Modifier.width(6.dp))
                             }
                         }
-                    }
-                }
+                    },
+                    onAddItem = { showAggiungiComponenteDialog = true },
+                    onEditItem = { interruttoreInModifica = it },
+                    onCloneItem = { interruttore ->
+                        val existingSigle = interruttoriQuadro.mapNotNull { it.siglaCircuito }
+                        val nextSigla = SiglaCloneHelper.findNextSiglaForClone(
+                            baseSigla = interruttore.siglaCircuito ?: "QA1",
+                            existingSigle = existingSigle,
+                            defaultPrefix = "QA"
+                        )
+                        val duplicato = interruttore.copy(
+                            id = java.util.UUID.randomUUID().toString(),
+                            siglaCircuito = nextSigla
+                        )
+                        val nuovaLista = interruttoriQuadro + duplicato
+                        interruttoriQuadro = nuovaLista
+                        onAggiungiComponenteAQuadro?.invoke(currentQuadro.copy(listaInterruttori = nuovaLista), duplicato)
+                    },
+                    onDeleteItem = { interruttore ->
+                        interruttoriQuadro = interruttoriQuadro - interruttore
+                    },
+                    onClearAll = { interruttoriQuadro = emptyList() },
+                    addButtonLabel = "Aggiungi Componente",
+                    emptyMessage = "Nessun componente registrato per questo quadro. Clicca su 'Aggiungi Componente' per iniziare."
+                )
             }
         }
 

@@ -46,27 +46,46 @@ class QuadroBtAttachmentProvider : TechnicalAttachmentProvider {
         val codScheda = if (quadro.sigla.isNotBlank()) "${quadro.codIntervento} - ${quadro.sigla}" else quadro.codIntervento
         val sitoText = if (quadro.descrizioneQuadro.isNotBlank()) quadro.descrizioneQuadro else "Sito / Ubicazione Quadro"
 
-        val columns = listOf(
-            TableColumn("Sigla Quadro", 2.4),
-            TableColumn("Sigla Interruttore", 1.7),
-            TableColumn("Dati Interruttore", 4.6),
-            TableColumn("Taratura diff.", 2.4),
-            TableColumn(
-                title = "Prova con tasto",
-                subColumns = listOf(
-                    SubColumn("OK", 1.0),
-                    SubColumn("NON OK", 1.4)
-                )
-            ),
-            TableColumn(
-                title = "Prova con strumento",
-                subColumns = listOf(
-                    SubColumn("OK", 1.0),
-                    SubColumn("NON OK", 1.4),
-                    SubColumn("NR.MISURA", 2.5)
+        val isAnnuale = frequenza.inMesi() >= 12
+
+        val columns = if (isAnnuale) {
+            listOf(
+                TableColumn("Sigla Quadro", 2.4),
+                TableColumn("Sigla Interruttore", 1.7),
+                TableColumn("Dati Interruttore", 4.6),
+                TableColumn("Taratura diff.", 2.4),
+                TableColumn(
+                    title = "Prova con tasto",
+                    subColumns = listOf(
+                        SubColumn("OK", 1.0),
+                        SubColumn("NON OK", 1.4)
+                    )
+                ),
+                TableColumn(
+                    title = "Prova con strumento",
+                    subColumns = listOf(
+                        SubColumn("OK", 1.0),
+                        SubColumn("NON OK", 1.4),
+                        SubColumn("NR.MISURA", 2.5)
+                    )
                 )
             )
-        )
+        } else {
+            // Frequenza 6 Mesi (es. DIFF.06): esclude prova con strumento, mantiene prova con tasto (R15)
+            listOf(
+                TableColumn("Sigla Quadro", 3.2),
+                TableColumn("Sigla Interruttore", 2.5),
+                TableColumn("Dati Interruttore", 6.8),
+                TableColumn("Taratura diff.", 3.1),
+                TableColumn(
+                    title = "Prova con tasto",
+                    subColumns = listOf(
+                        SubColumn("OK", 1.3),
+                        SubColumn("NON OK", 1.5)
+                    )
+                )
+            )
+        }
 
         val rows = mutableListOf<TechnicalRow>()
         var rowCounter = 1
@@ -96,30 +115,43 @@ class QuadroBtAttachmentProvider : TechnicalAttachmentProvider {
                 }
 
                 val tastoRadioName = "tasto_diff_${quadro.codIntervento}_$rowNum"
-                val strumentoRadioName = "strumento_diff_${quadro.codIntervento}_$rowNum"
-                val misuraTextName = "misura_diff_${quadro.codIntervento}_$rowNum"
 
-                val cells = listOf(
-                    TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                    TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 6.0),
-                    TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                    TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                    TechnicalCell.Radio(tastoRadioName, "OK", "Tasto OK"),
-                    TechnicalCell.Radio(tastoRadioName, "NON_OK", "Tasto NON OK"),
-                    TechnicalCell.Radio(strumentoRadioName, "OK", "Strumento OK"),
-                    TechnicalCell.Radio(strumentoRadioName, "NON_OK", "Strumento NON OK"),
-                    TechnicalCell.TextInput(misuraTextName, placeholder = "", label = "Misura", fontSizePt = 7.5, align = CellTextAlign.CENTER)
-                )
+                val cells = if (isAnnuale) {
+                    val strumentoRadioName = "strumento_diff_${quadro.codIntervento}_$rowNum"
+                    val misuraTextName = "misura_diff_${quadro.codIntervento}_$rowNum"
+                    listOf(
+                        TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 6.0),
+                        TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 6.0),
+                        TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 6.0),
+                        TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 6.0),
+                        TechnicalCell.Radio(tastoRadioName, "OK", "Tasto OK"),
+                        TechnicalCell.Radio(tastoRadioName, "NON_OK", "Tasto NON OK"),
+                        TechnicalCell.Radio(strumentoRadioName, "OK", "Strumento OK"),
+                        TechnicalCell.Radio(strumentoRadioName, "NON_OK", "Strumento NON OK"),
+                        TechnicalCell.TextInput(misuraTextName, placeholder = "", label = "Misura", fontSizePt = 7.5, align = CellTextAlign.CENTER)
+                    )
+                } else {
+                    listOf(
+                        TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 6.0),
+                        TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 6.0),
+                        TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 6.0),
+                        TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 6.0),
+                        TechnicalCell.Radio(tastoRadioName, "OK", "Tasto OK"),
+                        TechnicalCell.Radio(tastoRadioName, "NON_OK", "Tasto NON OK")
+                    )
+                }
 
                 rows.add(TechnicalRow(heightCm = 0.48, cells = cells))
             }
         }
 
+        val periodicitaLabel = if (isAnnuale) "(annuale: prova con tasto e strumento)" else "(semestrale: prova con tasto)"
+
         return TechnicalSheetData(
             codScheda = codScheda,
             oggetto = "DIFF",
             titoloBanner = "ELENCO INTERRUTTORI DIFFERENZIALI",
-            sottotitoloBanner = "Elenco interruttori differenziali e verifiche",
+            sottotitoloBanner = "Elenco interruttori differenziali e verifiche $periodicitaLabel",
             impiantoLabel = quadro.nomeCompleto,
             sitoLabel = sitoText,
             normative = "NORME CEI 78-17:2015, CEI 0-10:2012, CEI EN 50110:2014, CEI 11-27:2014, CEI 64-8:2012, CEI 64-14:2007",

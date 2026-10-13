@@ -50,8 +50,21 @@ class HtmlService(
         } else {
             impianto.codIntervento
         }
+        val oggetto = if (impianto is QuadroBT) {
+            when {
+                impianto.descrizioneQuadro.isNotBlank() && impianto.sigla.isNotBlank() ->
+                    "${impianto.descrizioneQuadro} - ${impianto.sigla}"
+                impianto.descrizioneQuadro.isNotBlank() ->
+                    impianto.descrizioneQuadro
+                impianto.sigla.isNotBlank() ->
+                    "${impianto.nomeCompleto} - ${impianto.sigla}"
+                else -> impianto.nomeCompleto
+            }
+        } else {
+            impianto.nomeCompleto
+        }
         html = html.replace("<!-- COD_SCHEDA -->", escapeHtml(cod))
-        html = html.replace("<!-- OGGETTO -->", escapeHtml(impianto.nomeCompleto))
+        html = html.replace("<!-- OGGETTO -->", escapeHtml(oggetto))
         html = html.replace("<!-- PERIODICITA -->", escapeHtml(frequenza.label()))
 
         // Premessa dinamica: testo base + note specifiche + sintesi componenti delegata ai provider
