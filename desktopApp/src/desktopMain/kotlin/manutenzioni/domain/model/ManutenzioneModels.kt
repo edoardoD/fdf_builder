@@ -362,7 +362,7 @@ data class Cantiere(
  */
 fun Impianto.normalizeType(): Impianto {
     return when {
-        this !is ImpiantoEmergenza && codIntervento.equals("EM", ignoreCase = true) -> {
+        this !is ImpiantoEmergenza && (codIntervento.equals("EM", ignoreCase = true) || codIntervento.equals("IS", ignoreCase = true)) -> {
             ImpiantoEmergenza(
                 id = id,
                 codIntervento = codIntervento,

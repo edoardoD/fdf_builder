@@ -55,6 +55,7 @@ fun App(viewModel: ManutenzioniViewModel, onDisconnect: () -> Unit = {}) {
                                 onAggiungiLampadaAEmergenza = viewModel::aggiungiLampadaAEmergenza,
                                 onAggiungiLampadeAEmergenza = viewModel::aggiungiLampadeAEmergenza,
                                 onAggiornaLampadaInEmergenza = viewModel::aggiornaLampadaInEmergenza,
+                                onExportStandaloneTechnicalSheet = viewModel::exportStandaloneTechnicalSheet,
                                 onUpdateDatiIntervento = viewModel::updateDatiInterventoCantiere,
                                 onUpdateMqtSwitchType = viewModel::updateMqtSwitchType,
                                 onAddImpiantiFromTemplates = viewModel::addImpiantiFromTemplates

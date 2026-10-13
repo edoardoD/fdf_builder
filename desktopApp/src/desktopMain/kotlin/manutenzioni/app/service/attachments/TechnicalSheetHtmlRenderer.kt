@@ -213,6 +213,48 @@ class TechnicalSheetHtmlRenderer {
         }
     }
 
+    fun renderStandaloneHtml(
+        data: TechnicalSheetData,
+        frequenza: Periodo,
+        clienteNome: String?
+    ): String {
+        val bodyContent = render(data, frequenza, clienteNome)
+        return """
+        <!DOCTYPE html>
+        <html lang="it">
+        <head>
+            <meta charset="UTF-8">
+            <title>${escapeHtml(data.titoloBanner)}</title>
+            <style>
+                @page {
+                    size: A4 portrait;
+                    margin: 1.0cm;
+                }
+                body {
+                    font-family: Arial, Helvetica, sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    color: #000;
+                }
+                .visually-hidden {
+                    position: absolute;
+                    width: 1px;
+                    height: 1px;
+                    margin: -1px;
+                    padding: 0;
+                    overflow: hidden;
+                    clip: rect(0, 0, 0, 0);
+                    border: 0;
+                }
+            </style>
+        </head>
+        <body>
+            $bodyContent
+        </body>
+        </html>
+        """.trimIndent()
+    }
+
     private fun formatCm(value: Double): String = String.format(java.util.Locale.US, "%.2f", value).trimEnd('0').trimEnd('.')
 
     private fun escapeHtml(text: String): String =
