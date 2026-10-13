@@ -276,37 +276,37 @@ develop
 
 #### 🔧 Branch 2.1: `refactor/technical-attachment-ui-unification`
 * **Obiettivo Architetturale:** Creare il componente Composable universale basato sul benchmark di `EmergenzaAttachmentProvider`.
-- [ ] **UI Component Riusabile:**
-  - [ ] Creare `TechnicalAttachmentSection<T>` con header (titolo, conteggio, aggiungi, svuota).
-  - [ ] Supportare card elemento con badge sigla, dettagli, badge ausiliari e bottoni standard (Modifica matita, Clona rapido, Elimina cestino).
-  - [ ] Includere pulsante opzionale *"Esporta Foglio Tecnico PDF"* (Foglio 2 standalone).
-- [ ] **Helper di Clonazione Sigla:**
-  - [ ] Generalizzare `LampadaGeneratorHelper.findNextSiglaForClone` per funzionare con qualsiasi prefisso/sigla (interruttori `QA1` -> `QA2`, sensori `RIV.L1.1` -> `RIV.L1.2`).
-- [ ] **Testing:** Test di anteprima grafica Composable con fixture di test.
+- [x] **UI Component Riusabile:**
+  - [x] Creare `TechnicalAttachmentSection<T>` con header (titolo, conteggio, aggiungi, svuota).
+  - [x] Supportare card elemento con badge sigla, dettagli, badge ausiliari e bottoni standard (Modifica matita, Clona rapido, Elimina cestino).
+  - [x] Includere pulsante opzionale *"Esporta Foglio Tecnico PDF"* (Foglio 2 standalone).
+- [x] **Helper di Clonazione Sigla:**
+  - [x] Generalizzare `LampadaGeneratorHelper.findNextSiglaForClone` per funzionare con qualsiasi prefisso/sigla (interruttori `QA1` -> `QA2`, sensori `RIV.L1.1` -> `RIV.L1.2`).
+- [x] **Testing:** Test di anteprima grafica Composable con fixture di test.
 
 #### 🌿 Branch 3: `feat/quadri-bt-lifecycle-and-diff`
 * **Richieste coperte:** `8`, `9`, `10`, `13`, `15` *(usa `TechnicalAttachmentSection`)*
-- [ ] **UI Quadri BT Refactoring:** Sostituire la card custom dei quadri con `TechnicalAttachmentSection<InterruttoreBT>`, abilitando nativamente **Modifica** (R9) e **Clona**.
-- [ ] **Cartiglio PDF Quadro:** Garantire che [QuadroBT](file:///Users/edoardo/development_prdj/fdf_builder/desktopApp/src/desktopMain/kotlin/manutenzioni/domain/model/ManutenzioneModels.kt#L57-L82) stampi la `descrizioneQuadro` / sigla specifica e non il placeholder fisso "Quadro Elettrico" (R8).
-- [ ] **Form Interruttore (`AggiungiComponenteDialog`):**
-  - [ ] Campo 1: `Sigla`
-  - [ ] Campo 2: `Produttore`
-  - [ ] Campo 3 e 4: `Codice/Dati Articolo` e `Taratura differenziale`
-  - [ ] Campo finale: `Descrizione/Note` (opzionale, non vincolante alla validazione) (R10).
-- [ ] **Gerarchia Visiva UI:** Riorganizzare visualizzazione ad albero: Scheda Quadri -> Elenco Quadri -> Componenti Quadro + Attività quadro (R13).
-- [ ] **Foglio 2 Condizionale (`QuadroBtAttachmentProvider`):**
-  - [ ] Frequenza `6 Mesi`: escludere colonna *"Prova con strumento"*; mantenere solo *"Prova con tasto"* (R15).
-  - [ ] Frequenza `1 Anno`: includere sia *"Prova con tasto"* che *"Prova con strumento"* (misura tempo/corrente).
-- [ ] **Testing:** Test di generazione PDF 6M vs 1A con confronto colonne differenziali.
+- [x] **UI Quadri BT Refactoring:** Sostituire la card custom dei quadri con `TechnicalAttachmentSection<InterruttoreBT>`, abilitando nativamente **Modifica** (R9) e **Clona**.
+- [x] **Cartiglio PDF Quadro:** Garantire che [QuadroBT](file:///Users/edoardo/development_prdj/fdf_builder/desktopApp/src/desktopMain/kotlin/manutenzioni/domain/model/ManutenzioneModels.kt#L57-L82) stampi la `descrizioneQuadro` / sigla specifica e non il placeholder fisso "Quadro Elettrico" (R8).
+- [x] **Form Interruttore (`AggiungiComponenteDialog`):**
+  - [x] Campo 1: `Sigla`
+  - [x] Campo 2: `Produttore`
+  - [x] Campo 3 e 4: `Codice/Dati Articolo` e `Taratura differenziale`
+  - [x] Campo finale: `Descrizione/Note` (opzionale, non vincolante alla validazione) (R10).
+- [x] **Gerarchia Visiva UI:** Riorganizzare visualizzazione ad albero: Scheda Quadri -> Elenco Quadri -> Componenti Quadro + Attività quadro (R13).
+- [x] **Foglio 2 Condizionale (`QuadroBtAttachmentProvider`):**
+  - [x] Frequenza `6 Mesi`: escludere colonna *"Prova con strumento"*; mantenere solo *"Prova con tasto"* (R15).
+  - [x] Frequenza `1 Anno`: includere sia *"Prova con tasto"* che *"Prova con strumento"* (misura tempo/corrente).
+- [x] **Testing:** Test di generazione PDF 6M vs 1A con confronto colonne differenziali.
 
 #### 🌿 Branch 4: `feat/emergenza-is-unification`
 * **Richieste coperte:** `7`, `14`, `16` *(usa `TechnicalAttachmentSection`)*
-- [ ] **Single Source of Truth:** Assicurare che nel DB esista una sola scheda master per l'illuminazione di emergenza/sicurezza.
-- [ ] **Domain Normalization:** Aggiornare `normalizeType()` per gestire sia `EM` che `IS` come `ImpiantoEmergenza` (R16).
-- [ ] **Selettore Sigla Cantiere:** Aggiungere nell'editor/scheda cantiere il selettore della sigla documentale (`EM` vs `IS`).
-- [ ] **UI Registro Lampade:** Attivare `TechnicalAttachmentSection` sia quando il codice è `EM` sia quando è `IS` (R7).
-- [ ] **Export Registro Lampade (UNI 11222):** Collegare il pulsante di export della section al provider [EmergenzaAttachmentProvider](file:///Users/edoardo/development_prdj/fdf_builder/desktopApp/src/desktopMain/kotlin/manutenzioni/app/service/attachments/EmergenzaAttachmentProvider.kt) (R14).
-- [ ] **Testing:** Test di cambio sigla da EM a IS senza perdita del registro lampade.
+- [x] **Single Source of Truth:** Assicurare che nel DB esista una sola scheda master per l'illuminazione di emergenza/sicurezza.
+- [x] **Domain Normalization:** Aggiornare `normalizeType()` per gestire sia `EM` che `IS` come `ImpiantoEmergenza` (R16).
+- [x] **Selettore Sigla Cantiere:** Aggiungere nell'editor/scheda cantiere il selettore della sigla documentale (`EM` vs `IS`).
+- [x] **UI Registro Lampade:** Attivare `TechnicalAttachmentSection` sia quando il codice è `EM` sia quando è `IS` (R7).
+- [x] **Export Registro Lampade (UNI 11222):** Collegare il pulsante di export della section al provider [EmergenzaAttachmentProvider](file:///Users/edoardo/development_prdj/fdf_builder/desktopApp/src/desktopMain/kotlin/manutenzioni/app/service/attachments/EmergenzaAttachmentProvider.kt) (R14).
+- [x] **Testing:** Test di cambio sigla da EM a IS senza perdita del registro lampade.
 
 #### 🌿 Branch 5: `feat/qmt-switch-types-activities`
 * **Richieste coperte:** `17`
@@ -318,16 +318,16 @@ develop
 
 #### 🌿 Branch 6: `feat/antincendio-loop-registry`
 * **Richieste coperte:** `18`, `19`, `20` *(usa `TechnicalAttachmentSection`)*
-- [ ] **Checkbox Componenti RI:** Aggiungere mappa di booleani per le 7 categorie di rivelatori in `RilevazioneAntincendio` (R18).
-- [ ] **Generazione Attività 6M:**
-  - [ ] Includere sempre le 10 attività istituzionali di centrale e linee.
-  - [ ] Aggiungere riga dinamica di verifica al 50% per ogni componente con checkbox attiva.
-- [ ] **Registro Loop 1..4 (`ELENCO RIL.csv`):**
-  - [ ] Creare `DispositivoRilevazione` (Loop 1..4, Indirizzo, Tipo, Installazione, Descrizione, Zona) (R19).
-  - [ ] Collegare alla `TechnicalAttachmentSection` per censimento dispositivi e moduli.
-  - [ ] Implementare `AntincendioAttachmentProvider : TechnicalAttachmentProvider` per generare il Foglio 2 `ELENCO RIL`.
-- [ ] **Guardrail RIG:** Verificare che `RilevazioneGas` rimanga stabile e compatibile (R20).
-- [ ] **Testing:** Test generazione scheda RI a 6 mesi con combinazioni di 1, 3 e 7 categorie di rivelatori.
+- [x] **Checkbox Componenti RI:** Aggiungere mappa di booleani per le 7 categorie di rivelatori in `RilevazioneAntincendio` (R18).
+- [x] **Generazione Attività 6M:**
+  - [x] Includere sempre le 10 attività istituzionali di centrale e linee.
+  - [x] Aggiungere riga dinamica di verifica al 50% per ogni componente con checkbox attiva.
+- [x] **Registro Loop 1..4 (`ELENCO RIL.csv`):**
+  - [x] Creare `DispositivoRilevazione` (Loop 1..4, Indirizzo, Tipo, Installazione, Descrizione, Zona) (R19).
+  - [x] Collegare alla `TechnicalAttachmentSection` per censimento dispositivi e moduli.
+  - [x] Implementare `AntincendioAttachmentProvider : TechnicalAttachmentProvider` per generare il Foglio 2 `ELENCO RIL`.
+- [x] **Guardrail RIG:** Verificare che `RilevazioneGas` rimanga stabile e compatibile (R20).
+- [x] **Testing:** Test generazione scheda RI a 6 mesi con combinazioni di 1, 3 e 7 categorie di rivelatori.
 
 ---
 
