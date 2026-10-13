@@ -1,5 +1,6 @@
 package manutenzioni.app.service
 
+import manutenzioni.app.service.attachments.AntincendioAttachmentProvider
 import manutenzioni.app.service.attachments.EmergenzaAttachmentProvider
 import manutenzioni.app.service.attachments.QuadroBtAttachmentProvider
 import manutenzioni.app.service.attachments.TechnicalSheetHtmlRenderer
@@ -25,7 +26,8 @@ class HtmlService(
     private val templatePath: String = "scheletro.html",
     private val attachmentProviders: List<TechnicalAttachmentProvider> = listOf(
         QuadroBtAttachmentProvider(),
-        EmergenzaAttachmentProvider()
+        EmergenzaAttachmentProvider(),
+        AntincendioAttachmentProvider()
     ),
     private val sheetRenderer: TechnicalSheetHtmlRenderer = TechnicalSheetHtmlRenderer()
 ) : Html {

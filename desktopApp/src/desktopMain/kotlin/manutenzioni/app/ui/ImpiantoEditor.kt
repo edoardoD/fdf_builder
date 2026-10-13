@@ -22,6 +22,7 @@ import manutenzioni.app.ui.features.operativita.AggiungiComponenteDialog
 import manutenzioni.app.ui.features.operativita.ModificaComponenteDialog
 import manutenzioni.app.ui.features.operativita.AggiungiLampadaDialog
 import manutenzioni.app.ui.features.operativita.ModificaLampadaDialog
+import manutenzioni.app.ui.features.operativita.AggiungiDispositivoDialog
 
 /**
  * Editor universale per impianti — gestisce sia creazione che modifica.
@@ -90,10 +91,21 @@ fun ImpiantoEditor(
     val isQuadro = impianto is QuadroBT || codIntervento.trim().equals("Q", ignoreCase = true) || (codIntervento.trim().startsWith("Q", ignoreCase = true) && !codIntervento.trim().equals("QMT", ignoreCase = true))
     val isEmergenza = impianto is ImpiantoEmergenza || codIntervento.trim().equals("EM", ignoreCase = true) || codIntervento.trim().equals("IS", ignoreCase = true)
     val isQuadroMQT = impianto is QuadroMQT || codIntervento.trim().equals("QMT", ignoreCase = true)
+    val isAntincendio = impianto is RilevazioneAntincendio || codIntervento.trim().equals("RI", ignoreCase = true)
 
     var tipoInterruttoreMQT by remember(impianto) {
         mutableStateOf((impianto as? QuadroMQT)?.tipoInterruttore ?: MqtSwitchType.SF6)
     }
+
+    // Stato per RilevazioneAntincendio (R18 e R19)
+    var categorieRivelatoriState by remember(impianto) {
+        mutableStateOf((impianto as? RilevazioneAntincendio)?.categorieRivelatori ?: emptyMap())
+    }
+    var dispositiviAntincendio by remember(impianto) {
+        mutableStateOf((impianto as? RilevazioneAntincendio)?.listaDispositivi ?: emptyList<DispositivoRilevazione>())
+    }
+    var showAddDispositivoDialog by remember { mutableStateOf(false) }
+    var dispositivoToEdit by remember { mutableStateOf<DispositivoRilevazione?>(null) }
 
     val currentQuadro = (impianto as? QuadroBT) ?: QuadroBT(
         id = impianto.id,
@@ -121,6 +133,20 @@ fun ImpiantoEditor(
         quantita = 1,
         noteSpecifiche = noteSpecifiche.ifBlank { null },
         listaLampade = lampadeEmergenza
+    )
+
+    val currentAntincendio = (impianto as? RilevazioneAntincendio) ?: RilevazioneAntincendio(
+        id = impianto.id,
+        codIntervento = codIntervento.trim().ifBlank { "RI" },
+        nomeCompleto = nomeCompleto.trim().ifBlank { "Rilevazione Incendi" },
+        premessa = premessa.ifBlank { null },
+        listaAttivita = attivitaList,
+        listaNormative = impianto.listaNormative,
+        cantiereId = impianto.cantiereId,
+        quantita = 1,
+        noteSpecifiche = noteSpecifiche.ifBlank { null },
+        categorieRivelatori = categorieRivelatoriState,
+        listaDispositivi = dispositiviAntincendio
     )
 
     if (showAggiungiComponenteDialog && isQuadro) {
@@ -190,6 +216,37 @@ fun ImpiantoEditor(
                 lampadeEmergenza = nuovaLista
                 onAggiornaLampadaInEmergenza?.invoke(currentEmergenza.copy(listaLampade = nuovaLista), aggiornata)
                 lampadaInModifica = null
+            }
+        )
+    }
+
+    if (showAddDispositivoDialog && isAntincendio) {
+        val nextLoop = dispositivoToEdit?.loop ?: 1
+        val nextIndirizzo = if (dispositivoToEdit != null) {
+            dispositivoToEdit!!.indirizzo
+        } else {
+            val existingInLoop = dispositiviAntincendio.filter { it.loop == nextLoop }.map { it.indirizzo }
+            SiglaCloneHelper.findNextSiglaForClone("1", existingInLoop, defaultPrefix = "1")
+        }
+
+        AggiungiDispositivoDialog(
+            dispositivoIniziale = dispositivoToEdit,
+            defaultLoop = nextLoop,
+            suggestedIndirizzo = nextIndirizzo,
+            onDismiss = {
+                showAddDispositivoDialog = false
+                dispositivoToEdit = null
+            },
+            onConfirm = { disp ->
+                if (dispositivoToEdit != null) {
+                    dispositiviAntincendio = dispositiviAntincendio.map {
+                        if (it.id == disp.id) disp else it
+                    }
+                } else {
+                    dispositiviAntincendio = dispositiviAntincendio + disp
+                }
+                showAddDispositivoDialog = false
+                dispositivoToEdit = null
             }
         )
     }
@@ -290,6 +347,29 @@ fun ImpiantoEditor(
                                         noteSpecifiche = savedNote,
                                         listaAttivita = attivitaList
                                     ).withTipoInterruttore(tipoInterruttoreMQT)
+                                }
+                                isAntincendio -> {
+                                    val baseRi = (impianto as? RilevazioneAntincendio) ?: RilevazioneAntincendio(
+                                        id = impianto.id,
+                                        codIntervento = savedCod,
+                                        nomeCompleto = savedNome,
+                                        premessa = savedPremessa,
+                                        listaAttivita = attivitaList,
+                                        listaNormative = impianto.listaNormative,
+                                        cantiereId = impianto.cantiereId,
+                                        quantita = 1,
+                                        noteSpecifiche = savedNote
+                                    )
+                                    baseRi.copy(
+                                        codIntervento = savedCod,
+                                        nomeCompleto = savedNome,
+                                        premessa = savedPremessa,
+                                        quantita = 1,
+                                        noteSpecifiche = savedNote,
+                                        listaAttivita = attivitaList,
+                                        categorieRivelatori = categorieRivelatoriState,
+                                        listaDispositivi = dispositiviAntincendio
+                                    )
                                 }
                                 else -> {
                                     impianto.copyWithBasicParams(
@@ -768,6 +848,162 @@ fun ImpiantoEditor(
                     },
                     addButtonLabel = "Aggiungi Lampade",
                     emptyMessage = "Nessuna lampada registrata. Clicca 'Aggiungi Lampade' per iniziare."
+                )
+            }
+        }
+
+        // Sezione Rilevazione Incendi (RilevazioneAntincendio: Checkbox Componenti & Registro Loop - R18, R19)
+        if (isAntincendio) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 2.dp,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "Dispositivi di Rivelazione Installati (Verifiche Semestrali al 50%)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = MaterialTheme.colors.primary
+                        )
+                        Text(
+                            text = "Seleziona le tipologie di dispositivi presenti nell'impianto. In fase di stampa a 6 mesi verranno iniettate automaticamente le prove di funzionamento al 50% conformi alla normativa.",
+                            style = MaterialTheme.typography.caption,
+                            color = Color.Gray
+                        )
+
+                        // 7 Checkbox categorie
+                        val categorie = CategoriaRivelatore.values()
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            categorie.forEach { cat ->
+                                val isChecked = categorieRivelatoriState[cat.key] == true
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            val mut = categorieRivelatoriState.toMutableMap()
+                                            if (!isChecked) mut[cat.key] = true else mut.remove(cat.key)
+                                            categorieRivelatoriState = mut
+                                        }
+                                        .padding(vertical = 4.dp, horizontal = 2.dp)
+                                ) {
+                                    Checkbox(
+                                        checked = isChecked,
+                                        onCheckedChange = { checked ->
+                                            val mut = categorieRivelatoriState.toMutableMap()
+                                            if (checked) mut[cat.key] = true else mut.remove(cat.key)
+                                            categorieRivelatoriState = mut
+                                        },
+                                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        text = cat.label,
+                                        fontSize = 13.sp,
+                                        fontWeight = if (isChecked) FontWeight.SemiBold else FontWeight.Normal
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                TechnicalAttachmentSection(
+                    title = "Registro Componenti a Loop (ELENCO RIL)",
+                    subtitle = "Sensori, rivelatori e moduli suddivisi per Loop (1..4) per verifiche strumentali (Foglio 2)",
+                    items = dispositiviAntincendio,
+                    itemTitle = { disp ->
+                        disp.descrizione.ifBlank { "Dispositivo ${disp.indirizzo}" }
+                    },
+                    itemSubtitle = { disp ->
+                        val parts = listOfNotNull(
+                            disp.installazione?.let { "Installazione: $it" },
+                            disp.zona?.let { "Zona: $it" },
+                            disp.dataInstallazione?.let { "Data: $it" }
+                        )
+                        parts.joinToString(" • ")
+                    },
+                    badgeText = { disp ->
+                        if (disp.indirizzo.startsWith("L", ignoreCase = true) || disp.indirizzo.contains(".")) {
+                            disp.indirizzo
+                        } else {
+                            "L${disp.loop}.${disp.indirizzo}"
+                        }
+                    },
+                    extraBadges = { disp ->
+                        Surface(
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.12f),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
+                        ) {
+                            Text(
+                                text = "LOOP ${disp.loop}",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colors.primary,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
+                        }
+                        Spacer(Modifier.width(4.dp))
+                        Surface(
+                            color = Color(0xFFF1F5F9),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
+                        ) {
+                            Text(
+                                text = disp.tipo,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.DarkGray,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
+                        }
+                    },
+                    onAddItem = {
+                        dispositivoToEdit = null
+                        showAddDispositivoDialog = true
+                    },
+                    onEditItem = { disp ->
+                        dispositivoToEdit = disp
+                        showAddDispositivoDialog = true
+                    },
+                    onCloneItem = { disp ->
+                        val existingSigle = dispositiviAntincendio.filter { it.loop == disp.loop }.map { it.indirizzo }
+                        val nextIndirizzo = SiglaCloneHelper.findNextSiglaForClone(
+                            baseSigla = disp.indirizzo,
+                            existingSigle = existingSigle,
+                            defaultPrefix = "1"
+                        )
+                        val duplicato = disp.copy(
+                            id = java.util.UUID.randomUUID().toString(),
+                            indirizzo = nextIndirizzo
+                        )
+                        dispositiviAntincendio = dispositiviAntincendio + duplicato
+                    },
+                    onDeleteItem = { disp ->
+                        dispositiviAntincendio = dispositiviAntincendio - disp
+                    },
+                    onClearAll = { dispositiviAntincendio = emptyList() },
+                    onExportStandalonePdf = {
+                        onExportStandaloneTechnicalSheet?.invoke(
+                            currentAntincendio.copy(
+                                codIntervento = codIntervento,
+                                nomeCompleto = nomeCompleto,
+                                categorieRivelatori = categorieRivelatoriState,
+                                listaDispositivi = dispositiviAntincendio
+                            )
+                        )
+                    },
+                    addButtonLabel = "Aggiungi al Loop",
+                    emptyMessage = "Nessun sensore o modulo registrato. Clicca 'Aggiungi al Loop' per popolare il registro."
                 )
             }
         }

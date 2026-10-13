@@ -587,11 +587,12 @@ class ManutenzioniViewModel(
             try {
                 val providers = listOf(
                     manutenzioni.app.service.attachments.QuadroBtAttachmentProvider(),
-                    manutenzioni.app.service.attachments.EmergenzaAttachmentProvider()
+                    manutenzioni.app.service.attachments.EmergenzaAttachmentProvider(),
+                    manutenzioni.app.service.attachments.AntincendioAttachmentProvider()
                 )
                 val provider = providers.firstOrNull { it.canHandle(impianto) }
                 if (provider == null) {
-                    _uiState.update { it.copy(errorMessage = "Nessun componente o lampada presente per generare il Foglio 2") }
+                    _uiState.update { it.copy(errorMessage = "Nessun componente registrato per generare il Foglio 2") }
                     return@launch
                 }
                 val frequenza = _uiState.value.frequenzePerImpianto[impianto.id] ?: Periodo(manutenzioni.domain.model.TipoPeriodo.M, 6)
@@ -1111,6 +1112,113 @@ class ManutenzioniViewModel(
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Errore sostituzione: ${e.message}") }
+            }
+        }
+    }
+
+    fun aggiungiDispositivoAdAntincendio(
+        impianto: manutenzioni.domain.model.RilevazioneAntincendio,
+        dispositivo: manutenzioni.domain.model.DispositivoRilevazione
+    ) {
+        scope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+                val updated = impianto.copy(listaDispositivi = impianto.listaDispositivi + dispositivo)
+                repository.salvaImpianto(updated)
+                val impiantiCantiere = impianto.cantiereId?.let { repository.getImpiantiForCantiere(it) } ?: emptyList()
+                val tuttiImpianti = repository.caricaImpianti()
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        selectedImpianto = updated,
+                        impiantiDelCantiere = impiantiCantiere,
+                        impianti = tuttiImpianti,
+                        statusMessage = "✓ Dispositivo '${dispositivo.indirizzo}' aggiunto a Rilevazione Incendi"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Errore aggiunta dispositivo: ${e.message}") }
+            }
+        }
+    }
+
+    fun aggiornaDispositivoInAntincendio(
+        impianto: manutenzioni.domain.model.RilevazioneAntincendio,
+        dispositivoAggiornato: manutenzioni.domain.model.DispositivoRilevazione
+    ) {
+        scope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+                val updated = impianto.copy(
+                    listaDispositivi = impianto.listaDispositivi.map {
+                        if (it.id == dispositivoAggiornato.id) dispositivoAggiornato else it
+                    }
+                )
+                repository.salvaImpianto(updated)
+                val impiantiCantiere = impianto.cantiereId?.let { repository.getImpiantiForCantiere(it) } ?: emptyList()
+                val tuttiImpianti = repository.caricaImpianti()
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        selectedImpianto = updated,
+                        impiantiDelCantiere = impiantiCantiere,
+                        impianti = tuttiImpianti,
+                        statusMessage = "✓ Dispositivo '${dispositivoAggiornato.indirizzo}' aggiornato"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Errore modifica dispositivo: ${e.message}") }
+            }
+        }
+    }
+
+    fun eliminaDispositivoDaAntincendio(
+        impianto: manutenzioni.domain.model.RilevazioneAntincendio,
+        dispositivoId: String
+    ) {
+        scope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+                val updated = impianto.copy(
+                    listaDispositivi = impianto.listaDispositivi.filter { it.id != dispositivoId }
+                )
+                repository.salvaImpianto(updated)
+                val impiantiCantiere = impianto.cantiereId?.let { repository.getImpiantiForCantiere(it) } ?: emptyList()
+                val tuttiImpianti = repository.caricaImpianti()
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        selectedImpianto = updated,
+                        impiantiDelCantiere = impiantiCantiere,
+                        impianti = tuttiImpianti,
+                        statusMessage = "✓ Dispositivo rimosso da Rilevazione Incendi"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Errore eliminazione dispositivo: ${e.message}") }
+            }
+        }
+    }
+
+    fun svuotaDispositiviAntincendio(impianto: manutenzioni.domain.model.RilevazioneAntincendio) {
+        scope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+                val updated = impianto.copy(listaDispositivi = emptyList())
+                repository.salvaImpianto(updated)
+                val impiantiCantiere = impianto.cantiereId?.let { repository.getImpiantiForCantiere(it) } ?: emptyList()
+                val tuttiImpianti = repository.caricaImpianti()
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        selectedImpianto = updated,
+                        impiantiDelCantiere = impiantiCantiere,
+                        impianti = tuttiImpianti,
+                        statusMessage = "✓ Registro componenti antincendio svuotato"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Errore svuotamento registro: ${e.message}") }
             }
         }
     }
