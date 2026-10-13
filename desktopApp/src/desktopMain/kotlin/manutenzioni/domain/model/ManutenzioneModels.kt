@@ -116,6 +116,34 @@ sealed interface ImpiantoRilevazione {
 }
 
 @Serializable
+enum class CategoriaRivelatore(val key: String, val label: String) {
+    FUMO_PUNTIFORMI("fumo_puntiformi", "Rivelatori di Fumo Puntiformi"),
+    FUMO_LINEARI("fumo_lineari", "Rivelatori di Fumo Lineari"),
+    CALORE_PUNTIFORMI("calore_puntiformi", "Rivelatori di Calore Puntiformi"),
+    CALORE_LINEARI("calore_lineari", "Rivelatori di Calore Lineari"),
+    ASPIRAZIONE("aspirazione", "Rivelazione ad Aspirazione"),
+    CONDOTTA("condotta", "Rivelatori di condotta"),
+    FIAMMA("fiamma", "Rivelatori di Fiamma");
+
+    fun buildDescrizione(): String {
+        return "Prova dei $label (prova sul 50% dell’impianto) impiegando dispositivi artificiali di produzione del fumo o di altro, simulando l'insorgere di un incendio"
+    }
+}
+
+@Serializable
+data class DispositivoRilevazione(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val loop: Int = 1,
+    val indirizzo: String,
+    val tipo: String,
+    val installazione: String? = null,
+    val descrizione: String,
+    val zona: String? = null,
+    val dataInstallazione: String? = null,
+    val note: String? = null
+)
+
+@Serializable
 @SerialName("RilevazioneAntincendio")
 data class RilevazioneAntincendio(
     override val id: String = java.util.UUID.randomUUID().toString(),
@@ -128,7 +156,13 @@ data class RilevazioneAntincendio(
     override val quantita: Int = 1,
     override val noteSpecifiche: String? = null,
     
-    override val quantitaComponenti: Map<String, Int> = emptyMap()
+    override val quantitaComponenti: Map<String, Int> = emptyMap(),
+
+    // R18: Mappa di booleani per le 7 categorie di rivelatori
+    val categorieRivelatori: Map<String, Boolean> = emptyMap(),
+
+    // R19: Registro componenti a Loop (1..4)
+    val listaDispositivi: List<DispositivoRilevazione> = emptyList()
 ) : Impianto(), ImpiantoRilevazione {
     override fun copyWithBasicParams(
         id: String, codIntervento: String, nomeCompleto: String, premessa: String?, 
@@ -137,8 +171,21 @@ data class RilevazioneAntincendio(
     ): Impianto = copy(
         id = id, codIntervento = codIntervento, nomeCompleto = nomeCompleto, 
         premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative, 
-        cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche
+        cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche,
+        categorieRivelatori = categorieRivelatori,
+        listaDispositivi = listaDispositivi
     )
+
+    fun isCategoriaAttiva(cat: CategoriaRivelatore): Boolean = categorieRivelatori[cat.key] == true
+
+    fun withCategoria(cat: CategoriaRivelatore, attiva: Boolean): RilevazioneAntincendio {
+        val mut = categorieRivelatori.toMutableMap()
+        if (attiva) mut[cat.key] = true else mut.remove(cat.key)
+        return copy(categorieRivelatori = mut)
+    }
+
+    fun withDispositivi(dispositivi: List<DispositivoRilevazione>): RilevazioneAntincendio =
+        copy(listaDispositivi = dispositivi)
 }
 
 @Serializable
@@ -402,7 +449,10 @@ fun Impianto.normalizeType(): Impianto {
                 listaNormative = listaNormative,
                 cantiereId = cantiereId,
                 quantita = quantita,
-                noteSpecifiche = noteSpecifiche
+                noteSpecifiche = noteSpecifiche,
+                quantitaComponenti = (this as? ImpiantoRilevazione)?.quantitaComponenti ?: emptyMap(),
+                categorieRivelatori = (this as? RilevazioneAntincendio)?.categorieRivelatori ?: emptyMap(),
+                listaDispositivi = (this as? RilevazioneAntincendio)?.listaDispositivi ?: emptyList()
             )
         }
         this !is RilevazioneGas && codIntervento.equals("RIG", ignoreCase = true) -> {

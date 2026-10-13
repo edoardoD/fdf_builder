@@ -13,6 +13,7 @@ import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.normalizeType
 
 import manutenzioni.domain.model.QuadroMQT
+import manutenzioni.domain.model.RilevazioneAntincendio
 
 class MongoManutenzioneRepository(
     connectionString: String = "mongodb://localhost:27017",
@@ -62,10 +63,15 @@ class MongoManutenzioneRepository(
                 quantita = imp.quantita, 
                 noteSpecifiche = imp.noteSpecifiche
             )
-            val updated = if (baseUpdated is QuadroMQT && imp is QuadroMQT && imp.tipoInterruttore != null) {
-                baseUpdated.withTipoInterruttore(imp.tipoInterruttore)
-            } else {
-                baseUpdated
+            val updated = when {
+                baseUpdated is QuadroMQT && imp is QuadroMQT && imp.tipoInterruttore != null ->
+                    baseUpdated.withTipoInterruttore(imp.tipoInterruttore)
+                baseUpdated is RilevazioneAntincendio && imp is RilevazioneAntincendio ->
+                    baseUpdated.copy(
+                        categorieRivelatori = imp.categorieRivelatori,
+                        listaDispositivi = imp.listaDispositivi
+                    )
+                else -> baseUpdated
             }
             salvaImpianto(updated)
         }
