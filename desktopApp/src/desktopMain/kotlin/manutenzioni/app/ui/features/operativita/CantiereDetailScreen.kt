@@ -48,6 +48,7 @@ fun CantiereDetailScreen(
     onAggiungiLampadaAEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, manutenzioni.domain.model.LampadaEmergenza) -> Unit)? = null,
     onAggiungiLampadeAEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, List<manutenzioni.domain.model.LampadaEmergenza>) -> Unit)? = null,
     onAggiornaLampadaInEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, manutenzioni.domain.model.LampadaEmergenza) -> Unit)? = null,
+    onExportStandaloneTechnicalSheet: ((manutenzioni.domain.model.Impianto) -> Unit)? = null,
     onUpdateDatiIntervento: (String?, String?) -> Unit = { _, _ -> },
     onUpdateMqtSwitchType: ((String, manutenzioni.domain.model.MqtSwitchType) -> Unit)? = null,
     onAddImpiantiFromTemplates: (List<Impianto>) -> Unit = { templates -> templates.forEach { onCreateNewImpianto(it) } }
@@ -78,6 +79,7 @@ fun CantiereDetailScreen(
                     onAggiungiLampadaAEmergenza = onAggiungiLampadaAEmergenza,
                     onAggiungiLampadeAEmergenza = onAggiungiLampadeAEmergenza,
                     onAggiornaLampadaInEmergenza = onAggiornaLampadaInEmergenza,
+                    onExportStandaloneTechnicalSheet = onExportStandaloneTechnicalSheet,
                     onSave = { impianto, _ -> 
                         onSaveImpianto(impianto)
                         impiantoInModifica = null

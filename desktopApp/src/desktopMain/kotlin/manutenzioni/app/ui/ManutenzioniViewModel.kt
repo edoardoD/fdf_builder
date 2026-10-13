@@ -581,6 +581,46 @@ class ManutenzioniViewModel(
         }
     }
 
+    /** Esporta singolarmente il foglio tecnico allegato (Foglio 2 standalone: UNI 11222 o Differenziali) */
+    fun exportStandaloneTechnicalSheet(impianto: Impianto) {
+        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val providers = listOf(
+                    manutenzioni.app.service.attachments.QuadroBtAttachmentProvider(),
+                    manutenzioni.app.service.attachments.EmergenzaAttachmentProvider()
+                )
+                val provider = providers.firstOrNull { it.canHandle(impianto) }
+                if (provider == null) {
+                    _uiState.update { it.copy(errorMessage = "Nessun componente o lampada presente per generare il Foglio 2") }
+                    return@launch
+                }
+                val frequenza = _uiState.value.frequenzePerImpianto[impianto.id] ?: Periodo(manutenzioni.domain.model.TipoPeriodo.M, 6)
+                val clienteNome = _uiState.value.selectedCliente?.nome
+                val sheetData = provider.buildSheetData(impianto, frequenza, clienteNome)
+                if (sheetData == null) {
+                    _uiState.update { it.copy(errorMessage = "Nessun dato registrato per il Foglio 2") }
+                    return@launch
+                }
+                val renderer = manutenzioni.app.service.attachments.TechnicalSheetHtmlRenderer()
+                val html = renderer.renderStandaloneHtml(sheetData, frequenza, clienteNome)
+                val tempHtml = java.io.File.createTempFile("allegato_${impianto.codIntervento}_", ".html")
+                tempHtml.writeText(html, Charsets.UTF_8)
+                val outputPdf = java.io.File.createTempFile("Foglio2_${impianto.codIntervento}_${sheetData.oggetto}_", ".pdf")
+                manutenzioni.app.service.Pdf().buildPdf(tempHtml.absolutePath, outputPdf.absolutePath)
+                tempHtml.delete()
+
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    try {
+                        java.awt.Desktop.getDesktop().open(outputPdf)
+                    } catch (_: Exception) {}
+                    _uiState.update { it.copy(pdfFile = outputPdf, statusMessage = "Foglio 2 generato: ${outputPdf.name}") }
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore esportazione Foglio 2: ${e.message}") }
+            }
+        }
+    }
+
     /**
      * Aggiunge in blocco più template globali al cantiere selezionato (R6 — selezione multipla).
      * Ogni template viene istanziato come copia indipendente (nuovo id, `cantiereId` del cantiere)

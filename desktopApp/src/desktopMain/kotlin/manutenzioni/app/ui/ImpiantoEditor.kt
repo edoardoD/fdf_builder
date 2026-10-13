@@ -54,6 +54,7 @@ fun ImpiantoEditor(
     onAggiungiLampadaAEmergenza: ((ImpiantoEmergenza, LampadaEmergenza) -> Unit)? = null,
     onAggiungiLampadeAEmergenza: ((ImpiantoEmergenza, List<LampadaEmergenza>) -> Unit)? = null,
     onAggiornaLampadaInEmergenza: ((ImpiantoEmergenza, LampadaEmergenza) -> Unit)? = null,
+    onExportStandaloneTechnicalSheet: ((Impianto) -> Unit)? = null,
     onSave: (Impianto, Boolean) -> Unit,
     onCancel: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -87,7 +88,7 @@ fun ImpiantoEditor(
 
     // Determinazione dinamica della tipologia di impianto (anche se originariamente ImpiantoStandard)
     val isQuadro = impianto is QuadroBT || codIntervento.trim().equals("Q", ignoreCase = true) || (codIntervento.trim().startsWith("Q", ignoreCase = true) && !codIntervento.trim().equals("QMT", ignoreCase = true))
-    val isEmergenza = impianto is ImpiantoEmergenza || codIntervento.trim().equals("EM", ignoreCase = true)
+    val isEmergenza = impianto is ImpiantoEmergenza || codIntervento.trim().equals("EM", ignoreCase = true) || codIntervento.trim().equals("IS", ignoreCase = true)
     val isQuadroMQT = impianto is QuadroMQT || codIntervento.trim().equals("QMT", ignoreCase = true)
 
     var tipoInterruttoreMQT by remember(impianto) {
@@ -394,6 +395,57 @@ fun ImpiantoEditor(
                         )
                     }
                 }
+                if (isEmergenza) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text("Sigla Documentale:", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable {
+                                codIntervento = "EM"
+                                if (nomeCompleto.isBlank() || nomeCompleto.equals("Illuminazione di sicurezza", ignoreCase = true)) {
+                                    nomeCompleto = "Illuminazione di emergenza"
+                                }
+                            }
+                        ) {
+                            RadioButton(
+                                selected = codIntervento.equals("EM", ignoreCase = true),
+                                onClick = {
+                                    codIntervento = "EM"
+                                    if (nomeCompleto.isBlank() || nomeCompleto.equals("Illuminazione di sicurezza", ignoreCase = true)) {
+                                        nomeCompleto = "Illuminazione di emergenza"
+                                    }
+                                }
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text("EM (Emergenza)", fontSize = 13.sp)
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable {
+                                codIntervento = "IS"
+                                if (nomeCompleto.isBlank() || nomeCompleto.equals("Illuminazione di emergenza", ignoreCase = true)) {
+                                    nomeCompleto = "Illuminazione di sicurezza"
+                                }
+                            }
+                        ) {
+                            RadioButton(
+                                selected = codIntervento.equals("IS", ignoreCase = true),
+                                onClick = {
+                                    codIntervento = "IS"
+                                    if (nomeCompleto.isBlank() || nomeCompleto.equals("Illuminazione di emergenza", ignoreCase = true)) {
+                                        nomeCompleto = "Illuminazione di sicurezza"
+                                    }
+                                }
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text("IS (Sicurezza)", fontSize = 13.sp)
+                        }
+                    }
+                }
             }
 
             if (!isReadOnlyAdminFields && !isNew) {
@@ -602,189 +654,121 @@ fun ImpiantoEditor(
                         interruttoriQuadro = interruttoriQuadro - interruttore
                     },
                     onClearAll = { interruttoriQuadro = emptyList() },
+                    onExportStandalonePdf = {
+                        onExportStandaloneTechnicalSheet?.invoke(
+                            currentQuadro.copy(
+                                sigla = siglaQuadro.trim(),
+                                descrizioneQuadro = descrizioneQuadro.trim(),
+                                listaInterruttori = interruttoriQuadro
+                            )
+                        )
+                    },
                     addButtonLabel = "Aggiungi Componente",
                     emptyMessage = "Nessun componente registrato per questo quadro. Clicca su 'Aggiungi Componente' per iniziare."
                 )
             }
         }
 
-        // Sezione Lampade di Emergenza (ImpiantoEmergenza)
+        // Sezione Lampade di Emergenza / Sicurezza (ImpiantoEmergenza: EM e IS - R7, R14, R16)
         if (isEmergenza) {
             item {
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
-                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                val isSicurezza = codIntervento.equals("IS", ignoreCase = true)
+                val attachmentTitle = if (isSicurezza) {
+                    "Registro Lampade di Sicurezza (UNI 11222)"
+                } else {
+                    "Registro Lampade di Emergenza (UNI 11222)"
+                }
+                TechnicalAttachmentSection(
+                    title = attachmentTitle,
+                    subtitle = "Apparecchi di illuminazione installati per verifiche e prove di autonomia (Foglio 2)",
+                    items = lampadeEmergenza,
+                    itemTitle = { lampada ->
+                        listOfNotNull(lampada.produttore, lampada.modello).joinToString(" ").ifBlank { lampada.sigla }
+                    },
+                    itemSubtitle = { lampada ->
+                        if (!lampada.posizione.isNullOrBlank()) "📍 ${lampada.posizione}" else ""
+                    },
+                    badgeText = { lampada ->
+                        lampada.sigla.ifBlank { "—" }
+                    },
+                    extraBadges = { lampada ->
+                        Surface(
+                            color = Color(0xFFE8F5E9),
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
                         ) {
-                            Column {
-                                Text("Lampade di Emergenza (${lampadeEmergenza.size})", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                                Text("Luci di emergenza installate in questo impianto", style = MaterialTheme.typography.caption, color = Color.Gray)
-                            }
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                if (lampadeEmergenza.isNotEmpty()) {
-                                    TextButton(
-                                        onClick = { lampadeEmergenza = emptyList() },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
-                                    ) {
-                                        Text("Svuota (${lampadeEmergenza.size})", color = Color(0xFFDC2626), fontSize = 11.sp)
-                                    }
-                                }
-                                Button(
-                                    onClick = { showAggiungiLampadaDialog = true },
-                                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary, contentColor = Color.White),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                                ) {
-                                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text("Aggiungi Lampade", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
+                            Text(
+                                text = "⏱ ${lampada.autonomia}",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF2E7D32),
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
                         }
-
-                        if (lampadeEmergenza.isEmpty()) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
-                                contentAlignment = Alignment.Center
+                        if (!lampada.dataUltimoCambioBatteria.isNullOrBlank()) {
+                            Surface(
+                                color = Color(0xFFFFF3E0),
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
                             ) {
                                 Text(
-                                    "Nessuna lampada registrata. Clicca 'Aggiungi Lampade' per iniziare.",
-                                    color = Color.Gray, fontSize = 12.sp
+                                    text = "🔋 ${lampada.dataUltimoCambioBatteria}",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFFE65100),
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
                                 )
                             }
-                        } else {
-                            lampadeEmergenza.forEach { lampada ->
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { lampadaInModifica = lampada },
-                                    backgroundColor = Color(0xFFF8FAFC),
-                                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().padding(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        // Badge Sigla
-                                        Surface(
-                                            color = MaterialTheme.colors.primary.copy(alpha = 0.12f),
-                                            shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
-                                        ) {
-                                            Text(
-                                                text = lampada.sigla.ifBlank { "—" },
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 11.sp,
-                                                color = MaterialTheme.colors.primary,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                            )
-                                        }
-                                        Spacer(Modifier.width(10.dp))
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                if (!lampada.produttore.isNullOrBlank()) {
-                                                    Text(
-                                                        text = lampada.produttore,
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 13.sp,
-                                                        color = Color(0xFF0F172A)
-                                                    )
-                                                    Spacer(Modifier.width(6.dp))
-                                                }
-                                                Text(
-                                                    text = lampada.modello,
-                                                    fontSize = 12.sp,
-                                                    color = Color(0xFF334155)
-                                                )
-                                            }
-                                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                                // Badge Autonomia
-                                                Surface(
-                                                    color = Color(0xFFE8F5E9),
-                                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
-                                                ) {
-                                                    Text(
-                                                        text = "⏱ ${lampada.autonomia}",
-                                                        fontSize = 10.sp,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        color = Color(0xFF2E7D32),
-                                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                                                    )
-                                                }
-                                                if (!lampada.posizione.isNullOrBlank()) {
-                                                    Text(
-                                                        text = "📍 ${lampada.posizione}",
-                                                        fontSize = 10.sp,
-                                                        color = Color(0xFF64748B)
-                                                    )
-                                                }
-                                                if (!lampada.dataUltimoCambioBatteria.isNullOrBlank()) {
-                                                    Surface(
-                                                        color = Color(0xFFFFF3E0),
-                                                        shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp)
-                                                    ) {
-                                                        Text(
-                                                            text = "🔋 ${lampada.dataUltimoCambioBatteria}",
-                                                            fontSize = 10.sp,
-                                                            fontWeight = FontWeight.SemiBold,
-                                                            color = Color(0xFFE65100),
-                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        // Modifica lampada
-                                        IconButton(
-                                            onClick = { lampadaInModifica = lampada },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Edit,
-                                                contentDescription = "Modifica lampada",
-                                                modifier = Modifier.size(16.dp),
-                                                tint = MaterialTheme.colors.primary
-                                            )
-                                        }
-                                        Spacer(Modifier.width(2.dp))
-                                        // Clona lampada con sigla successiva
-                                        IconButton(
-                                            onClick = {
-                                                val nextSigla = manutenzioni.app.ui.features.operativita.LampadaGeneratorHelper.findNextSiglaForClone(
-                                                    baseSigla = lampada.sigla,
-                                                    existing = lampadeEmergenza,
-                                                    defaultPrefix = codIntervento
-                                                )
-                                                val duplicata = lampada.copy(
-                                                    id = java.util.UUID.randomUUID().toString(),
-                                                    sigla = nextSigla
-                                                )
-                                                val nuovaLista = lampadeEmergenza + duplicata
-                                                lampadeEmergenza = nuovaLista
-                                                if (onAggiungiLampadeAEmergenza != null) {
-                                                    onAggiungiLampadeAEmergenza.invoke(currentEmergenza.copy(listaLampade = nuovaLista), listOf(duplicata))
-                                                } else {
-                                                    onAggiungiLampadaAEmergenza?.invoke(currentEmergenza.copy(listaLampade = nuovaLista), duplicata)
-                                                }
-                                            },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Icon(Icons.Default.Add, contentDescription = "Clona lampada", modifier = Modifier.size(16.dp), tint = MaterialTheme.colors.primary)
-                                        }
-                                        Spacer(Modifier.width(2.dp))
-                                        IconButton(
-                                            onClick = { lampadeEmergenza = lampadeEmergenza - lampada },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Icon(Icons.Default.Delete, contentDescription = "Rimuovi", modifier = Modifier.size(16.dp), tint = Color(0xFFDC2626))
-                                        }
-                                    }
-                                }
-                            }
                         }
-                    }
-                }
+                    },
+                    onAddItem = { showAggiungiLampadaDialog = true },
+                    onEditItem = { lampadaInModifica = it },
+                    onCloneItem = { lampada ->
+                        val nextSigla = SiglaCloneHelper.findNextSiglaForClone(
+                            baseSigla = lampada.sigla,
+                            existingSigle = lampadeEmergenza.map { it.sigla },
+                            defaultPrefix = codIntervento
+                        )
+                        val duplicata = lampada.copy(
+                            id = java.util.UUID.randomUUID().toString(),
+                            sigla = nextSigla
+                        )
+                        val nuovaLista = lampadeEmergenza + duplicata
+                        lampadeEmergenza = nuovaLista
+                        if (onAggiungiLampadeAEmergenza != null) {
+                            onAggiungiLampadeAEmergenza.invoke(
+                                currentEmergenza.copy(
+                                    codIntervento = codIntervento,
+                                    nomeCompleto = nomeCompleto,
+                                    listaLampade = nuovaLista
+                                ),
+                                listOf(duplicata)
+                            )
+                        } else {
+                            onAggiungiLampadaAEmergenza?.invoke(
+                                currentEmergenza.copy(
+                                    codIntervento = codIntervento,
+                                    nomeCompleto = nomeCompleto,
+                                    listaLampade = nuovaLista
+                                ),
+                                duplicata
+                            )
+                        }
+                    },
+                    onDeleteItem = { lampada ->
+                        lampadeEmergenza = lampadeEmergenza - lampada
+                    },
+                    onClearAll = { lampadeEmergenza = emptyList() },
+                    onExportStandalonePdf = {
+                        onExportStandaloneTechnicalSheet?.invoke(
+                            currentEmergenza.copy(
+                                codIntervento = codIntervento,
+                                nomeCompleto = nomeCompleto,
+                                listaLampade = lampadeEmergenza
+                            )
+                        )
+                    },
+                    addButtonLabel = "Aggiungi Lampade",
+                    emptyMessage = "Nessuna lampada registrata. Clicca 'Aggiungi Lampade' per iniziare."
+                )
             }
         }
 
