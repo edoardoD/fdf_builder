@@ -1,6 +1,7 @@
 # Created by https://www.toptal.com/developers/gitignore/api/gradle,java,macos,visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=gradle,java,macos,visualstudiocode
 *.pdf
+.kotlin/
 ### Java ###
 # Compiled class file
 *.class

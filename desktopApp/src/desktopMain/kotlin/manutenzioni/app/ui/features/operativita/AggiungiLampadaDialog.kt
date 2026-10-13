@@ -80,22 +80,11 @@ object LampadaGeneratorHelper {
      * Trova la prossima sigla disponibile clonando una singola lampada.
      */
     fun findNextSiglaForClone(baseSigla: String, existing: List<LampadaEmergenza>, defaultPrefix: String): String {
-        val clean = baseSigla.trim()
-        val match = Regex("""^(.*?)(\d+)$""").matchEntire(clean)
-        val (prefix, padding) = if (match != null) {
-            Pair(match.groupValues[1], match.groupValues[2].length)
-        } else {
-            Pair(if (clean.isBlank()) "${defaultPrefix.ifBlank { "EM" }}-" else "$clean-", 2)
-        }
-
-        val allNumbersWithPrefix = existing.mapNotNull { l ->
-            val m = Regex("""^(.*?)(\d+)$""").matchEntire(l.sigla.trim())
-            if (m != null && m.groupValues[1] == prefix) {
-                m.groupValues[2].toIntOrNull()
-            } else null
-        }
-        val nextNum = (allNumbersWithPrefix.maxOrNull() ?: 0) + 1
-        return "$prefix${nextNum.toString().padStart(padding, '0')}"
+        return manutenzioni.app.ui.components.SiglaCloneHelper.findNextSiglaForClone(
+            baseSigla = baseSigla,
+            existingSigle = existing.map { it.sigla },
+            defaultPrefix = defaultPrefix
+        )
     }
 }
 
