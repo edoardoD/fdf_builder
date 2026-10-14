@@ -236,7 +236,7 @@ develop
   │
   ├── [WAVE 3: Cantiere Workflow & PDF Batch Engine]
   │     ├── 🌿 feat/cantiere-metadata-and-signature   [R24, R25, R26]
-  │     └── 🌿 feat/pdf-batch-multifreq-naming-layout  [R11, R21, R22, R23, R29, R32]
+  │     └── 🌿 feat/pdf-batch-multifreq-naming-layout  [R11, R21, R22, R23, R29]
   │
   └── [WAVE 4: Calendario, Storicizzazione & RBAC]
         ├── 🌿 feat/calendario-scadenze-riepilogo     [R27, R28]
@@ -351,20 +351,37 @@ develop
 
 #### 🌿 Branch 8: `feat/pdf-batch-multifreq-naming-layout`
 * **Richieste coperte:** `11`, `21`, `22`, `23`, `29`, `32`
-* **Sotto-Fase 8.1 — Layout Foglio 1, Griglia Fissa a 30 Righe & Colonna "Zona" (R23, R32):**
-  - [ ] **Sincronizzazione Dati da CSV:** Sincronizzare da tutti i file in `Fogli_Esportati_CSV/*.csv` la colonna 4 ("Zona") dentro `manutenzioni_db.json` e MongoDB su tutti i template globali (copertura completa per FTV, TRFS, CAB, UPS, GE, IE, ecc.) (R32).
-  - [ ] **Aggiornamento Template HTML (`scheletro.html`):** Ridenominare l'intestazione della terza colonna (linee 391-393) da `<p>Impianto</p>` a `<p>Zona</p>` (o `<p>Zona / Impianto</p>`) coerentemente con la natura dei dati (R32).
-  - [ ] **Grid Padding Fisso a 30 Righe:** In `HtmlService.buildAttivitaRows`, se le attività filtrate sono $N < 30$, generare $30 - N$ righe `<tr>` neutre/vuote (con celle disabilitate) per garantire altezza e impaginazione millimetrica fissa (R23).
-  - [ ] **Pulizia Fallback Colonna Zona:** In `HtmlService.kt`, se `att.zona` è nullo/vuoto, evitare il fallback su `att.frequenza.label()`, stampando la stringa vuota o il fallback coerente dell'impianto (R32).
-  - [ ] **Standardizzazione Codice Periodicità:** Formattare il codice frequenza nel cartiglio a due cifre per i mesi (`01`, `02`, `03`, `06`) e a una cifra per gli anni (`1`, `2`, `5`) (R23).
-  - [ ] **Leggibilità Font Note:** Incrementare la dimensione del carattere nei campi testo/note per facilitare la compilazione (R23).
-* **Sotto-Fase 8.2 — Batch Multi-Frequenza, Naming File & Export Interruttori (R11, R21, R22, R29):**
-  - [ ] **Multi-selezione Frequenze:** Permettere all'utente di selezionare più periodicità contemporaneamente (es. 6M e 1A) per lo stesso impianto nella dashboard cantiere (R21).
-  - [ ] **Batch Generator Loop:** Aggiornare `AbstractPdfGeneratorStrategy` per ciclare su tutte le frequenze selezionate.
-  - [ ] **File Naming Univoco:** Generare i file con formato `{SIGLA_QUADRO}_{PERIODICITA}.pdf` (es. `QG_06.pdf`, `Q1_06.pdf`, `QG_1.pdf`) evitando sovrascritture accidentali (R22).
-  - [ ] **Cartella di Destinazione Temporale:** Creare automaticamente la sottocartella `YYYY_MM/` (es. `2026_10/`) nel percorso scelto (R29).
-  - [ ] **Tab Elenco Interruttori Cantiere:** Inserire tab dedicato che aggrega tutti gli interruttori dei quadri e attiva l'export complessivo (R11).
-  - [ ] **Testing:** Test di generazione batch con 2 quadri e frequenze multiple; verificare albero dei file generati, griglia a 30 righe esatte e fedeltà della colonna "Zona".
+* **Strategia di esecuzione:** Suddivisa in 2 sotto-fasi operative sequenziali per separare la standardizzazione del layout del Foglio 1 dalla logica batch.
+
+##### 🔹 Sotto-Fase 8.1: Layout Foglio 1, 30 Righe & Dati Zona (`R23`, `R32`)
+- [ ] **Sincronizzazione Dati Catalogo da CSV (R32):**
+  - [ ] Eseguire migrazione/script di parsing da tutti i file in `Fogli_Esportati_CSV/*.csv` (`FTV.csv`, `CAB MT.csv`, `TRFS.csv`, `UPS.csv`, `GE.csv`, ecc.) per estrarre la colonna 4 (*"Zona"*).
+  - [ ] Popolare fedelmente il campo `zona` in ogni attività dei template globali in `manutenzioni_db.json` e nel database MongoDB (copertura 100% per tutti gli impianti).
+- [ ] **Allineamento Intestazione HTML (R32):**
+  - [ ] In `scheletro.html` (L391-L393), rinominare l'intestazione della colonna da `<p>Impianto</p>` a `<p>Zona</p>` per riflettere con esattezza il dato visualizzato.
+- [ ] **Risoluzione & Fallback Colonna Zona in `HtmlService` (R32):**
+  - [ ] In `HtmlService.kt` (`buildAttivitaRows`), rimuovere il fallback su `att.frequenza.label()`.
+  - [ ] Stampare `att.zona` prioritariamente (con gestione speciale tipo interruttore per `QuadroMQT`). In caso di valore vuoto/nullo, fallback su stringa vuota o nome dell'impianto.
+- [ ] **Impaginazione Fissa a 30 Righe (R23):**
+  - [ ] In `HtmlService.kt` (`buildAttivitaRows`), calcolare le righe mancanti: se il totale attività filtrate $N < 30$, generare $30 - N$ righe `<tr>` neutre di riempimento (con celle disabled/non compilabili).
+  - [ ] Ottimizzare font size e interlinea per garantire la perfetta impaginazione su foglio singolo A4 millimetrico.
+- [ ] **Formattazione Periodicità nel Cartiglio (R23):**
+  - [ ] Standardizzare il codice periodicità stampato nel cartiglio: a due cifre per i mesi (`01`, `02`, `03`, `06`) e a una cifra per gli anni (`1`, `2`, `5`).
+
+##### 🔹 Sotto-Fase 8.2: Multi-frequenza Batch, Naming & File Management (`R11`, `R21`, `R22`, `R29`)
+- [ ] **Multi-selezione Frequenze nella UI di Cantiere (R21):**
+  - [ ] In `CantiereDetailScreen.kt`, consentire all'utente di selezionare più periodicità simultaneamente per ciascun impianto (es. sia 6M che 1A per i quadri).
+- [ ] **Batch Generator Loop Multi-frequenza (R21):**
+  - [ ] Aggiornare `AbstractPdfGeneratorStrategy.generateBatch` e `ManutenzioniViewModel` per ciclare su tutte le frequenze selezionate per ciascun impianto del cantiere.
+- [ ] **Naming Univoco File PDF (R22):**
+  - [ ] Generare i file con formato rigoroso: `{SIGLA_QUADRO}_{PERIODICITA}.pdf` (es. `QG_06.pdf`, `Q1_06.pdf`, `QG_1.pdf`), prevenendo sovrascritture.
+- [ ] **Salvataggio in Sottocartella Temporale `YYYY_MM` (R29):**
+  - [ ] Creare automaticamente la sottocartella basata sulla data inizio intervento o corrente (es. `2026_10/`) nel path di esportazione selezionato dall'utente.
+- [ ] **Tab & Export Elenco Interruttori Cantiere (R11):**
+  - [ ] Inserire vista aggregata di tutti gli interruttori dei quadri del cantiere con pulsante di esportazione dedicato.
+- [ ] **Testing End-to-End:**
+  - [ ] Verificare che un cantiere con più quadri generi la cartella corretta con file denominati `{SIGLA}_{PERIODICITA}.pdf`.
+  - [ ] Verificare con iText che ogni PDF generato contenga esattamente 30 righe nella tabella attività e riporti la dicitura corretta nella colonna "Zona".
 
 ---
 
