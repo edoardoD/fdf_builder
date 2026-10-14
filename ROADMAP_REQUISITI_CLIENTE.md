@@ -236,7 +236,7 @@ develop
   │
   ├── [WAVE 3: Cantiere Workflow & PDF Batch Engine]
   │     ├── 🌿 feat/cantiere-metadata-and-signature   [R24, R25, R26]
-  │     └── 🌿 feat/pdf-batch-multifreq-naming-layout  [R11, R21, R22, R23, R29]
+  │     └── 🌿 feat/pdf-batch-multifreq-naming-layout  [R11, R21, R22, R23, R29, R32]
   │
   └── [WAVE 4: Calendario, Storicizzazione & RBAC]
         ├── 🌿 feat/calendario-scadenze-riepilogo     [R27, R28]
@@ -351,15 +351,20 @@ develop
 
 #### 🌿 Branch 8: `feat/pdf-batch-multifreq-naming-layout`
 * **Richieste coperte:** `11`, `21`, `22`, `23`, `29`, `32`
-- [ ] **Multi-selezione Frequenze:** Permettere all'utente di selezionare più periodicità (es. 6M e 1A) per lo stesso impianto (R21).
-- [ ] **Batch Generator Loop:** Aggiornare `AbstractPdfGeneratorStrategy` per ciclare su tutte le frequenze selezionate.
-- [ ] **File Naming Univoco:** Generare i file con formato `{SIGLA_QUADRO}_{PERIODICITA}.pdf` (es. `QG_06.pdf`, `Q1_06.pdf`) (R22).
-- [ ] **Layout Fisso 30 Righe:** Configurare il renderer HTML per stampare sempre una griglia a 30 righe (con righe vuote se < 30) (R23).
-- [ ] **Stampa Colonna "Zona" nei PDF:** Garantire che il generatore HTML/PDF in `HtmlService` stampi sempre fedelmente la colonna "Zona" presente nei file CSV per tutti i tipi di impianto (es. `TRFS.csv` -> "Trasformatore", `QMT.csv` -> "Q.M.T." / tipologia interruttore selezionata, ecc.) all'interno della colonna "Impianto" della tabella attività (R32).
-- [ ] **Formattazione Periodicità:** Formattare codice frequenza a due cifre per i mesi (`01`, `06`) e una cifra per gli anni (`1`, `2`, `5`).
-- [ ] **Cartella di Destinazione Temporale:** Creare automaticamente la sottocartella `YYYY_MM/` (es. `2026_10/`) nel percorso scelto (R29).
-- [ ] **Tab Elenco Interruttori Cantiere:** Inserire tab dedicato che aggrega tutti gli interruttori dei quadri e attiva l'export (R11).
-- [ ] **Testing:** Test di generazione batch con 2 quadri e frequenze multiple; verificare albero dei file generati.
+* **Sotto-Fase 8.1 — Layout Foglio 1, Griglia Fissa a 30 Righe & Colonna "Zona" (R23, R32):**
+  - [ ] **Sincronizzazione Dati da CSV:** Sincronizzare da tutti i file in `Fogli_Esportati_CSV/*.csv` la colonna 4 ("Zona") dentro `manutenzioni_db.json` e MongoDB su tutti i template globali (copertura completa per FTV, TRFS, CAB, UPS, GE, IE, ecc.) (R32).
+  - [ ] **Aggiornamento Template HTML (`scheletro.html`):** Ridenominare l'intestazione della terza colonna (linee 391-393) da `<p>Impianto</p>` a `<p>Zona</p>` (o `<p>Zona / Impianto</p>`) coerentemente con la natura dei dati (R32).
+  - [ ] **Grid Padding Fisso a 30 Righe:** In `HtmlService.buildAttivitaRows`, se le attività filtrate sono $N < 30$, generare $30 - N$ righe `<tr>` neutre/vuote (con celle disabilitate) per garantire altezza e impaginazione millimetrica fissa (R23).
+  - [ ] **Pulizia Fallback Colonna Zona:** In `HtmlService.kt`, se `att.zona` è nullo/vuoto, evitare il fallback su `att.frequenza.label()`, stampando la stringa vuota o il fallback coerente dell'impianto (R32).
+  - [ ] **Standardizzazione Codice Periodicità:** Formattare il codice frequenza nel cartiglio a due cifre per i mesi (`01`, `02`, `03`, `06`) e a una cifra per gli anni (`1`, `2`, `5`) (R23).
+  - [ ] **Leggibilità Font Note:** Incrementare la dimensione del carattere nei campi testo/note per facilitare la compilazione (R23).
+* **Sotto-Fase 8.2 — Batch Multi-Frequenza, Naming File & Export Interruttori (R11, R21, R22, R29):**
+  - [ ] **Multi-selezione Frequenze:** Permettere all'utente di selezionare più periodicità contemporaneamente (es. 6M e 1A) per lo stesso impianto nella dashboard cantiere (R21).
+  - [ ] **Batch Generator Loop:** Aggiornare `AbstractPdfGeneratorStrategy` per ciclare su tutte le frequenze selezionate.
+  - [ ] **File Naming Univoco:** Generare i file con formato `{SIGLA_QUADRO}_{PERIODICITA}.pdf` (es. `QG_06.pdf`, `Q1_06.pdf`, `QG_1.pdf`) evitando sovrascritture accidentali (R22).
+  - [ ] **Cartella di Destinazione Temporale:** Creare automaticamente la sottocartella `YYYY_MM/` (es. `2026_10/`) nel percorso scelto (R29).
+  - [ ] **Tab Elenco Interruttori Cantiere:** Inserire tab dedicato che aggrega tutti gli interruttori dei quadri e attiva l'export complessivo (R11).
+  - [ ] **Testing:** Test di generazione batch con 2 quadri e frequenze multiple; verificare albero dei file generati, griglia a 30 righe esatte e fedeltà della colonna "Zona".
 
 ---
 
