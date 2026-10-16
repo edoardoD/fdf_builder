@@ -42,7 +42,11 @@ class HtmlService(
         impianto: Impianto,
         attivitaFiltrate: List<Attivita>,
         frequenza: Periodo,
-        clienteNome: String?
+        clienteNome: String?,
+        cantiereNome: String?,
+        dataInizioIntervento: String?,
+        nomeManutentore: String?,
+        firmaManutentore: String?
     ): String {
         var html = loadTemplate()
 
@@ -86,6 +90,15 @@ class HtmlService(
         }
         html = html.replace("<!-- PREMESSA -->", escapeHtml(premessaCompleta))
 
+        // Iniezione Sito (cantiereNome) nell'header
+        if (!cantiereNome.isNullOrBlank()) {
+            html = html.replace("<!-- SITO -->", escapeHtml(cantiereNome.trim()))
+            html = html.replace("<p>Sito</p>", "<p>Sito: ${escapeHtml(cantiereNome.trim())}</p>")
+        } else {
+            html = html.replace("<p>Sito: <!-- SITO --></p>", "<p>Sito</p>")
+            html = html.replace("<!-- SITO -->", "")
+        }
+
         // Iniezione nome cliente nell'header
         val clienteText = if (!clienteNome.isNullOrBlank()) {
             "Cliente: ${escapeHtml(clienteNome)}"
@@ -93,6 +106,28 @@ class HtmlService(
             "Cliente"
         }
         html = html.replace("<p>Cliente</p>", "<p>$clienteText</p>")
+
+        // Precompilazione AcroForm starting_date con dataInizioIntervento (R24)
+        if (!dataInizioIntervento.isNullOrBlank()) {
+            val escapedDate = escapeHtml(dataInizioIntervento.trim())
+            html = html.replace("value=\"<!-- DATA_INIZIO -->\"", "value=\"$escapedDate\"")
+            html = html.replace("<!-- DATA_INIZIO -->", escapedDate)
+        } else {
+            html = html.replace(" value=\"<!-- DATA_INIZIO -->\"", "")
+            html = html.replace("<!-- DATA_INIZIO -->", "")
+        }
+
+        // Iniezione Verificatore/Manutentore (R25)
+        val manutentoreText = if (!nomeManutentore.isNullOrBlank()) {
+            escapeHtml(nomeManutentore.trim())
+        } else {
+            ""
+        }
+        html = html.replace("<!-- MANUTENTORE -->", manutentoreText)
+
+        // Iniezione Firma Digitale Tecnico (R26)
+        val firmaHtml = buildFirmaHtml(firmaManutentore)
+        html = html.replace("<!-- FIRMA -->", firmaHtml)
 
         // Generazione righe dinamiche delle attività
         val rows = buildAttivitaRows(attivitaFiltrate, impianto)
@@ -102,7 +137,16 @@ class HtmlService(
         val extraSheets = attachmentProviders
             .filter { it.canHandle(impianto) }
             .mapNotNull { it.buildSheetData(impianto, frequenza, clienteNome) }
-            .joinToString("\n") { sheetRenderer.render(it, frequenza, clienteNome) }
+            .joinToString("\n") {
+                sheetRenderer.render(
+                    data = it,
+                    frequenza = frequenza,
+                    clienteNome = clienteNome,
+                    cantiereNome = cantiereNome,
+                    dataInizioIntervento = dataInizioIntervento,
+                    nomeManutentore = nomeManutentore
+                )
+            }
 
         // Append fogli aggiuntivi
         html = if (html.contains("<!-- COMPONENTI_QUADRO_SHEET -->")) {
@@ -114,6 +158,37 @@ class HtmlService(
         }
 
         return html
+    }
+
+    /**
+     * Costruisce il tag `<img>` con data URI Base64 per la firma digitale del tecnico (R26).
+     * Supporta sia data URI già codificati (`data:image/...;base64,...`) sia percorsi file su disco.
+     */
+    private fun buildFirmaHtml(firmaManutentore: String?): String {
+        val raw = firmaManutentore?.trim().orEmpty()
+        if (raw.isEmpty()) return ""
+
+        val dataUri = if (raw.startsWith("data:image/", ignoreCase = true)) {
+            raw
+        } else {
+            val file = File(raw)
+            if (!file.exists() || !file.isFile) return ""
+            val bytes = try {
+                file.readBytes()
+            } catch (_: Exception) {
+                return ""
+            }
+            val ext = file.extension.lowercase()
+            val mime = when (ext) {
+                "jpg", "jpeg" -> "image/jpeg"
+                "gif" -> "image/gif"
+                else -> "image/png"
+            }
+            val b64 = java.util.Base64.getEncoder().encodeToString(bytes)
+            "data:$mime;base64,$b64"
+        }
+
+        return """<img src="$dataUri" alt="Firma Tecnico" style="max-height: 0.42cm; max-width: 3.8cm; display: block; margin-top: 1px;" />"""
     }
 
     private fun loadTemplate(): String {

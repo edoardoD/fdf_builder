@@ -23,18 +23,21 @@ class CantiereSerializationTest {
             clienteId = "cliente-456",
             dataInizioIntervento = "08/10/2026",
             nomeManutentore = "Mario Rossi",
-            indirizzo = "Via Roma 1, Milano"
+            indirizzo = "Via Roma 1, Milano",
+            firmaManutentore = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
         )
 
         val encoded = json.encodeToString(cantiere)
         assertTrue(encoded.contains("\"indirizzo\": \"Via Roma 1, Milano\""))
         assertTrue(encoded.contains("\"dataInizioIntervento\": \"08/10/2026\""))
         assertTrue(encoded.contains("\"nomeManutentore\": \"Mario Rossi\""))
+        assertTrue(encoded.contains("\"firmaManutentore\": \"data:image/png;base64,"))
 
         val decoded = json.decodeFromString<Cantiere>(encoded)
         assertEquals(cantiere, decoded)
         assertEquals("08/10/2026", decoded.dataInizioIntervento)
         assertEquals("Mario Rossi", decoded.nomeManutentore)
+        assertTrue(decoded.firmaManutentore!!.startsWith("data:image/png;base64,"))
     }
 
     @Test
@@ -54,5 +57,6 @@ class CantiereSerializationTest {
         assertNull(decoded.dataInizioIntervento)
         assertNull(decoded.nomeManutentore)
         assertNull(decoded.indirizzo)
+        assertNull(decoded.firmaManutentore)
     }
 }

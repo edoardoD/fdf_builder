@@ -392,6 +392,63 @@ class ManutenzioniViewModel(
         }
     }
 
+    /** Aggiorna o rimuove la firma digitale del tecnico manutentore per il cantiere attivo (R26) */
+    fun updateFirmaManutentoreCantiere(firma: String?) {
+        val currentCantiere = _uiState.value.selectedCantiere ?: return
+        val normalized = firma?.trim()?.ifBlank { null }
+        val updated = currentCantiere.copy(firmaManutentore = normalized)
+        _uiState.update { state ->
+            state.copy(
+                selectedCantiere = updated,
+                cantieriDisponibili = state.cantieriDisponibili.map { if (it.id == updated.id) updated else it },
+                statusMessage = if (normalized != null) "✓ Firma digitale del tecnico associata al cantiere" else "✓ Firma digitale rimossa"
+            )
+        }
+        scope.launch(Dispatchers.IO) {
+            try {
+                repository.salvaCantiere(updated)
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore salvataggio firma tecnico: ${e.message}") }
+            }
+        }
+    }
+
+    /** Apre un selettore di file per scegliere l'immagine della firma del tecnico e la converte in Data URI Base64 (R26) */
+    fun selectFirmaManutentoreFile() {
+        try {
+            val os = System.getProperty("os.name").lowercase()
+            val selectedFile: File? = if (os.contains("mac")) {
+                val dialog = java.awt.FileDialog(null as java.awt.Frame?, "Seleziona immagine firma tecnico (PNG/JPG)", java.awt.FileDialog.LOAD)
+                dialog.setFilenameFilter { _, name ->
+                    val lower = name.lowercase()
+                    lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".gif")
+                }
+                dialog.isVisible = true
+                if (dialog.directory != null && dialog.file != null) File(dialog.directory, dialog.file) else null
+            } else {
+                val chooser = JFileChooser().apply {
+                    dialogTitle = "Seleziona immagine firma tecnico (PNG/JPG)"
+                    fileSelectionMode = JFileChooser.FILES_ONLY
+                }
+                val result = chooser.showOpenDialog(null)
+                if (result == JFileChooser.APPROVE_OPTION) chooser.selectedFile else null
+            }
+            if (selectedFile != null && selectedFile.exists() && selectedFile.isFile) {
+                val bytes = selectedFile.readBytes()
+                val ext = selectedFile.extension.lowercase()
+                val mime = when (ext) {
+                    "jpg", "jpeg" -> "image/jpeg"
+                    "gif" -> "image/gif"
+                    else -> "image/png"
+                }
+                val b64 = java.util.Base64.getEncoder().encodeToString(bytes)
+                updateFirmaManutentoreCantiere("data:$mime;base64,$b64")
+            }
+        } catch (e: Exception) {
+            _uiState.update { it.copy(errorMessage = "Errore caricamento immagine firma: ${e.message}") }
+        }
+    }
+
     private fun loadImpiantiForCantiere(cantiereId: String) {
         scope.launch {
             try {
@@ -496,13 +553,22 @@ class ManutenzioniViewModel(
             _uiState.update { it.copy(errorMessage = "Nessun impianto selezionato.") }
             return
         }
-        // Non possiamo più bloccare se non c'è una "frequenza globale", procediamo.
-        // La frequenza sarà letta dall'impianto stesso. Se manca, saltiamo o usiamo default.
-
         val outputDir = selectOutputDirectoryCompatibile() ?: return
+        generatePdfToDirectory(outputDir)
+    }
+
+    /** Genera i PDF per gli impianti selezionati del cantiere attivo nella directory specificata */
+    fun generatePdfToDirectory(outputDir: File) {
+        val state = _uiState.value
+        val impiantiSelezionatiIds = state.impiantiSelezionati.filter { it.value }.keys
+        if (impiantiSelezionatiIds.isEmpty()) {
+            _uiState.update { it.copy(errorMessage = "Nessun impianto selezionato.") }
+            return
+        }
 
         scope.launch {
             val impiantiDaGenerare = state.impiantiDelCantiere.filter { it.id in impiantiSelezionatiIds }
+            val cantiere = state.selectedCantiere
 
             _uiState.update {
                 it.copy(
@@ -528,6 +594,10 @@ class ManutenzioniViewModel(
                             copies = 1,
                             clienteNome = state.selectedCliente?.nome,
                             contextImpianti = state.impiantiDelCantiere,
+                            cantiereNome = cantiere?.nome,
+                            dataInizioIntervento = cantiere?.dataInizioIntervento,
+                            nomeManutentore = cantiere?.nomeManutentore,
+                            firmaManutentore = cantiere?.firmaManutentore,
                             onProgress = { current, total ->
                                 _uiState.update {
                                     it.copy(
@@ -555,16 +625,16 @@ class ManutenzioniViewModel(
                 "Errori: " + totalErrors.entries.joinToString("; ") { "${it.key}: ${it.value}" }
             } else null
 
-                _uiState.update {
-                    it.copy(
-                        pdfFile = allGeneratedFiles.firstOrNull(),
-                        generatedFiles = allGeneratedFiles,
-                        isLoading = false,
-                        batchProgress = null,
-                        statusMessage = statusMsg,
-                        errorMessage = errorMsg
-                    )
-                }
+            _uiState.update {
+                it.copy(
+                    pdfFile = allGeneratedFiles.firstOrNull(),
+                    generatedFiles = allGeneratedFiles,
+                    isLoading = false,
+                    batchProgress = null,
+                    statusMessage = statusMsg,
+                    errorMessage = errorMsg
+                )
+            }
         }
     }
 
@@ -595,15 +665,24 @@ class ManutenzioniViewModel(
                     _uiState.update { it.copy(errorMessage = "Nessun componente registrato per generare il Foglio 2") }
                     return@launch
                 }
-                val frequenza = _uiState.value.frequenzePerImpianto[impianto.id] ?: Periodo(manutenzioni.domain.model.TipoPeriodo.M, 6)
-                val clienteNome = _uiState.value.selectedCliente?.nome
+                val stateSnap = _uiState.value
+                val frequenza = stateSnap.frequenzePerImpianto[impianto.id] ?: Periodo(manutenzioni.domain.model.TipoPeriodo.M, 6)
+                val clienteNome = stateSnap.selectedCliente?.nome
+                val cantiere = stateSnap.selectedCantiere
                 val sheetData = provider.buildSheetData(impianto, frequenza, clienteNome)
                 if (sheetData == null) {
                     _uiState.update { it.copy(errorMessage = "Nessun dato registrato per il Foglio 2") }
                     return@launch
                 }
                 val renderer = manutenzioni.app.service.attachments.TechnicalSheetHtmlRenderer()
-                val html = renderer.renderStandaloneHtml(sheetData, frequenza, clienteNome)
+                val html = renderer.renderStandaloneHtml(
+                    data = sheetData,
+                    frequenza = frequenza,
+                    clienteNome = clienteNome,
+                    cantiereNome = cantiere?.nome,
+                    dataInizioIntervento = cantiere?.dataInizioIntervento,
+                    nomeManutentore = cantiere?.nomeManutentore
+                )
                 val tempHtml = java.io.File.createTempFile("allegato_${impianto.codIntervento}_", ".html")
                 tempHtml.writeText(html, Charsets.UTF_8)
                 val outputPdf = java.io.File.createTempFile("Foglio2_${impianto.codIntervento}_${sheetData.oggetto}_", ".pdf")

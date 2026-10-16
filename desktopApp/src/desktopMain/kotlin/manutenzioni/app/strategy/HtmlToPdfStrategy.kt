@@ -30,7 +30,11 @@ class HtmlToPdfStrategy(
         frequenza: Periodo,
         outputPath: String,
         clienteNome: String?,
-        contextImpianti: List<Impianto>
+        contextImpianti: List<Impianto>,
+        cantiereNome: String?,
+        dataInizioIntervento: String?,
+        nomeManutentore: String?,
+        firmaManutentore: String?
     ): File {
         // 1. Filtra attività per frequenza inclusiva e componenti del cantiere
         val attivitaFiltrate = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveAttivita(
@@ -45,8 +49,17 @@ class HtmlToPdfStrategy(
             )
         }
 
-        // 2. Genera HTML dinamico (con dati cliente)
-        val htmlContent = htmlService.buildHtml(impianto, attivitaFiltrate, frequenza, clienteNome)
+        // 2. Genera HTML dinamico (con dati cliente, cantiere, data inizio, manutentore e firma)
+        val htmlContent = htmlService.buildHtml(
+            impianto = impianto,
+            attivitaFiltrate = attivitaFiltrate,
+            frequenza = frequenza,
+            clienteNome = clienteNome,
+            cantiereNome = cantiereNome,
+            dataInizioIntervento = dataInizioIntervento,
+            nomeManutentore = nomeManutentore,
+            firmaManutentore = firmaManutentore
+        )
 
         // 3. Scrivi HTML temporaneo
         val tempHtml = File.createTempFile("manutenzione_${impianto.codIntervento}_", ".html")

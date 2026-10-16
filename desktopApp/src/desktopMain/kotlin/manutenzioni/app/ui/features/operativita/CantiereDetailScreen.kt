@@ -50,6 +50,8 @@ fun CantiereDetailScreen(
     onAggiornaLampadaInEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, manutenzioni.domain.model.LampadaEmergenza) -> Unit)? = null,
     onExportStandaloneTechnicalSheet: ((manutenzioni.domain.model.Impianto) -> Unit)? = null,
     onUpdateDatiIntervento: (String?, String?) -> Unit = { _, _ -> },
+    onSelectFirmaManutentore: () -> Unit = {},
+    onRemoveFirmaManutentore: () -> Unit = {},
     onUpdateMqtSwitchType: ((String, manutenzioni.domain.model.MqtSwitchType) -> Unit)? = null,
     onAddImpiantiFromTemplates: (List<Impianto>) -> Unit = { templates -> templates.forEach { onCreateNewImpianto(it) } }
 ) {
@@ -236,7 +238,8 @@ fun CantiereDetailScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
                         value = dataInizio,
@@ -275,6 +278,50 @@ fun CantiereDetailScreen(
                             unfocusedBorderColor = SlateBorder
                         )
                     )
+
+                    val hasFirma = !state.selectedCantiere?.firmaManutentore.isNullOrBlank()
+                    Column(
+                        modifier = Modifier.weight(0.9f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedButton(
+                                onClick = onSelectFirmaManutentore,
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = if (hasFirma) Color(0xFF2E7D32) else MaterialTheme.colors.primary
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = if (hasFirma) Icons.Default.Check else Icons.Default.Add,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = if (hasFirma) "Firma Caricata (Cambia)" else "Carica Firma Tecnico",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            if (hasFirma) {
+                                TextButton(
+                                    onClick = onRemoveFirmaManutentore,
+                                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colors.error)
+                                ) {
+                                    Text("Rimuovi", fontSize = 11.sp)
+                                }
+                            }
+                        }
+                        Text(
+                            text = if (hasFirma) "✓ Immagine firma pronta per il cartiglio PDF" else "Nessuna firma digitale associata (opzionale)",
+                            fontSize = 10.sp,
+                            color = if (hasFirma) Color(0xFF2E7D32) else MaterialTheme.colors.secondary
+                        )
+                    }
                 }
             }
         }
