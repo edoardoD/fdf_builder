@@ -18,6 +18,10 @@ interface Html {
         impianto: Impianto,
         attivitaFiltrate: List<Attivita>,
         frequenza: Periodo,
-        clienteNome: String? = null
+        clienteNome: String? = null,
+        cantiereNome: String? = null,
+        dataInizioIntervento: String? = null,
+        nomeManutentore: String? = null,
+        firmaManutentore: String? = null
     ): String
 }

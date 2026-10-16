@@ -399,7 +399,9 @@ data class Cantiere(
     val dataInizioIntervento: String? = null,
     val nomeManutentore: String? = null,
     /** Indirizzo della sede operativa / cantiere (R3). Opzionale per retrocompatibilità. */
-    val indirizzo: String? = null
+    val indirizzo: String? = null,
+    /** Percorso o Data URI base64 della firma digitale del tecnico manutentore (R26). */
+    val firmaManutentore: String? = null
 )
 
 /**
