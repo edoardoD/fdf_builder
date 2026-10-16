@@ -337,51 +337,51 @@ develop
 * **Richieste coperte:** `24`, `25`, `26`
 - [x] **Domain Model & Data Persistence:** Campi `dataInizioIntervento` e `nomeManutentore` definiti in `Cantiere` e testati in `CantiereSerializationTest`.
 - [x] **UI Dettaglio Cantiere (Data Entry):** Form in `CantiereDetailScreen.kt` per inserimento data inizio e nome manutentore salvati sul database.
-- [ ] **Collegamento Linea di Produzione PDF (ViewModel → Strategy):**
-  - [ ] Aggiornare `PdfBatchGenerator.generateBatch` e `AbstractPdfGeneratorStrategy.generate` introducendo i metadati di cantiere:
+- [x] **Collegamento Linea di Produzione PDF (ViewModel → Strategy):**
+  - [x] Aggiornare `PdfBatchGenerator.generateBatch` e `AbstractPdfGeneratorStrategy.generate` introducendo i metadati di cantiere:
     `cantiereNome: String? = null, dataInizioIntervento: String? = null, nomeManutentore: String? = null`.
-  - [ ] In `ManutenzioniViewModel.generatePdf`, estrarre dal cantiere selezionato (`state.selectedCantiere`) i valori di `nome` (Sito), `dataInizioIntervento` e `nomeManutentore` e passarli a `pdfStrategy.generateBatch`.
-- [ ] **HtmlService & AcroForm Precompilation:**
-  - [ ] In `scheletro.html`, iniettare il nome cantiere nel campo `<p>Sito: <!-- SITO --></p>`.
-  - [ ] In `scheletro.html`, precompilare il campo AcroForm `starting_date` con il valore di `dataInizioIntervento`.
-  - [ ] In `scheletro.html`, popolare la cella `Verificatore/Manutentore` con `nomeManutentore`.
-  - [ ] In `HtmlService.kt`, implementare la sostituzione dei relativi placeholder.
-- [ ] **Firma Digitale Tecnico:** Configurare pulsante caricamento immagine firma nella dashboard di cantiere e binding nel riquadro firma del PDF (R26).
-- [ ] **Testing End-to-End:** Test automatico che genera un PDF da un cantiere con dati intervento e verifica che i campi AcroForm e il cartiglio contengano i dati inseriti.
+  - [x] In `ManutenzioniViewModel.generatePdf`, estrarre dal cantiere selezionato (`state.selectedCantiere`) i valori di `nome` (Sito), `dataInizioIntervento` e `nomeManutentore` e passarli a `pdfStrategy.generateBatch`.
+- [x] **HtmlService & AcroForm Precompilation:**
+  - [x] In `scheletro.html`, iniettare il nome cantiere nel campo `<p>Sito: <!-- SITO --></p>`.
+  - [x] In `scheletro.html`, precompilare il campo AcroForm `starting_date` con il valore di `dataInizioIntervento`.
+  - [x] In `scheletro.html`, popolare la cella `Verificatore/Manutentore` con `nomeManutentore`.
+  - [x] In `HtmlService.kt`, implementare la sostituzione dei relativi placeholder.
+- [x] **Firma Digitale Tecnico:** Configurare pulsante caricamento immagine firma nella dashboard di cantiere e binding nel riquadro firma del PDF (R26).
+- [x] **Testing End-to-End:** Test automatico che genera un PDF da un cantiere con dati intervento e verifica che i campi AcroForm e il cartiglio contengano i dati inseriti.
 
 #### 🌿 Branch 8: `feat/pdf-batch-multifreq-naming-layout`
 * **Richieste coperte:** `11`, `21`, `22`, `23`, `29`, `32`
 * **Strategia di esecuzione:** Suddivisa in 2 sotto-fasi operative sequenziali per separare la standardizzazione del layout del Foglio 1 dalla logica batch.
 
 ##### 🔹 Sotto-Fase 8.1: Layout Foglio 1, 30 Righe & Dati Zona (`R23`, `R32`)
-- [ ] **Sincronizzazione Dati Catalogo da CSV (R32):**
-  - [ ] Eseguire migrazione/script di parsing da tutti i file in `Fogli_Esportati_CSV/*.csv` (`FTV.csv`, `CAB MT.csv`, `TRFS.csv`, `UPS.csv`, `GE.csv`, ecc.) per estrarre la colonna 4 (*"Zona"*).
-  - [ ] Popolare fedelmente il campo `zona` in ogni attività dei template globali in `manutenzioni_db.json` e nel database MongoDB (copertura 100% per tutti gli impianti).
-- [ ] **Allineamento Intestazione HTML (R32):**
-  - [ ] In `scheletro.html` (L391-L393), rinominare l'intestazione della colonna da `<p>Impianto</p>` a `<p>Zona</p>` per riflettere con esattezza il dato visualizzato.
-- [ ] **Risoluzione & Fallback Colonna Zona in `HtmlService` (R32):**
-  - [ ] In `HtmlService.kt` (`buildAttivitaRows`), rimuovere il fallback su `att.frequenza.label()`.
-  - [ ] Stampare `att.zona` prioritariamente (con gestione speciale tipo interruttore per `QuadroMQT`). In caso di valore vuoto/nullo, fallback su stringa vuota o nome dell'impianto.
-- [ ] **Impaginazione Fissa a 30 Righe (R23):**
-  - [ ] In `HtmlService.kt` (`buildAttivitaRows`), calcolare le righe mancanti: se il totale attività filtrate $N < 30$, generare $30 - N$ righe `<tr>` neutre di riempimento (con celle disabled/non compilabili).
-  - [ ] Ottimizzare font size e interlinea per garantire la perfetta impaginazione su foglio singolo A4 millimetrico.
-- [ ] **Formattazione Periodicità nel Cartiglio (R23):**
-  - [ ] Standardizzare il codice periodicità stampato nel cartiglio: a due cifre per i mesi (`01`, `02`, `03`, `06`) e a una cifra per gli anni (`1`, `2`, `5`).
+- [x] **Sincronizzazione Dati Catalogo da CSV (R32):**
+  - [x] Eseguire migrazione/script di parsing da tutti i file in `Fogli_Esportati_CSV/*.csv` (`FTV.csv`, `CAB MT.csv`, `TRFS.csv`, `UPS.csv`, `GE.csv`, ecc.) per estrarre la colonna 4 (*"Zona"*).
+  - [x] Popolare fedelmente il campo `zona` in ogni attività dei template globali in `manutenzioni_db.json` e nel database MongoDB (copertura 100% per tutti gli impianti).
+- [x] **Allineamento Intestazione HTML (R32):**
+  - [x] In `scheletro.html` (L391-L393), rinominare l'intestazione della colonna da `<p>Impianto</p>` a `<p>Zona</p>` per riflettere con esattezza il dato visualizzato.
+- [x] **Risoluzione & Fallback Colonna Zona in `HtmlService` (R32):**
+  - [x] In `HtmlService.kt` (`buildAttivitaRows`), rimuovere il fallback su `att.frequenza.label()`.
+  - [x] Stampare `att.zona` prioritariamente (con gestione speciale tipo interruttore per `QuadroMQT`). In caso di valore vuoto/nullo, fallback su stringa vuota o nome dell'impianto.
+- [x] **Impaginazione Fissa a 30 Righe (R23):**
+  - [x] In `HtmlService.kt` (`buildAttivitaRows`), calcolare le righe mancanti: se il totale attività filtrate $N < 30$, generare $30 - N$ righe `<tr>` neutre di riempimento (con celle disabled/non compilabili).
+  - [x] Ottimizzare font size e interlinea per garantire la perfetta impaginazione su foglio singolo A4 millimetrico.
+- [x] **Formattazione Periodicità nel Cartiglio (R23):**
+  - [x] Standardizzare il codice periodicità stampato nel cartiglio: a due cifre per i mesi (`01`, `02`, `03`, `06`) e a una cifra per gli anni (`1`, `2`, `5`).
 
 ##### 🔹 Sotto-Fase 8.2: Multi-frequenza Batch, Naming & File Management (`R11`, `R21`, `R22`, `R29`)
-- [ ] **Multi-selezione Frequenze nella UI di Cantiere (R21):**
-  - [ ] In `CantiereDetailScreen.kt`, consentire all'utente di selezionare più periodicità simultaneamente per ciascun impianto (es. sia 6M che 1A per i quadri).
-- [ ] **Batch Generator Loop Multi-frequenza (R21):**
-  - [ ] Aggiornare `AbstractPdfGeneratorStrategy.generateBatch` e `ManutenzioniViewModel` per ciclare su tutte le frequenze selezionate per ciascun impianto del cantiere.
-- [ ] **Naming Univoco File PDF (R22):**
-  - [ ] Generare i file con formato rigoroso: `{SIGLA_QUADRO}_{PERIODICITA}.pdf` (es. `QG_06.pdf`, `Q1_06.pdf`, `QG_1.pdf`), prevenendo sovrascritture.
-- [ ] **Salvataggio in Sottocartella Temporale `YYYY_MM` (R29):**
-  - [ ] Creare automaticamente la sottocartella basata sulla data inizio intervento o corrente (es. `2026_10/`) nel path di esportazione selezionato dall'utente.
-- [ ] **Tab & Export Elenco Interruttori Cantiere (R11):**
-  - [ ] Inserire vista aggregata di tutti gli interruttori dei quadri del cantiere con pulsante di esportazione dedicato.
-- [ ] **Testing End-to-End:**
-  - [ ] Verificare che un cantiere con più quadri generi la cartella corretta con file denominati `{SIGLA}_{PERIODICITA}.pdf`.
-  - [ ] Verificare con iText che ogni PDF generato contenga esattamente 30 righe nella tabella attività e riporti la dicitura corretta nella colonna "Zona".
+- [x] **Multi-selezione Frequenze nella UI di Cantiere (R21):**
+  - [x] In `CantiereDetailScreen.kt`, consentire all'utente di selezionare più periodicità simultaneamente per ciascun impianto (es. sia 6M che 1A per i quadri).
+- [x] **Batch Generator Loop Multi-frequenza (R21):**
+  - [x] Aggiornare `AbstractPdfGeneratorStrategy.generateBatch` e `ManutenzioniViewModel` per ciclare su tutte le frequenze selezionate per ciascun impianto del cantiere.
+- [x] **Naming Univoco File PDF (R22):**
+  - [x] Generare i file con formato rigoroso: `{SIGLA_QUADRO}_{PERIODICITA}.pdf` (es. `QG_06.pdf`, `Q1_06.pdf`, `QG_1.pdf`), prevenendo sovrascritture.
+- [x] **Salvataggio in Sottocartella Temporale `YYYY_MM` (R29):**
+  - [x] Creare automaticamente la sottocartella basata sulla data inizio intervento o corrente (es. `2026_10/`) nel path di esportazione selezionato dall'utente.
+- [x] **Tab & Export Elenco Interruttori Cantiere (R11):**
+  - [x] Inserire vista aggregata di tutti gli interruttori dei quadri del cantiere con pulsante di esportazione dedicato.
+- [x] **Testing End-to-End:**
+  - [x] Verificare che un cantiere con più quadri generi la cartella corretta con file denominati `{SIGLA}_{PERIODICITA}.pdf`.
+  - [x] Verificare con iText che ogni PDF generato contenga esattamente 30 righe nella tabella attività e riporti la dicitura corretta nella colonna "Zona".
 
 ---
 

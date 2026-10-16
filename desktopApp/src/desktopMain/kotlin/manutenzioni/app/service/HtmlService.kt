@@ -71,7 +71,7 @@ class HtmlService(
         }
         html = html.replace("<!-- COD_SCHEDA -->", escapeHtml(cod))
         html = html.replace("<!-- OGGETTO -->", escapeHtml(oggetto))
-        html = html.replace("<!-- PERIODICITA -->", escapeHtml(frequenza.label()))
+        html = html.replace("<!-- PERIODICITA -->", escapeHtml(frequenza.codiceCartiglio()))
 
         // Premessa dinamica: testo base + note specifiche + sintesi componenti delegata ai provider
         val premessaCompleta = buildString {
@@ -214,6 +214,7 @@ class HtmlService(
     /**
      * Genera le righe <tr> HTML per ogni attività, con radio button per esiti
      * e campo testo per le note. I nomi dei campi sono univoci per riga.
+     * Completa la tabella con righe neutre fino a raggiungere la griglia fissa di 30 righe (R23).
      */
     private fun buildAttivitaRows(attivita: List<Attivita>, impianto: Impianto): String {
         val sb = StringBuilder()
@@ -224,10 +225,10 @@ class HtmlService(
             val rowNum = index + 1
             val radioName = "esito_${codImpianto}_${rowNum}"
 
-            // Risoluzione testo colonna Zona / Impianto:
-            // Se att.zona è presente, usa la zona.
-            // Se l'impianto è un QuadroMQT e la zona è "Interruttore", sostituisci con la sigla scelta dal tecnico (SF6, ISV, IVOR).
-            val colImpiantoText = when {
+            // Risoluzione testo colonna Zona (R32):
+            // Se att.zona è presente, usa la zona (con sostituzione dello switch type per QuadroMQT).
+            // Rimosso il fallback sulla periodicità.
+            val colZonaText = when {
                 !att.zona.isNullOrBlank() -> {
                     if (att.zona.equals("interruttore", ignoreCase = true) && impianto is QuadroMQT) {
                         impianto.tipoInterruttore?.label ?: "SF6"
@@ -235,13 +236,13 @@ class HtmlService(
                         att.zona
                     }
                 }
-                else -> att.frequenza.label()
+                else -> ""
             }
 
             sb.appendLine("""                <tr class="row--data">""")
             sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(att.nAttivita.toString())}</p></td>""")
             sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(att.tipoAttivita ?: "")}</p></td>""")
-            sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(colImpiantoText)}</p></td>""")
+            sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(colZonaText)}</p></td>""")
             sb.appendLine("""                    <td class="cell--data-empty"><p style="text-align:justify;">${escapeHtml(att.descrizione ?: "")}</p></td>""")
             // Colonne esito con radio button:
             // P, PI, NA, NP, B appartengono al radio group principale (mutuamente esclusivo tra loro).
@@ -264,6 +265,24 @@ class HtmlService(
             sb.appendLine("""                    </td>""")
             sb.appendLine("""                    <td class="cell--spacer"></td>""")
             sb.appendLine("""                </tr>""")
+        }
+
+        // Griglia fissa a 30 righe (R23): se N < 30, genera 30 - N righe neutre di riempimento (non compilabili)
+        val targetRows = 30
+        if (attivita.size < targetRows) {
+            for (fillerIndex in (attivita.size + 1)..targetRows) {
+                sb.appendLine("""                <tr class="row--data">""")
+                sb.appendLine("""                    <td class="cell--data-empty"><p>$fillerIndex</p></td>""")
+                sb.appendLine("""                    <td class="cell--data-empty"></td>""")
+                sb.appendLine("""                    <td class="cell--data-empty"></td>""")
+                sb.appendLine("""                    <td class="cell--data-empty"></td>""")
+                for (i in 1..6) {
+                    sb.appendLine("""                    <td class="cell--data-empty"></td>""")
+                }
+                sb.appendLine("""                    <td class="cell--data-standard"></td>""")
+                sb.appendLine("""                    <td class="cell--spacer"></td>""")
+                sb.appendLine("""                </tr>""")
+            }
         }
 
         return sb.toString()

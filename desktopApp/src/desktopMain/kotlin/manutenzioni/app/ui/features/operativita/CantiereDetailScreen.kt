@@ -36,6 +36,7 @@ fun CantiereDetailScreen(
     onEditImpianto: (Impianto) -> Unit,
     onSaveImpianto: (Impianto) -> Unit,
     onFrequenzaPerImpiantoSelected: (String, Periodo) -> Unit,
+    onFrequenzaPerImpiantoToggled: (String, Periodo) -> Unit = onFrequenzaPerImpiantoSelected,
     onGeneraPdf: () -> Unit,
     onOpenPdf: () -> Unit,
     onCreateNewImpianto: (Impianto?) -> Unit,
@@ -49,6 +50,7 @@ fun CantiereDetailScreen(
     onAggiungiLampadeAEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, List<manutenzioni.domain.model.LampadaEmergenza>) -> Unit)? = null,
     onAggiornaLampadaInEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, manutenzioni.domain.model.LampadaEmergenza) -> Unit)? = null,
     onExportStandaloneTechnicalSheet: ((manutenzioni.domain.model.Impianto) -> Unit)? = null,
+    onExportCantiereInterruttoriPdf: () -> Unit = {},
     onUpdateDatiIntervento: (String?, String?) -> Unit = { _, _ -> },
     onSelectFirmaManutentore: () -> Unit = {},
     onRemoveFirmaManutentore: () -> Unit = {},
@@ -62,6 +64,7 @@ fun CantiereDetailScreen(
     var impiantoInEliminazione by remember { mutableStateOf<Impianto?>(null) }
     var showMassiveQuadroDialog by remember { mutableStateOf(false) }
     var selectedQuadroTemplate by remember { mutableStateOf<manutenzioni.domain.model.Impianto?>(null) }
+    var selectedCantiereTab by remember { mutableStateOf(0) }
 
     if (impiantoInModifica != null) {
         Box(modifier = Modifier.fillMaxSize().padding(32.dp)) {
@@ -190,7 +193,7 @@ fun CantiereDetailScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Banner / Card Dati Intervento e Manutentore
         var dataInizio by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataInizioIntervento) {
@@ -326,159 +329,351 @@ fun CantiereDetailScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            // Colonna 1: Impianti del cantiere
-            Column(modifier = Modifier.weight(2f).fillMaxHeight()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Attività di verifica in questo cantiere", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
-                    Button(onClick = { showNuovoImpiantoDialog = true }) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Aggiungi Attività di Verifica")
-                    }
+        // TabRow di Cantiere: 0 = "Generazione schede di Verifica", 1 = "Elenco interruttori" (R11, R12)
+        val quadriDelCantiere = state.impiantiDelCantiere.filterIsInstance<manutenzioni.domain.model.QuadroBT>()
+        val totInterruttori = quadriDelCantiere.sumOf { q -> q.listaInterruttori.sumOf { it.quantita.coerceAtLeast(1) } }
+
+        TabRow(
+            selectedTabIndex = selectedCantiereTab,
+            backgroundColor = MaterialTheme.colors.surface,
+            contentColor = MaterialTheme.colors.primary,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Tab(
+                selected = selectedCantiereTab == 0,
+                onClick = { selectedCantiereTab = 0 },
+                text = {
+                    Text(
+                        "Generazione schede di Verifica",
+                        fontWeight = if (selectedCantiereTab == 0) FontWeight.Bold else FontWeight.Normal
+                    )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                ImpiantoSelectionList(
-                    impianti = state.impiantiDelCantiere,
-                    selectionState = state.impiantiSelezionati,
-                    onSelectionChanged = onImpiantoSelectionChanged,
-                    onEditImpianto = { impianto -> 
-                        impiantoInModifica = impianto 
-                        onEditImpianto(impianto)
-                    },
-                    onDeleteImpianto = { impianto ->
-                        impiantoInEliminazione = impianto
-                        showDeleteImpiantoDialog = true
-                    },
-                    modifier = Modifier.weight(1f).fillMaxWidth()
-                )
-            }
+            )
+            Tab(
+                selected = selectedCantiereTab == 1,
+                onClick = { selectedCantiereTab = 1 },
+                text = {
+                    Text(
+                        "Elenco interruttori ($totInterruttori)",
+                        fontWeight = if (selectedCantiereTab == 1) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            )
+        }
 
-            // Colonna 2: Frequenza e Generazione
-            Column(
-                modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = 0.dp,
-                    border = BorderStroke(1.dp, SlateBorder),
-                    shape = RoundedCornerShape(8.dp),
-                    backgroundColor = MaterialTheme.colors.surface
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (selectedCantiereTab == 1) {
+            CantiereElencoInterruttoriTab(
+                quadri = quadriDelCantiere,
+                isLoading = state.isLoading,
+                onExportPdf = onExportCantiereInterruttoriPdf,
+                onEditQuadro = { quadro ->
+                    impiantoInModifica = quadro
+                    onEditImpianto(quadro)
+                },
+                modifier = Modifier.weight(1f).fillMaxWidth()
+            )
+        } else {
+            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                // Colonna 1: Impianti del cantiere
+                Column(modifier = Modifier.weight(2f).fillMaxHeight()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Attività di verifica in questo cantiere", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
+                        Button(onClick = { showNuovoImpiantoDialog = true }) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Aggiungi Attività di Verifica")
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    ImpiantoSelectionList(
+                        impianti = state.impiantiDelCantiere,
+                        selectionState = state.impiantiSelezionati,
+                        onSelectionChanged = onImpiantoSelectionChanged,
+                        onEditImpianto = { impianto -> 
+                            impiantoInModifica = impianto 
+                            onEditImpianto(impianto)
+                        },
+                        onDeleteImpianto = { impianto ->
+                            impiantoInEliminazione = impianto
+                            showDeleteImpiantoDialog = true
+                        },
+                        modifier = Modifier.weight(1f).fillMaxWidth()
+                    )
+                }
+
+                // Colonna 2: Frequenza e Generazione
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Text("1. Scegli Frequenza per Modulo", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        val impiantiAttiviIds = state.impiantiSelezionati.filter { it.value }.keys
-                        val impiantiAttivi = state.impiantiDelCantiere.filter { it.id in impiantiAttiviIds }
-                        
-                        if (impiantiAttivi.isEmpty()) {
-                            Text("Seleziona almeno un impianto dalla lista a sinistra.", color = MaterialTheme.colors.error, style = MaterialTheme.typography.body2)
-                        } else {
-                            impiantiAttivi.forEach { impianto ->
-                                val frequenzeDisp = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(impianto, state.impiantiDelCantiere)
-                                val currentFreq = state.frequenzePerImpianto[impianto.id]
-                                val displayLabel = if (impianto is manutenzioni.domain.model.QuadroBT) "${impianto.codIntervento} - ${impianto.sigla}" else impianto.codIntervento
-                                Text(text = displayLabel, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.body2, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp))
-                                
-                                if (impianto is manutenzioni.domain.model.QuadroMQT) {
-                                    Text(
-                                        text = "Tecnologia Interruttore MT:",
-                                        style = MaterialTheme.typography.caption,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colors.primary,
-                                        modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
-                                    )
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        manutenzioni.domain.model.MqtSwitchType.values().forEach { st ->
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                modifier = Modifier.clickable {
-                                                    onUpdateMqtSwitchType?.invoke(impianto.id, st)
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = 0.dp,
+                        border = BorderStroke(1.dp, SlateBorder),
+                        shape = RoundedCornerShape(8.dp),
+                        backgroundColor = MaterialTheme.colors.surface
+                    ) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Text("1. Scegli Frequenze per Modulo", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                "Puoi spuntare più periodicità per lo stesso impianto (es. 6 Mesi + 1 Anno)",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.secondary
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            
+                            val impiantiAttiviIds = state.impiantiSelezionati.filter { it.value }.keys
+                            val impiantiAttivi = state.impiantiDelCantiere.filter { it.id in impiantiAttiviIds }
+                            
+                            if (impiantiAttivi.isEmpty()) {
+                                Text("Seleziona almeno un impianto dalla lista a sinistra.", color = MaterialTheme.colors.error, style = MaterialTheme.typography.body2)
+                            } else {
+                                impiantiAttivi.forEach { impianto ->
+                                    val frequenzeDisp = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(impianto, state.impiantiDelCantiere)
+                                    val selectedFreqs = state.frequenzeSelezionatePerImpianto[impianto.id]
+                                        ?: state.frequenzePerImpianto[impianto.id]?.let { setOf(it) }
+                                        ?: emptySet()
+                                    val displayLabel = if (impianto is manutenzioni.domain.model.QuadroBT && impianto.sigla.isNotBlank()) "${impianto.codIntervento} - ${impianto.sigla}" else impianto.codIntervento
+                                    Text(text = displayLabel, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.body2, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp))
+                                    
+                                    if (impianto is manutenzioni.domain.model.QuadroMQT) {
+                                        Text(
+                                            text = "Tecnologia Interruttore MT:",
+                                            style = MaterialTheme.typography.caption,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colors.primary,
+                                            modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
+                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            manutenzioni.domain.model.MqtSwitchType.values().forEach { st ->
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.clickable {
+                                                        onUpdateMqtSwitchType?.invoke(impianto.id, st)
+                                                    }
+                                                ) {
+                                                    RadioButton(
+                                                        selected = (impianto.tipoInterruttore ?: manutenzioni.domain.model.MqtSwitchType.SF6) == st,
+                                                        onClick = { onUpdateMqtSwitchType?.invoke(impianto.id, st) },
+                                                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary),
+                                                        modifier = Modifier.size(24.dp)
+                                                    )
+                                                    Spacer(Modifier.width(2.dp))
+                                                    Text(st.label, fontSize = 12.sp)
                                                 }
+                                            }
+                                        }
+                                    }
+
+                                    if (frequenzeDisp.isEmpty()) {
+                                        Text("Nessuna attività registrata per questo modulo.", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.error)
+                                    } else {
+                                        frequenzeDisp.forEach { periodo ->
+                                            val isChecked = periodo in selectedFreqs
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable { onFrequenzaPerImpiantoToggled(impianto.id, periodo) }
+                                                    .padding(vertical = 2.dp),
+                                                verticalAlignment = Alignment.CenterVertically
                                             ) {
-                                                RadioButton(
-                                                    selected = (impianto.tipoInterruttore ?: manutenzioni.domain.model.MqtSwitchType.SF6) == st,
-                                                    onClick = { onUpdateMqtSwitchType?.invoke(impianto.id, st) },
-                                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary),
-                                                    modifier = Modifier.size(24.dp)
+                                                Checkbox(
+                                                    checked = isChecked,
+                                                    onCheckedChange = { onFrequenzaPerImpiantoToggled(impianto.id, periodo) },
+                                                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
                                                 )
-                                                Spacer(Modifier.width(2.dp))
-                                                Text(st.label, fontSize = 12.sp)
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = "${periodo.label()} (cod. ${periodo.codiceCartiglio()})",
+                                                    style = MaterialTheme.typography.body2
+                                                )
                                             }
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
 
-                                if (frequenzeDisp.isEmpty()) {
-                                    Text("Nessuna attività registrata per questo modulo.", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.error)
-                                } else {
-                                    frequenzeDisp.forEach { periodo ->
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            RadioButton(
-                                                selected = currentFreq == periodo,
-                                                onClick = { onFrequenzaPerImpiantoSelected(impianto.id, periodo) },
-                                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(text = periodo.label(), style = MaterialTheme.typography.body2)
-                                        }
-                                    }
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = 0.dp,
+                        border = BorderStroke(1.dp, SlateBorder),
+                        shape = RoundedCornerShape(8.dp),
+                        backgroundColor = MaterialTheme.colors.surface
+                    ) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Text("2. Generazione Schede di Verifica", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            val impiantiAttiviIdsForGen = state.impiantiSelezionati.filter { it.value }.keys
+                            val isEnabled = impiantiAttiviIdsForGen.isNotEmpty() && impiantiAttiviIdsForGen.all { id ->
+                                !state.frequenzeSelezionatePerImpianto[id].isNullOrEmpty() || state.frequenzePerImpianto.containsKey(id)
+                            }
+                            Button(
+                                onClick = onGeneraPdf,
+                                enabled = isEnabled && !state.isLoading,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary, contentColor = Color.White)
+                            ) {
+                                Text("Genera Schede di Verifica", fontWeight = FontWeight.Bold)
+                            }
+                            
+                            if (state.pdfFile != null) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                OutlinedButton(
+                                    onClick = onOpenPdf,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.primary)
+                                ) {
+                                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Apri PDF Creato")
                                 }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Percorso: ${state.pdfFile.name}", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.secondary)
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+}
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = 0.dp,
-                    border = BorderStroke(1.dp, SlateBorder),
-                    shape = RoundedCornerShape(8.dp),
-                    backgroundColor = MaterialTheme.colors.surface
+/**
+ * Tab dedicata in Cantiere per visualizzare tutti gli interruttori differenziali
+ * aggregati dai vari Quadri BT del cantiere e stamparne il PDF unico (R11).
+ */
+@Composable
+private fun CantiereElencoInterruttoriTab(
+    quadri: List<manutenzioni.domain.model.QuadroBT>,
+    isLoading: Boolean,
+    onExportPdf: () -> Unit,
+    onEditQuadro: (manutenzioni.domain.model.QuadroBT) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val provider = remember { manutenzioni.app.service.attachments.QuadroBtAttachmentProvider() }
+    val quadriConInterruttori = quadri.filter { it.listaInterruttori.isNotEmpty() }
+    val totRigheSrotolate = quadriConInterruttori.sumOf { q -> q.listaInterruttori.sumOf { it.quantita.coerceAtLeast(1) } }
+
+    Card(
+        modifier = modifier,
+        elevation = 0.dp,
+        border = BorderStroke(1.dp, SlateBorder),
+        shape = RoundedCornerShape(8.dp),
+        backgroundColor = MaterialTheme.colors.surface
+    ) {
+        Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Elenco Interruttori Differenziali del Cantiere",
+                        style = MaterialTheme.typography.subtitle1,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "${quadri.size} quadri elettrici nel cantiere • $totRigheSrotolate interruttori registrati",
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.secondary
+                    )
+                }
+                Button(
+                    onClick = onExportPdf,
+                    enabled = totRigheSrotolate > 0 && !isLoading,
+                    colors = ButtonDefaults.buttonColors(
+                        backgroundColor = MaterialTheme.colors.primary,
+                        contentColor = Color.White
+                    )
                 ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Text("2. Generazione Schede di Verifica", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        val impiantiAttiviIdsForGen = state.impiantiSelezionati.filter { it.value }.keys
-                        val isEnabled = impiantiAttiviIdsForGen.isNotEmpty() && impiantiAttiviIdsForGen.all { id -> state.frequenzePerImpianto.containsKey(id) }
-                        Button(
-                            onClick = onGeneraPdf,
-                            enabled = isEnabled && !state.isLoading,
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary, contentColor = Color.White)
-                        ) {
-                            Text("Genera Schede di Verifica", fontWeight = FontWeight.Bold)
-                        }
-                        
-                        if (state.pdfFile != null) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            OutlinedButton(
-                                onClick = onOpenPdf,
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.primary)
-                            ) {
-                                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Apri PDF Creato")
+                    Text("Stampa PDF Elenco Interruttori", fontWeight = FontWeight.SemiBold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Divider(color = SlateBorder)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (quadriConInterruttori.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "Nessun interruttore registrato nei quadri di questo cantiere.",
+                            style = MaterialTheme.typography.body1,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            "Apri un Quadro Elettrico (Q) dalla tab 'Generazione schede di Verifica' per aggiungere gli interruttori.",
+                            style = MaterialTheme.typography.caption,
+                            color = MaterialTheme.colors.secondary
+                        )
+                    }
+                }
+            } else {
+                // Header tabella
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Quadro", fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                    Text("Sigla Circuito", fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                    Text("Componente / Articolo", fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.weight(2.2f))
+                    Text("Taratura Diff.", fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.weight(1.2f))
+                    Text("Q.tà", fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.weight(0.6f))
+                    Text("Azioni", fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.weight(0.8f))
+                }
+                Divider(color = SlateBorder)
+
+                Column(
+                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    quadriConInterruttori.forEach { quadro ->
+                        val siglaQuadro = if (quadro.sigla.isNotBlank()) quadro.sigla else quadro.codIntervento
+                        quadro.listaInterruttori.forEachIndexed { idx, interruttore ->
+                            val datiComp = buildString {
+                                if (!interruttore.produttore.isNullOrBlank()) append(interruttore.produttore).append(" ")
+                                if (!interruttore.codiceArticolo.isNullOrBlank()) append(interruttore.codiceArticolo).append(" — ")
+                                append(interruttore.nome)
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Percorso: ${state.pdfFile.name}", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.secondary)
+                            val taratura = provider.extractTaratura(interruttore).ifBlank { "—" }
+                            val siglaCircuito = interruttore.siglaCircuito?.takeIf { it.isNotBlank() } ?: "QF${idx + 1}"
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(siglaQuadro, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                                Text(siglaCircuito, fontSize = 12.sp, modifier = Modifier.weight(1f))
+                                Text(datiComp, fontSize = 12.sp, modifier = Modifier.weight(2.2f))
+                                Text(taratura, fontSize = 12.sp, modifier = Modifier.weight(1.2f))
+                                Text("${interruttore.quantita}", fontSize = 12.sp, modifier = Modifier.weight(0.6f))
+                                TextButton(
+                                    onClick = { onEditQuadro(quadro) },
+                                    modifier = Modifier.weight(0.8f)
+                                ) {
+                                    Text("Modifica", fontSize = 11.sp)
+                                }
+                            }
+                            Divider(color = SlateBorder.copy(alpha = 0.5f))
                         }
                     }
                 }

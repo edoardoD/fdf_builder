@@ -2,6 +2,7 @@ package manutenzioni.domain.strategy
 
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.Periodo
+import manutenzioni.domain.model.QuadroBT
 import manutenzioni.domain.model.BatchResult
 import java.io.File
 
@@ -51,7 +52,7 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
      * Implementazione batch: itera su `generate()` N volte, gestendo
      * naming progressivo, callback di progresso ed errori parziali.
      *
-     * Se `copies == 1`, il file ha il nome base (retrocompatibilità UX).
+     * Naming standard (R22): `{SIGLA_O_COD}_{PERIODICITA}.pdf` (es. `QG_06.pdf`, `Q1_06.pdf`, `QG_1.pdf`, `GE_06.pdf`).
      * Se `copies > 1`, ogni file ha il suffisso `_copia_{i}`.
      */
     override fun generateBatch(
@@ -69,7 +70,12 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
     ): BatchResult {
         require(copies >= 1) { "Il numero di copie deve essere >= 1" }
 
-        val baseName = "${impianto.codIntervento}_${frequenza.label().replace(" ", "_")}"
+        val prefix = if (impianto is QuadroBT && impianto.sigla.isNotBlank()) {
+            impianto.sigla.trim().replace(" ", "_").replace("/", "-").replace("\\", "-")
+        } else {
+            impianto.codIntervento.trim().replace(" ", "_")
+        }
+        val baseName = "${prefix}_${frequenza.codiceCartiglio()}"
         val generatedFiles = mutableListOf<File>()
         val errors = mutableMapOf<Int, String>()
 
