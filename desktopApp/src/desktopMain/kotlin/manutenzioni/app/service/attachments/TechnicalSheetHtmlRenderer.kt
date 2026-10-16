@@ -69,7 +69,7 @@ class TechnicalSheetHtmlRenderer {
         sb.appendLine("""                    </td>""")
         sb.appendLine("""                    <td style="border: 0.0133cm solid #000; background-color: #b4c6e7; padding: 2px 4px; vertical-align: top;">""")
         sb.appendLine("""                        <p style="font-size: 5pt; margin: 0;">Periodicità:</p>""")
-        sb.appendLine("""                        <p style="font-size: 6.5pt; font-weight: bold; margin: 0;">${escapeHtml(frequenza.label())}</p>""")
+        sb.appendLine("""                        <p style="font-size: 6.5pt; font-weight: bold; margin: 0;">${escapeHtml(frequenza.codiceCartiglio())}</p>""")
         sb.appendLine("""                    </td>""")
         sb.appendLine("""                </tr>""")
 

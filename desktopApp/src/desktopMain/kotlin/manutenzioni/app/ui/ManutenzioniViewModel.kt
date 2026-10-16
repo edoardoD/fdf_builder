@@ -53,6 +53,8 @@ data class ManutenzioniUiState(
     val impianti: List<Impianto> = emptyList(),
     val selectedImpianto: Impianto? = null,
     val frequenzePerImpianto: Map<String, Periodo> = emptyMap(),
+    /** Selezione multipla di periodicità per ciascun impianto del cantiere (R21) */
+    val frequenzeSelezionatePerImpianto: Map<String, Set<Periodo>> = emptyMap(),
     val clienti: List<Cliente> = emptyList(),
     val selectedCliente: Cliente? = null,
     val cantieriDisponibili: List<Cantiere> = emptyList(),
@@ -75,6 +77,45 @@ data class ManutenzioniUiState(
     val candidateComponents: List<ComponentCandidate> = emptyList(),
     val catalogoApprovato: List<ComponenteApprovato> = emptyList()
 )
+
+/**
+ * Calcola il nome della sottocartella temporale `YYYY_MM` (es. `2026_10`) a partire dalla
+ * data di inizio intervento del cantiere (`gg/mm/aaaa` o `aaaa-mm-gg`), con fallback al mese corrente (R29).
+ */
+internal fun resolveTemporalSubfolderName(dataInizioIntervento: String?): String {
+    val raw = dataInizioIntervento?.trim().orEmpty()
+    if (raw.isNotEmpty()) {
+        // Formato gg/mm/aaaa o gg-mm-aaaa o gg.mm.aaaa
+        val dmyRegex = Regex("""^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$""")
+        dmyRegex.matchEntire(raw)?.let { m ->
+            val month = m.groupValues[2].padStart(2, '0')
+            val year = m.groupValues[3]
+            return "${year}_${month}"
+        }
+        // Formato ISO aaaa-mm-gg o aaaa/mm/gg
+        val ymdRegex = Regex("""^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$""")
+        ymdRegex.matchEntire(raw)?.let { m ->
+            val year = m.groupValues[1]
+            val month = m.groupValues[2].padStart(2, '0')
+            return "${year}_${month}"
+        }
+        // Formato mm/aaaa o aaaa_mm
+        val myRegex = Regex("""^(\d{1,2})[/\-.](\d{4})$""")
+        myRegex.matchEntire(raw)?.let { m ->
+            val month = m.groupValues[1].padStart(2, '0')
+            val year = m.groupValues[2]
+            return "${year}_${month}"
+        }
+        val ymRegex = Regex("""^(\d{4})[_\-.](\d{1,2})$""")
+        ymRegex.matchEntire(raw)?.let { m ->
+            val year = m.groupValues[1]
+            val month = m.groupValues[2].padStart(2, '0')
+            return "${year}_${month}"
+        }
+    }
+    val now = java.time.LocalDate.now()
+    return "%04d_%02d".format(now.year, now.monthValue)
+}
 
 /**
  * Funzione pura: istanzia un template globale come copia indipendente per un cantiere.
@@ -112,15 +153,17 @@ class ManutenzioniViewModel(
         loadImpiantiGlobali()
     }
 
-    /** Carica gli impianti dal repository */
+    /** Carica gli impianti dal repository e arricchisce eventuali zone mancanti dai master bundled (R32) */
     private fun loadImpianti() {
         scope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                val impianti = repository.caricaImpianti()
+                val rawImpianti = repository.caricaImpianti()
+                val impianti = enrichImpiantiZonaIfNeeded(rawImpianti)
                 _uiState.update {
                     it.copy(
                         impianti = impianti,
+                        impiantiGlobali = impianti.filter { imp -> imp.cantiereId == null },
                         isLoading = false,
                         statusMessage = "${impianti.size} impianti caricati"
                     )
@@ -133,6 +176,65 @@ class ManutenzioniViewModel(
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * Se il database attivo (JSON utente o MongoDB) contiene attività con `zona == null`,
+     * propaga automaticamente il valore `zona` dal catalogo master `manutenzioni_db.json` (R32).
+     */
+    private suspend fun enrichImpiantiZonaIfNeeded(impianti: List<Impianto>): List<Impianto> {
+        val needsEnrichment = impianti.any { imp ->
+            imp.listaAttivita.any { it.zona.isNullOrBlank() }
+        }
+        if (!needsEnrichment) return impianti
+
+        val bundledZonaMap: Map<Pair<String, Int>, String> = try {
+            val stream = this::class.java.classLoader?.getResourceAsStream("manutenzioni_db.json")
+            if (stream != null) {
+                val content = stream.bufferedReader().use { it.readText() }
+                val json = kotlinx.serialization.json.Json {
+                    ignoreUnknownKeys = true
+                    classDiscriminator = "type"
+                }
+                val bundledDb = json.decodeFromString(manutenzioni.app.data.ManutenzioniDatabase.serializer(), content)
+                buildMap {
+                    for (imp in bundledDb.impianti) {
+                        for (att in imp.listaAttivita) {
+                            if (!att.zona.isNullOrBlank()) {
+                                put(imp.codIntervento.uppercase() to att.nAttivita, att.zona)
+                            }
+                        }
+                    }
+                }
+            } else emptyMap()
+        } catch (_: Exception) {
+            emptyMap()
+        }
+
+        if (bundledZonaMap.isEmpty()) return impianti
+
+        return impianti.map { imp ->
+            var changed = false
+            val updatedAttivita = imp.listaAttivita.map { att ->
+                if (att.zona.isNullOrBlank()) {
+                    val mappedZona = bundledZonaMap[imp.codIntervento.uppercase() to att.nAttivita]
+                    if (!mappedZona.isNullOrBlank()) {
+                        changed = true
+                        att.copy(zona = mappedZona)
+                    } else att
+                } else att
+            }
+            if (changed) {
+                val baseUpdated = imp.copyWithBasicParams(listaAttivita = updatedAttivita)
+                val finalUpdated = if (baseUpdated is QuadroMQT && baseUpdated.tipoInterruttore != null) {
+                    baseUpdated.withTipoInterruttore(baseUpdated.tipoInterruttore)
+                } else baseUpdated
+                try {
+                    withContext(Dispatchers.IO) { repository.salvaImpianto(finalUpdated) }
+                } catch (_: Exception) {}
+                finalUpdated
+            } else imp
         }
     }
     
@@ -452,7 +554,8 @@ class ManutenzioniViewModel(
     private fun loadImpiantiForCantiere(cantiereId: String) {
         scope.launch {
             try {
-                val impianti = repository.getImpiantiForCantiere(cantiereId)
+                val rawImpianti = repository.getImpiantiForCantiere(cantiereId)
+                val impianti = enrichImpiantiZonaIfNeeded(rawImpianti)
                 _uiState.update { it.copy(impiantiDelCantiere = impianti) }
             } catch (e: Exception) {
                 _uiState.update {
@@ -491,9 +594,49 @@ class ManutenzioniViewModel(
 
     /** Imposta la frequenza scelta per uno specifico impianto (tramite codIntervento o id) */
     fun updateFrequenzaForImpianto(impiantoId: String, frequenza: Periodo) {
-        val updatedFrequenze = _uiState.value.frequenzePerImpianto.toMutableMap()
-        updatedFrequenze[impiantoId] = frequenza
-        _uiState.update { it.copy(frequenzePerImpianto = updatedFrequenze) }
+        _uiState.update { state ->
+            val updatedFrequenze = state.frequenzePerImpianto.toMutableMap()
+            updatedFrequenze[impiantoId] = frequenza
+            val updatedMulti = state.frequenzeSelezionatePerImpianto.toMutableMap()
+            if (updatedMulti[impiantoId].isNullOrEmpty()) {
+                updatedMulti[impiantoId] = setOf(frequenza)
+            }
+            state.copy(
+                frequenzePerImpianto = updatedFrequenze,
+                frequenzeSelezionatePerImpianto = updatedMulti
+            )
+        }
+    }
+
+    /**
+     * Attiva o disattiva una periodicità per uno specifico impianto del cantiere (R21 — selezione multipla).
+     * Garantisce che almeno una periodicità rimanga selezionata.
+     */
+    fun toggleFrequenzaForImpianto(impiantoId: String, frequenza: Periodo) {
+        _uiState.update { state ->
+            val currentSet = state.frequenzeSelezionatePerImpianto[impiantoId]
+                ?: state.frequenzePerImpianto[impiantoId]?.let { setOf(it) }
+                ?: emptySet()
+
+            val nextSet = if (frequenza in currentSet) {
+                if (currentSet.size > 1) currentSet - frequenza else currentSet
+            } else {
+                currentSet + frequenza
+            }
+
+            val updatedMulti = state.frequenzeSelezionatePerImpianto.toMutableMap()
+            updatedMulti[impiantoId] = nextSet
+
+            val updatedSingle = state.frequenzePerImpianto.toMutableMap()
+            nextSet.minByOrNull { it.inMesi() }?.let { primary ->
+                updatedSingle[impiantoId] = primary
+            }
+
+            state.copy(
+                frequenzePerImpianto = updatedSingle,
+                frequenzeSelezionatePerImpianto = updatedMulti
+            )
+        }
     }
 
     /** Cambia la sezione corrente dell'app */
@@ -539,7 +682,7 @@ class ManutenzioniViewModel(
 
     private fun loadImpiantiGlobali() {
         scope.launch {
-            val allImpianti = repository.caricaImpianti()
+            val allImpianti = enrichImpiantiZonaIfNeeded(repository.caricaImpianti())
             val globali = allImpianti.filter { it.cantiereId == null }
             _uiState.update { it.copy(impiantiGlobali = globali) }
         }
@@ -557,7 +700,11 @@ class ManutenzioniViewModel(
         generatePdfToDirectory(outputDir)
     }
 
-    /** Genera i PDF per gli impianti selezionati del cantiere attivo nella directory specificata */
+    /**
+     * Genera i PDF per gli impianti selezionati del cantiere attivo nella directory specificata.
+     * Supporta multi-selezione delle periodicità per ciascun impianto (R21), naming univoco
+     * `{SIGLA}_{PERIODICITA}.pdf` (R22) e creazione della sottocartella temporale `YYYY_MM` (R29).
+     */
     fun generatePdfToDirectory(outputDir: File) {
         val state = _uiState.value
         val impiantiSelezionatiIds = state.impiantiSelezionati.filter { it.value }.keys
@@ -570,12 +717,18 @@ class ManutenzioniViewModel(
             val impiantiDaGenerare = state.impiantiDelCantiere.filter { it.id in impiantiSelezionatiIds }
             val cantiere = state.selectedCantiere
 
+            // Sottocartella temporale YYYY_MM (es. 2026_10) derivata da dataInizioIntervento (R29)
+            val subfolderName = resolveTemporalSubfolderName(cantiere?.dataInizioIntervento)
+            val targetOutputDir = File(outputDir, subfolderName).apply {
+                if (!exists()) mkdirs()
+            }
+
             _uiState.update {
                 it.copy(
                     isLoading = true,
                     errorMessage = null,
                     batchProgress = "Avvio generazione...",
-                    statusMessage = "Generazione di ${impiantiDaGenerare.size} PDF in corso...",
+                    statusMessage = "Generazione PDF in $subfolderName in corso...",
                     generatedFiles = emptyList()
                 )
             }
@@ -585,42 +738,49 @@ class ManutenzioniViewModel(
             val totalErrors = mutableMapOf<String, String>()
 
             for ((index, impianto) in impiantiDaGenerare.withIndex()) {
-                try {
-                    val batchResult = withContext(Dispatchers.IO) {
-                        pdfStrategy.generateBatch(
-                            impianto = impianto,
-                            frequenza = state.frequenzePerImpianto[impianto.id] ?: Periodo(manutenzioni.domain.model.TipoPeriodo.A, 1),
-                            outputDir = outputDir,
-                            copies = 1,
-                            clienteNome = state.selectedCliente?.nome,
-                            contextImpianti = state.impiantiDelCantiere,
-                            cantiereNome = cantiere?.nome,
-                            dataInizioIntervento = cantiere?.dataInizioIntervento,
-                            nomeManutentore = cantiere?.nomeManutentore,
-                            firmaManutentore = cantiere?.firmaManutentore,
-                            onProgress = { current, total ->
-                                _uiState.update {
-                                    it.copy(
-                                        batchProgress = "Impianto ${index + 1}/${impiantiDaGenerare.size}: PDF $current di $total...",
-                                        statusMessage = "Generazione ${impianto.id}..."
-                                    )
+                val frequenzeScelte = state.frequenzeSelezionatePerImpianto[impianto.id]
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.sortedBy { it.inMesi() }
+                    ?: listOf(state.frequenzePerImpianto[impianto.id] ?: Periodo(manutenzioni.domain.model.TipoPeriodo.A, 1))
+
+                for (frequenza in frequenzeScelte) {
+                    try {
+                        val batchResult = withContext(Dispatchers.IO) {
+                            pdfStrategy.generateBatch(
+                                impianto = impianto,
+                                frequenza = frequenza,
+                                outputDir = targetOutputDir,
+                                copies = 1,
+                                clienteNome = state.selectedCliente?.nome,
+                                contextImpianti = state.impiantiDelCantiere,
+                                cantiereNome = cantiere?.nome,
+                                dataInizioIntervento = cantiere?.dataInizioIntervento,
+                                nomeManutentore = cantiere?.nomeManutentore,
+                                firmaManutentore = cantiere?.firmaManutentore,
+                                onProgress = { current, total ->
+                                    _uiState.update {
+                                        it.copy(
+                                            batchProgress = "Impianto ${index + 1}/${impiantiDaGenerare.size} (${frequenza.codiceCartiglio()}): PDF $current di $total...",
+                                            statusMessage = "Generazione ${impianto.codIntervento} (${frequenza.label()})..."
+                                        )
+                                    }
                                 }
-                            }
-                        )
-                    }
-                    allGeneratedFiles.addAll(batchResult.generatedFiles)
-                    totalSuccessCount += batchResult.successCount
-                    if (!batchResult.isFullSuccess) {
-                        batchResult.errors.forEach { (copy, error) ->
-                            totalErrors["${impianto.id} (copia $copy)"] = error
+                            )
                         }
+                        allGeneratedFiles.addAll(batchResult.generatedFiles)
+                        totalSuccessCount += batchResult.successCount
+                        if (!batchResult.isFullSuccess) {
+                            batchResult.errors.forEach { (copy, error) ->
+                                totalErrors["${impianto.id}_${frequenza.codiceCartiglio()} (copia $copy)"] = error
+                            }
+                        }
+                    } catch (e: Exception) {
+                        totalErrors["${impianto.id}_${frequenza.codiceCartiglio()}"] = e.message ?: "Errore sconosciuto"
                     }
-                } catch (e: Exception) {
-                    totalErrors[impianto.id] = e.message ?: "Errore sconosciuto"
                 }
             }
 
-            val statusMsg = "✓ $totalSuccessCount PDF generati. ${totalErrors.size} errori."
+            val statusMsg = "✓ $totalSuccessCount PDF generati in $subfolderName/. ${totalErrors.size} errori."
             val errorMsg = if (totalErrors.isNotEmpty()) {
                 "Errori: " + totalErrors.entries.joinToString("; ") { "${it.key}: ${it.value}" }
             } else null
@@ -697,6 +857,65 @@ class ManutenzioniViewModel(
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Errore esportazione Foglio 2: ${e.message}") }
+            }
+        }
+    }
+
+    /**
+     * Esporta in PDF l'elenco aggregato di tutti gli interruttori differenziali di tutti i Quadri BT
+     * presenti nel cantiere attivo (R11).
+     */
+    fun exportCantiereInterruttoriPdf(outputPdfFile: File? = null) {
+        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val stateSnap = _uiState.value
+                val quadri = stateSnap.impiantiDelCantiere.filterIsInstance<QuadroBT>()
+                val provider = manutenzioni.app.service.attachments.QuadroBtAttachmentProvider()
+                val frequenza = Periodo(manutenzioni.domain.model.TipoPeriodo.A, 1)
+                val clienteNome = stateSnap.selectedCliente?.nome
+                val cantiere = stateSnap.selectedCantiere
+                val sheetData = provider.buildCantiereSheetData(
+                    quadri = quadri,
+                    frequenza = frequenza,
+                    clienteNome = clienteNome,
+                    cantiereNome = cantiere?.nome
+                )
+                if (sheetData == null) {
+                    _uiState.update { it.copy(errorMessage = "Nessun interruttore registrato nei quadri del cantiere") }
+                    return@launch
+                }
+                val renderer = manutenzioni.app.service.attachments.TechnicalSheetHtmlRenderer()
+                val html = renderer.renderStandaloneHtml(
+                    data = sheetData,
+                    frequenza = frequenza,
+                    clienteNome = clienteNome,
+                    cantiereNome = cantiere?.nome,
+                    dataInizioIntervento = cantiere?.dataInizioIntervento,
+                    nomeManutentore = cantiere?.nomeManutentore
+                )
+                val tempHtml = java.io.File.createTempFile("elenco_interruttori_cantiere_", ".html")
+                tempHtml.writeText(html, Charsets.UTF_8)
+                val safeCantiere = cantiere?.nome?.trim()?.replace(" ", "_")?.replace("/", "-") ?: "Cantiere"
+                val outputPdf = outputPdfFile ?: java.io.File.createTempFile("Elenco_Interruttori_${safeCantiere}_", ".pdf")
+                manutenzioni.app.service.Pdf().buildPdf(tempHtml.absolutePath, outputPdf.absolutePath)
+                tempHtml.delete()
+
+                if (outputPdfFile == null) {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        try {
+                            java.awt.Desktop.getDesktop().open(outputPdf)
+                        } catch (_: Exception) {}
+                    }
+                }
+                _uiState.update {
+                    it.copy(
+                        pdfFile = outputPdf,
+                        statusMessage = "✓ Elenco Interruttori Cantiere generato: ${outputPdf.name}",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore esportazione Elenco Interruttori: ${e.message}") }
             }
         }
     }

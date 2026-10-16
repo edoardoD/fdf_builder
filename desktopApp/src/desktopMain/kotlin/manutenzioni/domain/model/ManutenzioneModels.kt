@@ -368,6 +368,15 @@ data class Periodo(
         TipoPeriodo.M -> "$valore ${if (valore == 1) "Mese" else "Mesi"}"
         TipoPeriodo.A -> "$valore ${if (valore == 1) "Anno" else "Anni"}"
     }
+
+    /**
+     * Codice compatto da 2 caratteri per i Mesi (es. "01", "02", "03", "06")
+     * e 1 carattere per gli Anni (es. "1", "2", "5") per il cartiglio PDF e naming file (R22, R23).
+     */
+    fun codiceCartiglio(): String = when (tipo) {
+        TipoPeriodo.M -> valore.toString().padStart(2, '0')
+        TipoPeriodo.A -> valore.toString()
+    }
 }
 
 @Serializable

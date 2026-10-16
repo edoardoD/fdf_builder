@@ -24,7 +24,10 @@
         }
 
         body {
-            margin: 1cm;
+            margin-left: auto;
+            margin-right: auto;
+            width: 21cm;
+            /* larghezza standard A4, centrare la tabella */
             direction: ltr;
         }
 
@@ -33,6 +36,22 @@
             border-spacing: 0;
             empty-cells: show;
             width: 100%;
+            table-layout: fixed;
+            /* Impedisce overflow colonne */
+            page-break-inside: auto;
+        }
+        
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        tfoot {
+            display: table-footer-group;
         }
 
         td {
@@ -41,10 +60,15 @@
             padding: 0.05cm;
             border: 0.0133cm solid #000000;
             font-family: Calibri;
+            overflow-wrap: break-word;
+            /* Permette a testi lunghi di andare a capo senza spezzare le parole a metà */
+            word-break: normal;
+            max-width: 1px;
+            /* Con table-layout: fixed, limita la larghezza effettiva */
         }
 
         p {
-            white-space: nowrap;
+            /* white-space: nowrap; */ /* RIMOSSO: consente il wrap automatico */
             margin: 0;
             font-size: inherit;
         }
@@ -125,6 +149,8 @@
             color: var(--color-text-dark);
             font-size: 11pt;
             vertical-align: top;
+            text-align: justify;
+            /* giustifica il testo delle celle dati */
         }
 
         /* Celle per input form */
@@ -238,7 +264,7 @@
         }
 
         .row--data {
-            height: 0.487cm;
+            height: 0.40cm;
         }
 
         .row--section {
@@ -258,6 +284,21 @@
         .text--normal {
             font-weight: normal;
             font-size: 7pt;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            max-width: 100%;
+            font-size: 7.5pt;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .table--main {
+            margin-left: auto;
+            margin-right: auto;
         }
     </style>
 </head>
@@ -282,7 +323,7 @@
                 <col class="col--w12" />
             </colgroup>
 
-            <tbody>
+            <thead>
                 <!-- ========== SEZIONE 1: INTESTAZIONE ========== -->
                 <tr class="row--title">
                     <td colspan="11" class="cell--title">
@@ -391,7 +432,7 @@
                         <p>Tipo Attività</p>
                     </td>
                     <td rowspan="2" class="cell--header-column">
-                        <p>Impianto</p>
+                        <p>Zona</p>
                     </td>
                     <td rowspan="2" class="cell--header-column">
                         <p>Attività</p>
@@ -428,10 +469,13 @@
                     <td class="cell--data-standard"></td>
                     <td class="cell--spacer"></td>
                 </tr>
-
-                <!-- ========== SEZIONE 6: RIGHE DATI (generate dinamicamente) ========== -->
-                <!-- ATTIVITA_ROWS -->
-
+            </thead>
+            
+            <tbody>
+                <!-- ========== SEZIONE 6: RIGHE DATI (generate dinamicamente) ========== --><!-- ATTIVITA_ROWS -->
+            </tbody>
+            
+            <tfoot>
                 <!-- ========== SEZIONE 7: LEGENDA ========== -->
                 <tr class="row--legend">
                     <td colspan="11" class="cell--legend">
@@ -466,10 +510,14 @@
                 <tr class="row--standard">
                     <td class="cell--spacer"></td>
                 </tr>
-            </tbody>
+            </tfoot>
         </table>
+
+        <!-- ========== SEZIONE ALLEGATI: SECONDO FOGLIO COMPONENTI QUADRO ========== -->
+        <!-- COMPONENTI_QUADRO_SHEET -->
     </form>
 
 </body>
 
 </html>
+

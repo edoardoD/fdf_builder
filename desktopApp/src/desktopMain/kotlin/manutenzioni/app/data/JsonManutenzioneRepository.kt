@@ -211,13 +211,18 @@ class JsonManutenzioneRepository(
                 if (list[i].cantiereId == null) {
                     hasGlobal = true
                 }
-                list[i] = list[i].copyWithBasicParams(
+                val baseUpdated = list[i].copyWithBasicParams(
                     nomeCompleto = impiantoTemplate.nomeCompleto,
                     premessa = impiantoTemplate.premessa,
                     listaAttivita = impiantoTemplate.listaAttivita,
                     listaNormative = impiantoTemplate.listaNormative
                     // id, cantiereId, quantita e noteSpecifiche rimangono inalterati
                 )
+                list[i] = if (baseUpdated is manutenzioni.domain.model.QuadroMQT && baseUpdated.tipoInterruttore != null) {
+                    baseUpdated.withTipoInterruttore(baseUpdated.tipoInterruttore)
+                } else {
+                    baseUpdated
+                }
             }
         }
         if (!hasGlobal) {

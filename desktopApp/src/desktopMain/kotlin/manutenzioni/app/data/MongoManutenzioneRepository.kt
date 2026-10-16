@@ -57,15 +57,15 @@ class MongoManutenzioneRepository(
             if (imp.cantiereId == null) {
                 hasGlobal = true
             }
-            val baseUpdated = impiantoTemplate.copyWithBasicParams(
-                id = imp.id, 
-                cantiereId = imp.cantiereId, 
-                quantita = imp.quantita, 
-                noteSpecifiche = imp.noteSpecifiche
+            val baseUpdated = imp.copyWithBasicParams(
+                nomeCompleto = impiantoTemplate.nomeCompleto,
+                premessa = impiantoTemplate.premessa,
+                listaAttivita = impiantoTemplate.listaAttivita,
+                listaNormative = impiantoTemplate.listaNormative
             )
             val updated = when {
-                baseUpdated is QuadroMQT && imp is QuadroMQT && imp.tipoInterruttore != null ->
-                    baseUpdated.withTipoInterruttore(imp.tipoInterruttore)
+                baseUpdated is QuadroMQT && baseUpdated.tipoInterruttore != null ->
+                    baseUpdated.withTipoInterruttore(baseUpdated.tipoInterruttore)
                 baseUpdated is RilevazioneAntincendio && imp is RilevazioneAntincendio ->
                     baseUpdated.copy(
                         categorieRivelatori = imp.categorieRivelatori,

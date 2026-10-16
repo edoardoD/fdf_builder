@@ -12,7 +12,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ambulatorio"
         },
         {
           "nAttivita": 2,
@@ -21,7 +22,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ambulatorio"
         },
         {
           "nAttivita": 3,
@@ -30,7 +32,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ambulatorio"
         },
         {
           "nAttivita": 4,
@@ -39,7 +42,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ambulatorio"
         },
         {
           "nAttivita": 5,
@@ -48,7 +52,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ambulatorio"
         },
         {
           "nAttivita": 6,
@@ -57,7 +62,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ambulatorio"
         },
         {
           "nAttivita": 7,
@@ -66,7 +72,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ambulatorio"
         },
         {
           "nAttivita": 8,
@@ -75,7 +82,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ambulatorio"
         },
         {
           "nAttivita": 9,
@@ -84,7 +92,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ambulatorio"
         },
         {
           "nAttivita": 10,
@@ -93,7 +102,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ambulatorio"
         }
       ],
       "listaNormative": [
@@ -120,7 +130,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 2,
@@ -129,7 +140,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 3,
@@ -138,7 +150,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 4,
@@ -147,7 +160,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 5,
@@ -156,7 +170,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 6,
@@ -165,7 +180,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 7,
@@ -174,7 +190,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 8,
@@ -183,7 +200,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 9,
@@ -192,7 +210,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 10,
@@ -201,7 +220,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 11,
@@ -210,7 +230,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 12,
@@ -219,7 +240,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         },
         {
           "nAttivita": 13,
@@ -228,7 +250,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "BACS"
         }
       ],
       "listaNormative": [
@@ -255,7 +278,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Esterna"
         },
         {
           "nAttivita": 2,
@@ -264,7 +288,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Esterna"
         },
         {
           "nAttivita": 3,
@@ -273,7 +298,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 4,
@@ -282,7 +308,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 5,
@@ -291,7 +318,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 6,
@@ -300,7 +328,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 7,
@@ -309,7 +338,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 8,
@@ -318,7 +348,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 9,
@@ -327,7 +358,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 10,
@@ -336,7 +368,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 11,
@@ -345,7 +378,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 12,
@@ -354,7 +388,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 13,
@@ -363,7 +398,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 14,
@@ -372,7 +408,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 15,
@@ -381,7 +418,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 16,
@@ -390,7 +428,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 17,
@@ -399,7 +438,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 18,
@@ -408,7 +448,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 19,
@@ -417,7 +458,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 20,
@@ -426,7 +468,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 21,
@@ -435,7 +478,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 22,
@@ -444,7 +488,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 23,
@@ -453,7 +498,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cabina Esterna"
         },
         {
           "nAttivita": 24,
@@ -462,7 +508,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 25,
@@ -471,7 +518,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 26,
@@ -480,7 +528,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 27,
@@ -489,7 +538,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 28,
@@ -498,7 +548,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Cabina"
         },
         {
           "nAttivita": 29,
@@ -507,7 +558,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Cabina Interna"
         },
         {
           "nAttivita": 30,
@@ -516,7 +568,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Cabina Interna"
         }
       ],
       "listaNormative": [
@@ -543,7 +596,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 2,
@@ -552,7 +606,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 3,
@@ -561,7 +616,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 4,
@@ -570,7 +626,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 5,
@@ -579,7 +636,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 6,
@@ -588,7 +646,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 7,
@@ -597,7 +656,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 8,
@@ -606,7 +666,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 9,
@@ -615,7 +676,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 10,
@@ -624,7 +686,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 11,
@@ -633,7 +696,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 12,
@@ -642,7 +706,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 13,
@@ -651,7 +716,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 14,
@@ -660,7 +726,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 15,
@@ -669,7 +736,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 16,
@@ -678,7 +746,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         },
         {
           "nAttivita": 17,
@@ -687,7 +756,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Degenze"
         }
       ],
       "listaNormative": [
@@ -714,7 +784,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Diff. Sonora"
         },
         {
           "nAttivita": 2,
@@ -723,7 +794,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Diff. Sonora"
         },
         {
           "nAttivita": 3,
@@ -732,7 +804,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Diff. Sonora"
         },
         {
           "nAttivita": 4,
@@ -741,7 +814,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Diff. Sonora"
         },
         {
           "nAttivita": 5,
@@ -750,7 +824,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Diff. Sonora"
         }
       ],
       "listaNormative": [
@@ -810,7 +885,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Generale"
         },
         {
           "nAttivita": 2,
@@ -819,7 +895,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Generale"
         },
         {
           "nAttivita": 3,
@@ -828,7 +905,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Moduli"
         },
         {
           "nAttivita": 4,
@@ -837,7 +915,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Struttura"
         },
         {
           "nAttivita": 5,
@@ -846,7 +925,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Ottimizzatori"
         },
         {
           "nAttivita": 6,
@@ -855,7 +935,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cavi DC"
         },
         {
           "nAttivita": 7,
@@ -864,7 +945,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Cavidotti"
         },
         {
           "nAttivita": 8,
@@ -873,7 +955,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "EQP"
         },
         {
           "nAttivita": 9,
@@ -882,7 +965,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "QDC"
         },
         {
           "nAttivita": 10,
@@ -891,7 +975,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "QDC"
         },
         {
           "nAttivita": 11,
@@ -900,7 +985,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Inverter"
         },
         {
           "nAttivita": 12,
@@ -909,7 +995,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Inverter"
         },
         {
           "nAttivita": 13,
@@ -918,7 +1005,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Inverter"
         },
         {
           "nAttivita": 14,
@@ -927,7 +1015,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Monitoraggio"
         },
         {
           "nAttivita": 15,
@@ -936,7 +1025,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Inverter"
         },
         {
           "nAttivita": 16,
@@ -945,7 +1035,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Inverter"
         },
         {
           "nAttivita": 17,
@@ -954,7 +1045,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "SPI"
         },
         {
           "nAttivita": 18,
@@ -963,7 +1055,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "SPI"
         },
         {
           "nAttivita": 19,
@@ -972,7 +1065,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 5
-          }
+          },
+          "zona": "SPI"
         }
       ],
       "listaNormative": [
@@ -999,7 +1093,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 2,
@@ -1008,7 +1103,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 3,
@@ -1017,7 +1113,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 4,
@@ -1026,7 +1123,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 5,
@@ -1035,7 +1133,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 6,
@@ -1044,7 +1143,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 7,
@@ -1053,7 +1153,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 8,
@@ -1062,7 +1163,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 9,
@@ -1071,7 +1173,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 10,
@@ -1080,7 +1183,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 11,
@@ -1089,7 +1193,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 12,
@@ -1098,7 +1203,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 13,
@@ -1107,7 +1213,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 14,
@@ -1116,7 +1223,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 15,
@@ -1125,7 +1233,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 16,
@@ -1134,7 +1243,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 17,
@@ -1143,7 +1253,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 18,
@@ -1152,7 +1263,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 19,
@@ -1161,7 +1273,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 20,
@@ -1170,7 +1283,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 21,
@@ -1179,7 +1293,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 22,
@@ -1188,7 +1303,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 23,
@@ -1197,7 +1313,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 24,
@@ -1206,7 +1323,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 25,
@@ -1215,7 +1333,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 26,
@@ -1224,7 +1343,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 27,
@@ -1233,7 +1353,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 28,
@@ -1242,7 +1363,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 3
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 29,
@@ -1251,7 +1373,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 3
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         },
         {
           "nAttivita": 30,
@@ -1260,7 +1383,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 3
-          }
+          },
+          "zona": "Gruppo Elettrogeno"
         }
       ],
       "listaNormative": [
@@ -1287,7 +1411,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 2,
@@ -1296,7 +1421,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 3,
@@ -1305,7 +1431,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 4,
@@ -1314,7 +1441,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 5,
@@ -1323,7 +1451,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 6,
@@ -1332,7 +1461,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 7,
@@ -1341,7 +1471,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 8,
@@ -1350,7 +1481,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 9,
@@ -1359,7 +1491,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 10,
@@ -1368,7 +1501,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 11,
@@ -1377,7 +1511,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 12,
@@ -1386,7 +1521,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 13,
@@ -1395,7 +1531,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 14,
@@ -1404,7 +1541,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 15,
@@ -1413,7 +1551,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 16,
@@ -1422,7 +1561,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 17,
@@ -1431,7 +1571,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 18,
@@ -1440,7 +1581,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Impianto elettrico"
         },
         {
           "nAttivita": 19,
@@ -1449,7 +1591,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Impianto elettrico"
         }
       ],
       "listaNormative": [
@@ -1513,7 +1656,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "PEM"
         },
         {
           "nAttivita": 2,
@@ -1522,7 +1666,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "PEM"
         },
         {
           "nAttivita": 3,
@@ -1531,7 +1676,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "PEM"
         },
         {
           "nAttivita": 4,
@@ -1540,7 +1686,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "PEM"
         }
       ],
       "listaNormative": [
@@ -1567,7 +1714,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 2,
@@ -1576,7 +1724,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 3,
@@ -1585,7 +1734,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 4,
@@ -1594,7 +1744,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 5,
@@ -1603,7 +1754,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 6,
@@ -1612,7 +1764,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 7,
@@ -1621,7 +1774,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 8,
@@ -1630,7 +1784,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 9,
@@ -1639,7 +1794,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 10,
@@ -1648,7 +1804,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 11,
@@ -1657,7 +1814,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 12,
@@ -1666,7 +1824,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 13,
@@ -1675,7 +1834,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 14,
@@ -1684,7 +1844,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 15,
@@ -1693,7 +1854,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 16,
@@ -1702,7 +1864,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 17,
@@ -1711,7 +1874,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 18,
@@ -1720,7 +1884,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 19,
@@ -1729,7 +1894,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Quadro"
         },
         {
           "nAttivita": 20,
@@ -1738,7 +1904,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 2
-          }
+          },
+          "zona": "Quadro"
         }
       ],
       "listaNormative": [
@@ -1996,7 +2163,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 2,
@@ -2005,7 +2173,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 3,
@@ -2014,7 +2183,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 4,
@@ -2023,7 +2193,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 2
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 5,
@@ -2032,7 +2203,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 2
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 6,
@@ -2041,7 +2213,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 2
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 7,
@@ -2050,7 +2223,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Componenti"
         },
         {
           "nAttivita": 8,
@@ -2059,7 +2233,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Sistema"
         },
         {
           "nAttivita": 9,
@@ -2068,7 +2243,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Sitema"
         },
         {
           "nAttivita": 10,
@@ -2077,7 +2253,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "Linee"
         }
       ],
       "listaNormative": [
@@ -2104,7 +2281,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 2,
@@ -2113,7 +2291,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 3,
@@ -2122,7 +2301,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 4,
@@ -2131,7 +2311,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 5,
@@ -2140,7 +2321,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 6,
@@ -2149,7 +2331,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 7,
@@ -2158,7 +2341,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 8,
@@ -2167,7 +2351,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 9,
@@ -2176,7 +2361,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 10,
@@ -2185,7 +2371,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 11,
@@ -2194,7 +2381,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 12,
@@ -2203,7 +2391,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         },
         {
           "nAttivita": 13,
@@ -2212,7 +2401,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Rifasamento"
         }
       ],
       "listaNormative": [
@@ -2235,7 +2425,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 2,
@@ -2244,7 +2435,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 3,
@@ -2253,7 +2445,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 4,
@@ -2262,7 +2455,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 2
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 5,
@@ -2271,7 +2465,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 2
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 6,
@@ -2280,7 +2475,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 2
-          }
+          },
+          "zona": "Centrale"
         },
         {
           "nAttivita": 7,
@@ -2289,7 +2485,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Componenti"
         },
         {
           "nAttivita": 8,
@@ -2298,7 +2495,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Sistema"
         },
         {
           "nAttivita": 9,
@@ -2307,7 +2505,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "Sitema"
         },
         {
           "nAttivita": 10,
@@ -2316,7 +2515,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "Linee"
         },
         {
           "nAttivita": 11,
@@ -2325,7 +2525,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "Rivelatori GAS"
         },
         {
           "nAttivita": 12,
@@ -2335,7 +2536,8 @@
             "tipo": "M",
             "valore": 6
           },
-          "targetImpiantoCod": "GE"
+          "targetImpiantoCod": "GE",
+          "zona": "Gruppo elettrogeno"
         },
         {
           "nAttivita": 13,
@@ -2345,7 +2547,8 @@
             "tipo": "M",
             "valore": 6
           },
-          "targetImpiantoCod": "PEM"
+          "targetImpiantoCod": "PEM",
+          "zona": "Sgancio generale emergenza"
         },
         {
           "nAttivita": 14,
@@ -2355,7 +2558,8 @@
             "tipo": "M",
             "valore": 6
           },
-          "targetImpiantoCod": "RI"
+          "targetImpiantoCod": "RI",
+          "zona": "Rilevazione incendi"
         },
         {
           "nAttivita": 15,
@@ -2365,7 +2569,8 @@
             "tipo": "A",
             "valore": 1
           },
-          "targetImpiantoCod": "Q"
+          "targetImpiantoCod": "Q",
+          "zona": "Quadro elettrico"
         },
         {
           "nAttivita": 16,
@@ -2375,7 +2580,8 @@
             "tipo": "M",
             "valore": 6
           },
-          "targetImpiantoCod": "SPD"
+          "targetImpiantoCod": "SPD",
+          "zona": "Limitatori Sovratensione"
         },
         {
           "nAttivita": 17,
@@ -2385,7 +2591,8 @@
             "tipo": "A",
             "valore": 1
           },
-          "targetImpiantoCod": "CAB"
+          "targetImpiantoCod": "CAB",
+          "zona": "Cabina MT/BT"
         }
       ],
       "listaNormative": [
@@ -2435,7 +2642,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 2,
@@ -2444,7 +2652,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 3,
@@ -2453,7 +2662,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 4,
@@ -2462,7 +2672,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 5,
@@ -2471,7 +2682,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 6,
@@ -2480,7 +2692,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 7,
@@ -2489,7 +2702,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 8,
@@ -2498,7 +2712,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 9,
@@ -2507,7 +2722,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Traformatore"
         },
         {
           "nAttivita": 10,
@@ -2516,7 +2732,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 11,
@@ -2525,7 +2742,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 5
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 12,
@@ -2534,7 +2752,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 5
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 13,
@@ -2543,7 +2762,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 5
-          }
+          },
+          "zona": "Trasformatore"
         }
       ],
       "listaNormative": [
@@ -2570,7 +2790,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 2,
@@ -2579,7 +2800,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 3,
@@ -2588,7 +2810,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 4,
@@ -2597,7 +2820,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 5,
@@ -2606,7 +2830,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 6,
@@ -2615,7 +2840,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 7,
@@ -2624,7 +2850,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 8,
@@ -2633,7 +2860,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "Trasformatore"
         },
         {
           "nAttivita": 9,
@@ -2642,7 +2870,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 5
-          }
+          },
+          "zona": "Traformatore"
         }
       ],
       "listaNormative": [
@@ -2669,7 +2898,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 2,
@@ -2678,7 +2908,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 3,
@@ -2687,7 +2918,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 1
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 4,
@@ -2696,7 +2928,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 2
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 5,
@@ -2705,7 +2938,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 2
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 6,
@@ -2714,7 +2948,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 2
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 7,
@@ -2723,7 +2958,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 8,
@@ -2732,7 +2968,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 9,
@@ -2741,7 +2978,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 4
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 10,
@@ -2750,7 +2988,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 11,
@@ -2759,7 +2998,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 12,
@@ -2768,7 +3008,8 @@
           "frequenza": {
             "tipo": "M",
             "valore": 6
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 13,
@@ -2777,7 +3018,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 14,
@@ -2786,7 +3028,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "UPS"
         },
         {
           "nAttivita": 15,
@@ -2795,7 +3038,8 @@
           "frequenza": {
             "tipo": "A",
             "valore": 1
-          }
+          },
+          "zona": "UPS"
         }
       ],
       "listaNormative": [
