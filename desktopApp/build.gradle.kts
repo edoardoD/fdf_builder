@@ -109,3 +109,12 @@ tasks.register("createDmg") {
 tasks.register("createMsi") {
     dependsOn("packageMsi")
 }
+
+tasks.register<JavaExec>("runHtmlCli") {
+    group = "application"
+    description = "Genera e stampa il codice HTML compilato della scheda PDF tramite CLI o menu interattivo"
+    mainClass.set("manutenzioni.app.cli.GenerateHtmlCliKt")
+    val desktopMainCompilation = kotlin.targets.getByName("desktop").compilations.getByName("main")
+    classpath = files(desktopMainCompilation.output.allOutputs, desktopMainCompilation.runtimeDependencyFiles)
+    standardInput = System.`in`
+}
