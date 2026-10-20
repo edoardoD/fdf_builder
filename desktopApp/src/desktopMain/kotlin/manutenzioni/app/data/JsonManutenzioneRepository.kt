@@ -38,6 +38,7 @@ class JsonManutenzioneRepository(
     private var cacheCatalogoApprovato: MutableList<manutenzioni.domain.model.ComponenteApprovato>? = null
     private var cacheSessioniVerifica: MutableList<manutenzioni.domain.model.SessioneVerifica>? = null
     private var cacheUtenti: MutableList<manutenzioni.domain.model.Utente>? = null
+    private var cacheEventiManutenzione: MutableList<manutenzioni.domain.model.EventoManutenzione>? = null
 
     init {
         println("📂 Database log: ${dbFile.absolutePath}")
@@ -96,10 +97,19 @@ class JsonManutenzioneRepository(
         componenti: List<manutenzioni.domain.model.ComponenteStandard> = getComponentiCache(),
         catalogoApprovato: List<manutenzioni.domain.model.ComponenteApprovato> = getCatalogoApprovatoCache(),
         sessioniVerifica: List<manutenzioni.domain.model.SessioneVerifica> = getSessioniVerificaCache(),
-        utenti: List<manutenzioni.domain.model.Utente> = getUtentiCache()
+        utenti: List<manutenzioni.domain.model.Utente> = getUtentiCache(),
+        eventiManutenzione: List<manutenzioni.domain.model.EventoManutenzione> = getEventiManutenzioneCache()
     ) {
-        val db = ManutenzioniDatabase(impianti, clienti, cantieri, componenti, catalogoApprovato, sessioniVerifica, utenti)
+        val db = ManutenzioniDatabase(impianti, clienti, cantieri, componenti, catalogoApprovato, sessioniVerifica, utenti, eventiManutenzione)
         dbFile.writeText(json.encodeToString(ManutenzioniDatabase.serializer(), db))
+    }
+
+    private fun getEventiManutenzioneCache(): MutableList<manutenzioni.domain.model.EventoManutenzione> {
+        if (cacheEventiManutenzione == null) {
+            val db = loadFromDisk()
+            cacheEventiManutenzione = db.eventiManutenzione.toMutableList()
+        }
+        return cacheEventiManutenzione!!
     }
 
     private fun getSessioniVerificaCache(): MutableList<manutenzioni.domain.model.SessioneVerifica> {
@@ -431,6 +441,89 @@ class JsonManutenzioneRepository(
             list.firstOrNull { it.id == id }?.ruolo != manutenzioni.domain.model.RuoloUtente.ADMIN
         ) {
             list.removeAll { it.id == id }
+            saveToDisk()
+        }
+    }
+
+    // === Eventi di Manutenzione & Scheduler Ricorrenze ===
+
+    override suspend fun salvaEventoManutenzione(evento: manutenzioni.domain.model.EventoManutenzione) = mutex.withLock {
+        val list = getEventiManutenzioneCache()
+        val index = list.indexOfFirst { it.id == evento.id }
+        if (index >= 0) {
+            list[index] = evento
+        } else {
+            list.add(evento)
+        }
+        saveToDisk()
+    }
+
+    override suspend fun salvaEventiManutenzioneBatch(eventi: List<manutenzioni.domain.model.EventoManutenzione>) = mutex.withLock {
+        val list = getEventiManutenzioneCache()
+        eventi.forEach { evento ->
+            val index = list.indexOfFirst { it.id == evento.id }
+            if (index >= 0) {
+                list[index] = evento
+            } else {
+                list.add(evento)
+            }
+        }
+        saveToDisk()
+    }
+
+    override suspend fun caricaEventiManutenzione(): List<manutenzioni.domain.model.EventoManutenzione> = mutex.withLock {
+        return getEventiManutenzioneCache().toList()
+    }
+
+    override suspend fun caricaEventiPerMese(annoMese: String): List<manutenzioni.domain.model.EventoManutenzione> = mutex.withLock {
+        // annoMese nel formato "yyyy-MM" (es. "2026-10") o "yyyy_MM"
+        val normalized = annoMese.replace("_", "-")
+        return getEventiManutenzioneCache().filter { ev ->
+            val d = ev.dataPianificata.trim()
+            val parts = d.split("/", "-", ".")
+            if (parts.size == 3) {
+                val y = if (parts[0].length == 4) parts[0] else parts[2]
+                val m = (if (parts[0].length == 4) parts[1] else parts[1]).padStart(2, '0')
+                "$y-$m" == normalized
+            } else false
+        }
+    }
+
+    override suspend fun caricaEventiPerCantiere(cantiereId: String): List<manutenzioni.domain.model.EventoManutenzione> = mutex.withLock {
+        return getEventiManutenzioneCache().filter { it.cantiereId == cantiereId }
+    }
+
+    override suspend fun eliminaEventoManutenzione(id: String, eliminaSerieFutura: Boolean) = mutex.withLock {
+        val list = getEventiManutenzioneCache()
+        val target = list.find { it.id == id }
+        if (target != null && eliminaSerieFutura && !target.serieRicorrenzaId.isNullOrBlank()) {
+            val serieId = target.serieRicorrenzaId
+            val baseDate = manutenzioni.domain.service.CalendarioScadenzeCalculator.parseDataRiferimento(target.dataPianificata)
+            list.removeAll { ev ->
+                ev.serieRicorrenzaId == serieId &&
+                    manutenzioni.domain.service.CalendarioScadenzeCalculator.parseDataRiferimento(ev.dataPianificata) >= baseDate
+            }
+        } else {
+            list.removeAll { it.id == id }
+        }
+        saveToDisk()
+    }
+
+    override suspend fun aggiornaStatoEvento(
+        id: String,
+        nuovoStato: manutenzioni.domain.model.StatoEventoManutenzione,
+        dataCompletamento: String?
+    ) = mutex.withLock {
+        val list = getEventiManutenzioneCache()
+        val index = list.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            val corrente = list[index]
+            list[index] = corrente.copy(
+                stato = nuovoStato,
+                dataCompletamentoEffettiva = if (nuovoStato == manutenzioni.domain.model.StatoEventoManutenzione.COMPLETATO) {
+                    dataCompletamento ?: corrente.dataPianificata
+                } else corrente.dataCompletamentoEffettiva
+            )
             saveToDisk()
         }
     }

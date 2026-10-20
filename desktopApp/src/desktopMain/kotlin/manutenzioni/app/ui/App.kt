@@ -85,7 +85,17 @@ fun App(viewModel: ManutenzioniViewModel, onDisconnect: () -> Unit = {}) {
                             onOrizzonteChanged = viewModel::setOrizzonteScadenze,
                             onSelectMese = viewModel::selectMeseCalendarioGlobale,
                             onApriCantiereDaCalendario = viewModel::apriCantiereDaCalendario,
-                            onExportRiepilogoCantierePdf = { viewModel.exportRiepilogoDaCalendarioGlobale(it) }
+                            onExportRiepilogoCantierePdf = { viewModel.exportRiepilogoDaCalendarioGlobale(it) },
+                            onDateSelected = viewModel::selezionaGiornoCalendario,
+                            onPreviousMonth = { viewModel.cambiaMeseCalendario(-1) },
+                            onNextMonth = { viewModel.cambiaMeseCalendario(1) },
+                            onTodayClicked = viewModel::vaiAlMeseCorrente,
+                            onPianificaInterventiBatch = { data, cantieri, imp, freq, man, note, ric ->
+                                viewModel.pianificaInterventiBatch(data, cantieri, imp, freq, man, note, ric)
+                            },
+                            onAvviaInterventoDaCalendario = viewModel::avviaInterventoDaCalendario,
+                            onCompletaEventoManutenzione = { viewModel.completaEventoManutenzione(it) },
+                            onEliminaEventoManutenzione = { id, serie -> viewModel.eliminaEventoManutenzione(id, serie) }
                         )
                     }
                     AppSection.DATABASE -> {

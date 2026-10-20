@@ -45,11 +45,15 @@ object CalendarioScadenzeCalculator {
                 return try {
                     if (p0 > 1900) {
                         // Formato ISO: yyyy-MM-dd
-                        LocalDate.of(p0, p1.coerceIn(1, 12), p2.coerceIn(1, 28))
+                        val month = p1.coerceIn(1, 12)
+                        val maxDay = java.time.YearMonth.of(p0, month).lengthOfMonth()
+                        LocalDate.of(p0, month, p2.coerceIn(1, maxDay))
                     } else {
                         // Formato IT: dd/MM/yyyy
                         val year = if (p2 < 100) 2000 + p2 else p2
-                        LocalDate.of(year, p1.coerceIn(1, 12), p0.coerceIn(1, 28))
+                        val month = p1.coerceIn(1, 12)
+                        val maxDay = java.time.YearMonth.of(year, month).lengthOfMonth()
+                        LocalDate.of(year, month, p0.coerceIn(1, maxDay))
                     }
                 } catch (_: Exception) {
                     fallback

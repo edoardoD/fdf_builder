@@ -93,6 +93,12 @@ data class ManutenzioniUiState(
     val orizzonteScadenzeMesi: Int = 12,
     /** Storico sessioni di verifica salvate per il cantiere selezionato (R25, R30) */
     val sessioniVerificaCantiere: List<manutenzioni.domain.model.SessioneVerifica> = emptyList(),
+    /** Eventi di manutenzione pianificati e gestiti a calendario (Interactive Scheduler) */
+    val eventiManutenzione: List<manutenzioni.domain.model.EventoManutenzione> = emptyList(),
+    /** Data del giorno correntemente selezionato a calendario ("dd/MM/yyyy", es. "22/10/2026") */
+    val dataCalendarioSelezionata: String? = null,
+    /** Mese attualmente visualizzato nella griglia interattiva del calendario */
+    val meseVisualizzatoCalendario: java.time.YearMonth = java.time.YearMonth.now(),
     /** Lista profili utenti per controllo accessi RBAC (R31) */
     val utenti: List<manutenzioni.domain.model.Utente> = emptyList(),
     /** Utente attivo nella sessione corrente (default: Amministratore) */
@@ -113,6 +119,31 @@ data class ManutenzioniUiState(
         } else {
             cantieriDisponibili.filter { it.id in utenteAttivo.cantieriAssegnatiIds }
         }
+
+    /** Eventi del mese correntemente visualizzato nella griglia del calendario */
+    val eventiMeseVisualizzato: List<manutenzioni.domain.model.EventoManutenzione>
+        get() {
+            val ymTarget = "%04d-%02d".format(meseVisualizzatoCalendario.year, meseVisualizzatoCalendario.monthValue)
+            return eventiManutenzione.filter { ev ->
+                val d = ev.dataPianificata.trim()
+                val parts = d.split("/", "-", ".")
+                if (parts.size == 3) {
+                    val y = if (parts[0].length == 4) parts[0] else parts[2]
+                    val m = (if (parts[0].length == 4) parts[1] else parts[1]).padStart(2, '0')
+                    "$y-$m" == ymTarget
+                } else false
+            }
+        }
+
+    /** Mappa di tutti gli eventi del mese raggruppati per data ("dd/MM/yyyy") */
+    val mappaEventiPerGiorno: Map<String, List<manutenzioni.domain.model.EventoManutenzione>>
+        get() = eventiMeseVisualizzato.groupBy { it.dataPianificata.trim() }
+
+    /** Eventi pianificati per il giorno selezionato a calendario (o emptyList se nessun giorno è selezionato) */
+    val eventiGiornoSelezionato: List<manutenzioni.domain.model.EventoManutenzione>
+        get() = dataCalendarioSelezionata?.let { sel ->
+            eventiManutenzione.filter { it.dataPianificata.trim() == sel.trim() }
+        } ?: emptyList()
 }
 
 /**
@@ -1413,6 +1444,7 @@ class ManutenzioniViewModel(
         loadComponentiStandard()
         loadCatalogoApprovato()
         loadUtenti()
+        loadEventiManutenzione()
         _uiState.value.selectedCliente?.let {
             loadCantieriForCliente(it.id)
         }
@@ -2153,6 +2185,278 @@ class ManutenzioniViewModel(
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(errorMessage = "Errore eliminazione utente: ${e.message}") }
+            }
+        }
+    }
+
+    // === Interactive Calendar Scheduler & Ricorrenze Manutenzione ===
+
+    fun loadEventiManutenzione() {
+        scope.launch {
+            try {
+                val eventi = withContext(Dispatchers.IO) { repository.caricaEventiManutenzione() }
+                _uiState.update { it.copy(eventiManutenzione = eventi) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore caricamento eventi calendario: ${e.message}") }
+            }
+        }
+    }
+
+    /** Seleziona o deseleziona un giorno a calendario (formato "dd/MM/yyyy", es. "22/10/2026") */
+    fun selezionaGiornoCalendario(data: String?) {
+        _uiState.update { state ->
+            val nextMonth = if (!data.isNullOrBlank()) {
+                val parsed = manutenzioni.domain.service.CalendarioScadenzeCalculator.parseDataRiferimento(data)
+                java.time.YearMonth.of(parsed.year, parsed.monthValue)
+            } else {
+                state.meseVisualizzatoCalendario
+            }
+            state.copy(
+                dataCalendarioSelezionata = data,
+                meseVisualizzatoCalendario = nextMonth
+            )
+        }
+    }
+
+    /** Sposta la vista del calendario di N mesi in avanti o indietro */
+    fun cambiaMeseCalendario(deltaMesi: Long) {
+        _uiState.update { state ->
+            val next = state.meseVisualizzatoCalendario.plusMonths(deltaMesi)
+            // Se il giorno selezionato non ricade nel nuovo mese, deselezionalo
+            val nextSel = state.dataCalendarioSelezionata?.takeIf { sel ->
+                val p = manutenzioni.domain.service.CalendarioScadenzeCalculator.parseDataRiferimento(sel)
+                p.year == next.year && p.monthValue == next.monthValue
+            }
+            state.copy(
+                meseVisualizzatoCalendario = next,
+                dataCalendarioSelezionata = nextSel
+            )
+        }
+    }
+
+    /** Riporta la vista del calendario al mese e giorno correnti */
+    fun vaiAlMeseCorrente() {
+        val now = java.time.LocalDate.now()
+        val nowFormatted = "%02d/%02d/%04d".format(now.dayOfMonth, now.monthValue, now.year)
+        _uiState.update { state ->
+            state.copy(
+                meseVisualizzatoCalendario = java.time.YearMonth.of(now.year, now.monthValue),
+                dataCalendarioSelezionata = nowFormatted
+            )
+        }
+    }
+
+    /**
+     * Pianifica uno o più interventi di manutenzione per una lista di cantieri alla stessa data,
+     * con calcolo e generazione automatica delle ricorrenze successive future.
+     */
+    fun pianificaInterventiBatch(
+        dataPianificata: String,
+        cantieriIds: List<String>,
+        impiantiCodici: List<String> = emptyList(),
+        frequenza: Periodo,
+        manutentore: String? = null,
+        note: String? = null,
+        generaRicorrenze: Boolean = true,
+        orizzonteRicorrenzeMesi: Int = 24
+    ) {
+        if (cantieriIds.isEmpty()) {
+            _uiState.update { it.copy(errorMessage = "Seleziona almeno un cantiere per pianificare l'intervento") }
+            return
+        }
+        val cleanDate = dataPianificata.trim()
+        if (cleanDate.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "La data pianificata è obbligatoria") }
+            return
+        }
+
+        scope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            try {
+                val state = _uiState.value
+                val tuttiEventiGenerati = mutableListOf<manutenzioni.domain.model.EventoManutenzione>()
+
+                withContext(Dispatchers.IO) {
+                    for (cantiereId in cantieriIds) {
+                        val cantiere = state.tuttiCantieri.find { it.id == cantiereId }
+                            ?: repository.getCantieriForCliente("").find { it.id == cantiereId }
+                            ?: continue
+
+                        val impiantiCantiere = repository.getImpiantiForCantiere(cantiereId)
+                        val targetImpianti = if (impiantiCodici.isNotEmpty()) {
+                            impiantiCantiere.filter { it.codIntervento.uppercase() in impiantiCodici.map { c -> c.uppercase() } }
+                        } else {
+                            impiantiCantiere
+                        }
+
+                        if (targetImpianti.isEmpty()) continue
+
+                        val snapshotList = targetImpianti.map { imp ->
+                            val attivita = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveAttivita(imp, impiantiCantiere, frequenza)
+                            val attDesc = attivita.mapIndexed { idx, att ->
+                                val z = att.zona?.takeIf { it.isNotBlank() }?.let { " [$it]" } ?: ""
+                                "${idx + 1}. ${att.tipoAttivita}$z: ${att.descrizione} (${att.frequenza.label()})"
+                            }
+                            val desc = when (imp) {
+                                is QuadroBT -> if (imp.sigla.isNotBlank()) "${imp.nomeCompleto} (${imp.sigla})" else imp.nomeCompleto
+                                else -> imp.nomeCompleto
+                            }
+                            manutenzioni.domain.model.ImpiantoPianificatoSnapshot(
+                                impiantoId = imp.id,
+                                codIntervento = imp.codIntervento,
+                                descrizione = desc,
+                                periodicitaScelta = frequenza,
+                                numeroAttivitaPreviste = attivita.size,
+                                attivitaDescrizioni = attDesc
+                            )
+                        }
+
+                        val serieId = java.util.UUID.randomUUID().toString()
+                        val eventoBase = manutenzioni.domain.model.EventoManutenzione(
+                            id = java.util.UUID.randomUUID().toString(),
+                            cantiereId = cantiere.id,
+                            clienteId = cantiere.clienteId,
+                            dataPianificata = cleanDate,
+                            nomeManutentore = manutentore?.trim()?.ifBlank { null } ?: cantiere.nomeManutentore,
+                            stato = manutenzioni.domain.model.StatoEventoManutenzione.PIANIFICATO,
+                            impiantiPianificati = snapshotList,
+                            note = note?.trim()?.ifBlank { null },
+                            serieRicorrenzaId = serieId
+                        )
+                        tuttiEventiGenerati.add(eventoBase)
+
+                        if (generaRicorrenze) {
+                            val future = manutenzioni.domain.service.RicorrenzeManutenzioneEngine.generaRicorrenzeFuture(
+                                eventoBase = eventoBase,
+                                orizzonteMesi = orizzonteRicorrenzeMesi
+                            )
+                            tuttiEventiGenerati.addAll(future)
+                        }
+                    }
+
+                    repository.salvaEventiManutenzioneBatch(tuttiEventiGenerati)
+                }
+
+                val eventiRicaricati = withContext(Dispatchers.IO) { repository.caricaEventiManutenzione() }
+                _uiState.update {
+                    it.copy(
+                        eventiManutenzione = eventiRicaricati,
+                        dataCalendarioSelezionata = cleanDate,
+                        isLoading = false,
+                        statusMessage = "✓ Pianificati interventi per ${cantieriIds.size} cantieri al $cleanDate (${tuttiEventiGenerati.size} eventi totali generati con ricorrenze)",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Errore pianificazione interventi: ${e.message}") }
+            }
+        }
+    }
+
+    /**
+     * Avvia l'esecuzione di un evento dal calendario: imposta lo stato su IN_CORSO,
+     * carica il cantiere in Operatività con data e impianti dell'evento pre-selezionati.
+     */
+    fun avviaInterventoDaCalendario(evento: manutenzioni.domain.model.EventoManutenzione) {
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    repository.aggiornaStatoEvento(evento.id, manutenzioni.domain.model.StatoEventoManutenzione.IN_CORSO)
+                }
+                val eventi = withContext(Dispatchers.IO) { repository.caricaEventiManutenzione() }
+                val stateSnap = _uiState.value
+                val cantiere = stateSnap.tuttiCantieri.find { it.id == evento.cantiereId }
+                    ?: repository.getCantieriForCliente("").find { it.id == evento.cantiereId }
+                val cliente = cantiere?.let { c -> stateSnap.clienti.find { it.id == c.clienteId } }
+
+                val preselectedImpianti = evento.impiantiPianificati.associate { it.impiantoId to true }
+                val preselectedMulti = evento.impiantiPianificati.associate { it.impiantoId to setOf(it.periodicitaScelta) }
+                val preselectedSingle = evento.impiantiPianificati.associate { it.impiantoId to it.periodicitaScelta }
+
+                val updatedCantiere = cantiere?.copy(
+                    dataIntervento = evento.dataPianificata,
+                    dataInizioIntervento = evento.dataPianificata,
+                    nomeManutentore = evento.nomeManutentore ?: cantiere.nomeManutentore
+                )
+
+                if (updatedCantiere != null) {
+                    withContext(Dispatchers.IO) { repository.salvaCantiere(updatedCantiere) }
+                }
+
+                _uiState.update { state ->
+                    state.copy(
+                        currentSection = AppSection.OPERATIVITA,
+                        selectedCliente = cliente,
+                        selectedCantiere = updatedCantiere,
+                        selectedImpianto = null,
+                        impiantiSelezionati = preselectedImpianti,
+                        frequenzeSelezionatePerImpianto = preselectedMulti,
+                        frequenzePerImpianto = preselectedSingle,
+                        eventiManutenzione = eventi,
+                        statusMessage = "✓ Intervento del ${evento.dataPianificata} avviato in Operatività per '${updatedCantiere?.nome}'",
+                        errorMessage = null
+                    )
+                }
+                cantiere?.let {
+                    loadImpiantiForCantiere(it.id)
+                    loadSessioniPerCantiere(it.id)
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore avvio intervento: ${e.message}") }
+            }
+        }
+    }
+
+    /**
+     * Segna un evento di manutenzione come COMPLETATO alla data corrente.
+     */
+    fun completaEventoManutenzione(eventoId: String, dataCompletamento: String? = null) {
+        val nowFormatted = dataCompletamento ?: run {
+            val now = java.time.LocalDate.now()
+            "%02d/%02d/%04d".format(now.dayOfMonth, now.monthValue, now.year)
+        }
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    repository.aggiornaStatoEvento(
+                        id = eventoId,
+                        nuovoStato = manutenzioni.domain.model.StatoEventoManutenzione.COMPLETATO,
+                        dataCompletamento = nowFormatted
+                    )
+                }
+                val eventi = withContext(Dispatchers.IO) { repository.caricaEventiManutenzione() }
+                _uiState.update {
+                    it.copy(
+                        eventiManutenzione = eventi,
+                        statusMessage = "✓ Intervento segnato come Completato in data $nowFormatted",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore completamento intervento: ${e.message}") }
+            }
+        }
+    }
+
+    /**
+     * Elimina un evento dal calendario, con opzione per cancellare tutte le ricorrenze future della serie.
+     */
+    fun eliminaEventoManutenzione(eventoId: String, eliminaSerieFutura: Boolean = false) {
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    repository.eliminaEventoManutenzione(eventoId, eliminaSerieFutura)
+                }
+                val eventi = withContext(Dispatchers.IO) { repository.caricaEventiManutenzione() }
+                _uiState.update {
+                    it.copy(
+                        eventiManutenzione = eventi,
+                        statusMessage = if (eliminaSerieFutura) "✓ Evento e serie futura rimossi" else "✓ Evento rimosso dal calendario",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore eliminazione evento: ${e.message}") }
             }
         }
     }
