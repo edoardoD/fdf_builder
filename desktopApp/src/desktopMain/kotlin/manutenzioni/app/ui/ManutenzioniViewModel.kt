@@ -19,6 +19,8 @@ import manutenzioni.domain.model.InterruttoreBT
 import manutenzioni.domain.model.QuadroBT
 import manutenzioni.domain.model.QuadroMQT
 import manutenzioni.domain.model.MqtSwitchType
+import manutenzioni.domain.model.ImpiantoEmergenza
+import manutenzioni.domain.model.EmergenzaSiglaDoc
 import manutenzioni.domain.model.ComponentCandidate
 import manutenzioni.domain.model.ComponenteApprovato
 import manutenzioni.domain.model.VarianteProdotto
@@ -200,9 +202,10 @@ class ManutenzioniViewModel(
                 val bundledDb = json.decodeFromString(manutenzioni.app.data.ManutenzioniDatabase.serializer(), content)
                 buildMap {
                     for (imp in bundledDb.impianti) {
-                        for (att in imp.listaAttivita) {
+                        imp.listaAttivita.forEachIndexed { idx, att ->
                             if (!att.zona.isNullOrBlank()) {
-                                put(imp.codIntervento.uppercase() to att.nAttivita, att.zona)
+                                val dynamicNum = if (att.nAttivita > 0) att.nAttivita else idx + 1
+                                put(imp.codIntervento.uppercase() to dynamicNum, att.zona)
                             }
                         }
                     }
@@ -216,9 +219,10 @@ class ManutenzioniViewModel(
 
         return impianti.map { imp ->
             var changed = false
-            val updatedAttivita = imp.listaAttivita.map { att ->
+            val updatedAttivita = imp.listaAttivita.mapIndexed { idx, att ->
                 if (att.zona.isNullOrBlank()) {
-                    val mappedZona = bundledZonaMap[imp.codIntervento.uppercase() to att.nAttivita]
+                    val dynamicNum = if (att.nAttivita > 0) att.nAttivita else idx + 1
+                    val mappedZona = bundledZonaMap[imp.codIntervento.uppercase() to dynamicNum]
                     if (!mappedZona.isNullOrBlank()) {
                         changed = true
                         att.copy(zona = mappedZona)
@@ -472,11 +476,20 @@ class ManutenzioniViewModel(
         loadImpiantiForCantiere(cantiere.id)
     }
 
-    /** Aggiorna e storicizza nel database la data di inizio intervento e il nome del manutentore per il cantiere attivo */
-    fun updateDatiInterventoCantiere(dataInizio: String?, manutentore: String?) {
+    /** Aggiorna e storicizza nel database la data di inizio contratto, data intervento, data intervento precedente e il nome del manutentore per il cantiere attivo */
+    fun updateDatiInterventoCantiere(
+        dataInizioContratto: String?,
+        dataIntervento: String?,
+        dataInterventoPrecedente: String?,
+        manutentore: String?
+    ) {
         val currentCantiere = _uiState.value.selectedCantiere ?: return
+        val dataInterventoNormalized = dataIntervento?.trim()?.ifBlank { null }
         val updated = currentCantiere.copy(
-            dataInizioIntervento = dataInizio?.trim()?.ifBlank { null },
+            dataInizioContratto = dataInizioContratto?.trim()?.ifBlank { null },
+            dataIntervento = dataInterventoNormalized,
+            dataInizioIntervento = dataInterventoNormalized, // retrocompat sync
+            dataInterventoPrecedente = dataInterventoPrecedente?.trim()?.ifBlank { null },
             nomeManutentore = manutentore?.trim()?.ifBlank { null }
         )
         _uiState.update { state ->
@@ -492,6 +505,17 @@ class ManutenzioniViewModel(
                 _uiState.update { it.copy(errorMessage = "Errore salvataggio dati intervento: ${e.message}") }
             }
         }
+    }
+
+    /** Overload a 2 parametri per retrocompatibilità */
+    fun updateDatiInterventoCantiere(dataInizio: String?, manutentore: String?) {
+        val c = _uiState.value.selectedCantiere
+        updateDatiInterventoCantiere(
+            dataInizioContratto = c?.dataInizioContratto,
+            dataIntervento = dataInizio,
+            dataInterventoPrecedente = c?.dataInterventoPrecedente,
+            manutentore = manutentore
+        )
     }
 
     /** Aggiorna o rimuove la firma digitale del tecnico manutentore per il cantiere attivo (R26) */
@@ -592,6 +616,19 @@ class ManutenzioniViewModel(
         }
     }
 
+    /**
+     * Seleziona o deseleziona una lista di impianti in blocco (R3).
+     */
+    fun toggleImpiantiSelection(impiantoIds: List<String>, isSelected: Boolean) {
+        _uiState.update { state ->
+            val updated = state.impiantiSelezionati.toMutableMap()
+            impiantoIds.forEach { id ->
+                if (isSelected) updated[id] = true else updated.remove(id)
+            }
+            state.copy(impiantiSelezionati = updated)
+        }
+    }
+
     /** Imposta la frequenza scelta per uno specifico impianto (tramite codIntervento o id) */
     fun updateFrequenzaForImpianto(impiantoId: String, frequenza: Periodo) {
         _uiState.update { state ->
@@ -636,6 +673,34 @@ class ManutenzioniViewModel(
                 frequenzePerImpianto = updatedSingle,
                 frequenzeSelezionatePerImpianto = updatedMulti
             )
+        }
+    }
+
+    /**
+     * Attiva o disattiva una periodicità per più impianti del cantiere in blocco (R3).
+     * Se tutti gli impianti specificati hanno già la frequenza attiva, la rimuove (purché ciascuno mantenga almeno una frequenza).
+     * Altrimenti, aggiunge la frequenza a tutti gli impianti specificati.
+     */
+    fun toggleFrequenzaForImpianti(impiantoIds: List<String>, frequenza: Periodo) {
+        if (impiantoIds.isEmpty()) return
+        _uiState.update { state ->
+            val currentMulti = state.frequenzeSelezionatePerImpianto.toMutableMap()
+            val currentSingle = state.frequenzePerImpianto.toMutableMap()
+            val allHaveIt = impiantoIds.all { id ->
+                val set = currentMulti[id] ?: currentSingle[id]?.let { setOf(it) } ?: emptySet()
+                frequenza in set
+            }
+            impiantoIds.forEach { id ->
+                val currentSet = currentMulti[id] ?: currentSingle[id]?.let { setOf(it) } ?: emptySet()
+                val nextSet = if (allHaveIt) {
+                    if (currentSet.size > 1) currentSet - frequenza else currentSet
+                } else {
+                    currentSet + frequenza
+                }
+                currentMulti[id] = nextSet
+                nextSet.minByOrNull { it.inMesi() }?.let { primary -> currentSingle[id] = primary }
+            }
+            state.copy(frequenzePerImpianto = currentSingle, frequenzeSelezionatePerImpianto = currentMulti)
         }
     }
 
@@ -717,8 +782,8 @@ class ManutenzioniViewModel(
             val impiantiDaGenerare = state.impiantiDelCantiere.filter { it.id in impiantiSelezionatiIds }
             val cantiere = state.selectedCantiere
 
-            // Sottocartella temporale YYYY_MM (es. 2026_10) derivata da dataInizioIntervento (R29)
-            val subfolderName = resolveTemporalSubfolderName(cantiere?.dataInizioIntervento)
+            // Sottocartella temporale YYYY_MM (es. 2026_10) derivata da dataInterventoEffettiva (R29 & R4)
+            val subfolderName = resolveTemporalSubfolderName(cantiere?.dataInterventoEffettiva)
             val targetOutputDir = File(outputDir, subfolderName).apply {
                 if (!exists()) mkdirs()
             }
@@ -764,7 +829,10 @@ class ManutenzioniViewModel(
                                             statusMessage = "Generazione ${impianto.codIntervento} (${frequenza.label()})..."
                                         )
                                     }
-                                }
+                                },
+                                dataInizioContratto = cantiere?.dataInizioContratto,
+                                dataIntervento = cantiere?.effectiveDataIntervento,
+                                dataInterventoPrecedente = cantiere?.dataInterventoPrecedente
                             )
                         }
                         allGeneratedFiles.addAll(batchResult.generatedFiles)
@@ -776,6 +844,27 @@ class ManutenzioniViewModel(
                         }
                     } catch (e: Exception) {
                         totalErrors["${impianto.id}_${frequenza.codiceCartiglio()}"] = e.message ?: "Errore sconosciuto"
+                    }
+                }
+            }
+
+            // Promozione automatica della data intervento a dataInterventoPrecedente se la generazione ha successo (R4)
+            if (totalSuccessCount > 0 && totalErrors.isEmpty() && cantiere != null) {
+                val currentData = cantiere.effectiveDataIntervento
+                if (!currentData.isNullOrBlank()) {
+                    val promoted = cantiere.copy(dataInterventoPrecedente = currentData)
+                    withContext(Dispatchers.IO) {
+                        try {
+                            repository.salvaCantiere(promoted)
+                        } catch (e: Exception) {
+                            println("Warning: salvataggio promozione data cantiere fallito: ${e.message}")
+                        }
+                    }
+                    _uiState.update { state ->
+                        state.copy(
+                            selectedCantiere = promoted,
+                            cantieriDisponibili = state.cantieriDisponibili.map { if (it.id == promoted.id) promoted else it }
+                        )
                     }
                 }
             }
@@ -991,6 +1080,14 @@ class ManutenzioniViewModel(
     fun updateMqtSwitchType(impiantoId: String, switchType: MqtSwitchType) {
         val currentImpianto = _uiState.value.impiantiDelCantiere.find { it.id == impiantoId } as? QuadroMQT ?: return
         val updated = currentImpianto.withTipoInterruttore(switchType)
+        saveImpianto(updated)
+    }
+
+    /** Aggiorna la sigla documentale (EM / IS) per un ImpiantoEmergenza e persiste la modifica */
+    fun updateEmergenzaSiglaDocumentale(impiantoId: String, sigla: EmergenzaSiglaDoc) {
+        val currentImpianto = (_uiState.value.impiantiDelCantiere.find { it.id == impiantoId }
+            ?: _uiState.value.impianti.find { it.id == impiantoId }) as? ImpiantoEmergenza ?: return
+        val updated = currentImpianto.withSiglaDocumentale(sigla)
         saveImpianto(updated)
     }
 

@@ -13,11 +13,14 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Engineering
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,10 +54,13 @@ fun CantiereDetailScreen(
     onAggiornaLampadaInEmergenza: ((manutenzioni.domain.model.ImpiantoEmergenza, manutenzioni.domain.model.LampadaEmergenza) -> Unit)? = null,
     onExportStandaloneTechnicalSheet: ((manutenzioni.domain.model.Impianto) -> Unit)? = null,
     onExportCantiereInterruttoriPdf: () -> Unit = {},
-    onUpdateDatiIntervento: (String?, String?) -> Unit = { _, _ -> },
+    onUpdateDatiIntervento: (String?, String?, String?, String?) -> Unit = { _, _, _, _ -> },
+    onFrequenzaForImpiantiToggled: ((List<String>, Periodo) -> Unit)? = null,
+    onImpiantiSelectionChanged: ((List<String>, Boolean) -> Unit)? = null,
     onSelectFirmaManutentore: () -> Unit = {},
     onRemoveFirmaManutentore: () -> Unit = {},
     onUpdateMqtSwitchType: ((String, manutenzioni.domain.model.MqtSwitchType) -> Unit)? = null,
+    onUpdateEmergenzaSiglaDocumentale: ((String, manutenzioni.domain.model.EmergenzaSiglaDoc) -> Unit)? = null,
     onAddImpiantiFromTemplates: (List<Impianto>) -> Unit = { templates -> templates.forEach { onCreateNewImpianto(it) } }
 ) {
     // Gestione visualizzazione ImpiantoEditor
@@ -196,8 +202,14 @@ fun CantiereDetailScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Banner / Card Dati Intervento e Manutentore
-        var dataInizio by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataInizioIntervento) {
-            mutableStateOf(state.selectedCantiere?.dataInizioIntervento ?: "")
+        var dataInizioContratto by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataInizioContratto) {
+            mutableStateOf(state.selectedCantiere?.dataInizioContratto ?: "")
+        }
+        var dataInterventoPrecedente by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataInterventoPrecedente) {
+            mutableStateOf(state.selectedCantiere?.dataInterventoPrecedente ?: "")
+        }
+        var dataIntervento by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataIntervento, state.selectedCantiere?.dataInizioIntervento) {
+            mutableStateOf(state.selectedCantiere?.dataIntervento ?: state.selectedCantiere?.dataInizioIntervento ?: "")
         }
         var nomeManutentore by remember(state.selectedCantiere?.id, state.selectedCantiere?.nomeManutentore) {
             mutableStateOf(state.selectedCantiere?.nomeManutentore ?: "")
@@ -245,13 +257,13 @@ fun CantiereDetailScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
-                        value = dataInizio,
+                        value = dataInizioContratto,
                         onValueChange = {
-                            dataInizio = it
-                            onUpdateDatiIntervento(it, nomeManutentore)
+                            dataInizioContratto = it
+                            onUpdateDatiIntervento(it, dataIntervento, dataInterventoPrecedente, nomeManutentore)
                         },
-                        label = { Text("Data Inizio Intervento") },
-                        placeholder = { Text("GG/MM/AAAA (es. 08/10/2026)") },
+                        label = { Text("Data inizio contratto") },
+                        placeholder = { Text("GG/MM/AAAA") },
                         leadingIcon = {
                             Icon(Icons.Default.DateRange, contentDescription = null, tint = MaterialTheme.colors.primary)
                         },
@@ -264,15 +276,15 @@ fun CantiereDetailScreen(
                     )
 
                     OutlinedTextField(
-                        value = nomeManutentore,
+                        value = dataInterventoPrecedente,
                         onValueChange = {
-                            nomeManutentore = it
-                            onUpdateDatiIntervento(dataInizio, it)
+                            dataInterventoPrecedente = it
+                            onUpdateDatiIntervento(dataInizioContratto, dataIntervento, it, nomeManutentore)
                         },
-                        label = { Text("Nome Manutentore / Tecnico") },
-                        placeholder = { Text("Nome e Cognome (es. Mario Rossi)") },
+                        label = { Text("Data intervento precedente") },
+                        placeholder = { Text("GG/MM/AAAA") },
                         leadingIcon = {
-                            Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colors.primary)
+                            Icon(Icons.Default.DateRange, contentDescription = null, tint = MaterialTheme.colors.primary)
                         },
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -282,9 +294,55 @@ fun CantiereDetailScreen(
                         )
                     )
 
+                    OutlinedTextField(
+                        value = dataIntervento,
+                        onValueChange = {
+                            dataIntervento = it
+                            onUpdateDatiIntervento(dataInizioContratto, it, dataInterventoPrecedente, nomeManutentore)
+                        },
+                        label = { Text("Data intervento") },
+                        placeholder = { Text("GG/MM/AAAA") },
+                        leadingIcon = {
+                            Icon(Icons.Default.DateRange, contentDescription = null, tint = MaterialTheme.colors.primary)
+                        },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = MaterialTheme.colors.primary,
+                            unfocusedBorderColor = SlateBorder
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedTextField(
+                        value = nomeManutentore,
+                        onValueChange = {
+                            nomeManutentore = it
+                            onUpdateDatiIntervento(dataInizioContratto, dataIntervento, dataInterventoPrecedente, it)
+                        },
+                        label = { Text("Nome Manutentore / Tecnico") },
+                        placeholder = { Text("Nome e Cognome (es. Mario Rossi)") },
+                        leadingIcon = {
+                            Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colors.primary)
+                        },
+                        singleLine = true,
+                        modifier = Modifier.weight(1.2f),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = MaterialTheme.colors.primary,
+                            unfocusedBorderColor = SlateBorder
+                        )
+                    )
+
                     val hasFirma = !state.selectedCantiere?.firmaManutentore.isNullOrBlank()
                     Column(
-                        modifier = Modifier.weight(0.9f),
+                        modifier = Modifier.weight(0.8f),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Row(
@@ -405,6 +463,7 @@ fun CantiereDetailScreen(
                             impiantoInEliminazione = impianto
                             showDeleteImpiantoDialog = true
                         },
+                        onBulkSelectionChanged = onImpiantiSelectionChanged,
                         modifier = Modifier.weight(1f).fillMaxWidth()
                     )
                 }
@@ -436,7 +495,159 @@ fun CantiereDetailScreen(
                             if (impiantiAttivi.isEmpty()) {
                                 Text("Seleziona almeno un impianto dalla lista a sinistra.", color = MaterialTheme.colors.error, style = MaterialTheme.typography.body2)
                             } else {
-                                impiantiAttivi.forEach { impianto ->
+                                val quadriAttivi = impiantiAttivi.filterIsInstance<manutenzioni.domain.model.QuadroBT>()
+                                val altriImpiantiAttivi = impiantiAttivi.filter { it !is manutenzioni.domain.model.QuadroBT }
+
+                                if (quadriAttivi.isNotEmpty()) {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                                        elevation = 0.dp,
+                                        border = BorderStroke(1.dp, SlateBorder),
+                                        shape = RoundedCornerShape(8.dp),
+                                        backgroundColor = MaterialTheme.colors.surface
+                                    ) {
+                                        Column(modifier = Modifier.padding(12.dp)) {
+                                            Text(
+                                                text = "Quadri Elettrici selezionati (${quadriAttivi.size})",
+                                                fontWeight = FontWeight.Bold,
+                                                style = MaterialTheme.typography.subtitle2,
+                                                color = MaterialTheme.colors.primary
+                                            )
+                                            Text(
+                                                text = "Imposta le periodicità per tutti i quadri attivi",
+                                                style = MaterialTheme.typography.caption,
+                                                color = MaterialTheme.colors.secondary
+                                            )
+                                            Spacer(modifier = Modifier.height(8.dp))
+
+                                            val frequenzeDisponibiliQuadri = quadriAttivi
+                                                .flatMap { manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(it, state.impiantiDelCantiere) }
+                                                .distinct()
+                                                .sortedBy { it.inMesi() }
+
+                                            if (frequenzeDisponibiliQuadri.isEmpty()) {
+                                                Text("Nessuna attività registrata per i quadri selezionati.", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.error)
+                                            } else {
+                                                frequenzeDisponibiliQuadri.forEach { periodo ->
+                                                    val matchingCount = quadriAttivi.count { quadro ->
+                                                        val selectedFreqs = state.frequenzeSelezionatePerImpianto[quadro.id]
+                                                            ?: state.frequenzePerImpianto[quadro.id]?.let { setOf(it) }
+                                                            ?: emptySet()
+                                                        periodo in selectedFreqs
+                                                    }
+                                                    val triState = when {
+                                                        matchingCount == 0 -> ToggleableState.Off
+                                                        matchingCount == quadriAttivi.size -> ToggleableState.On
+                                                        else -> ToggleableState.Indeterminate
+                                                    }
+
+                                                    val onToggleBulkFreq = {
+                                                        if (onFrequenzaForImpiantiToggled != null) {
+                                                            onFrequenzaForImpiantiToggled(quadriAttivi.map { it.id }, periodo)
+                                                        } else {
+                                                            quadriAttivi.forEach { onFrequenzaPerImpiantoToggled(it.id, periodo) }
+                                                        }
+                                                    }
+
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .clickable { onToggleBulkFreq() }
+                                                            .padding(vertical = 2.dp),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        TriStateCheckbox(
+                                                            state = triState,
+                                                            onClick = onToggleBulkFreq,
+                                                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
+                                                        )
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Text(
+                                                            text = periodo.label(),
+                                                            style = MaterialTheme.typography.body2
+                                                        )
+                                                        if (matchingCount > 0 && matchingCount < quadriAttivi.size) {
+                                                            Spacer(modifier = Modifier.width(6.dp))
+                                                            Text(
+                                                                text = "($matchingCount/${quadriAttivi.size})",
+                                                                style = MaterialTheme.typography.caption,
+                                                                color = MaterialTheme.colors.secondary
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Divider()
+
+                                            var expandPersonalizzaQuadri by remember { mutableStateOf(false) }
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clickable { expandPersonalizzaQuadri = !expandPersonalizzaQuadri }
+                                                    .padding(top = 8.dp, bottom = 4.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "Personalizza singoli quadri (${quadriAttivi.size})",
+                                                    style = MaterialTheme.typography.caption,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = MaterialTheme.colors.primary
+                                                )
+                                                Icon(
+                                                    imageVector = if (expandPersonalizzaQuadri) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colors.primary,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+
+                                            if (expandPersonalizzaQuadri) {
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(start = 12.dp, top = 4.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    quadriAttivi.forEach { quadro ->
+                                                        val frequenzeDisp = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(quadro, state.impiantiDelCantiere)
+                                                        val selectedFreqs = state.frequenzeSelezionatePerImpianto[quadro.id]
+                                                            ?: state.frequenzePerImpianto[quadro.id]?.let { setOf(it) }
+                                                            ?: emptySet()
+                                                        val displayLabel = if (quadro.sigla.isNotBlank()) "${quadro.codIntervento} - ${quadro.sigla}" else quadro.nomeCompleto
+                                                        Text(text = displayLabel, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.caption, modifier = Modifier.padding(top = 4.dp))
+                                                        
+                                                        frequenzeDisp.forEach { periodo ->
+                                                            val isChecked = periodo in selectedFreqs
+                                                            Row(
+                                                                modifier = Modifier
+                                                                    .fillMaxWidth()
+                                                                    .clickable { onFrequenzaPerImpiantoToggled(quadro.id, periodo) }
+                                                                    .padding(vertical = 1.dp),
+                                                                verticalAlignment = Alignment.CenterVertically
+                                                            ) {
+                                                                Checkbox(
+                                                                    checked = isChecked,
+                                                                    onCheckedChange = { onFrequenzaPerImpiantoToggled(quadro.id, periodo) },
+                                                                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
+                                                                )
+                                                                Spacer(modifier = Modifier.width(6.dp))
+                                                                Text(
+                                                                    text = periodo.label(),
+                                                                    style = MaterialTheme.typography.caption
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                altriImpiantiAttivi.forEach { impianto ->
                                     val frequenzeDisp = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(impianto, state.impiantiDelCantiere)
                                     val selectedFreqs = state.frequenzeSelezionatePerImpianto[impianto.id]
                                         ?: state.frequenzePerImpianto[impianto.id]?.let { setOf(it) }
@@ -477,6 +688,39 @@ fun CantiereDetailScreen(
                                         }
                                     }
 
+                                    if (impianto is manutenzioni.domain.model.ImpiantoEmergenza) {
+                                        Text(
+                                            text = "Sigla Documentale:",
+                                            style = MaterialTheme.typography.caption,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colors.primary,
+                                            modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
+                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            manutenzioni.domain.model.EmergenzaSiglaDoc.values().forEach { sigla ->
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.clickable {
+                                                        onUpdateEmergenzaSiglaDocumentale?.invoke(impianto.id, sigla)
+                                                    }
+                                                ) {
+                                                    RadioButton(
+                                                        selected = impianto.siglaDocumentale == sigla,
+                                                        onClick = { onUpdateEmergenzaSiglaDocumentale?.invoke(impianto.id, sigla) },
+                                                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary),
+                                                        modifier = Modifier.size(24.dp)
+                                                    )
+                                                    Spacer(Modifier.width(2.dp))
+                                                    Text(sigla.displayLabel, fontSize = 12.sp)
+                                                }
+                                            }
+                                        }
+                                    }
+
                                     if (frequenzeDisp.isEmpty()) {
                                         Text("Nessuna attività registrata per questo modulo.", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.error)
                                     } else {
@@ -496,7 +740,7 @@ fun CantiereDetailScreen(
                                                 )
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Text(
-                                                    text = "${periodo.label()} (cod. ${periodo.codiceCartiglio()})",
+                                                    text = periodo.label(),
                                                     style = MaterialTheme.typography.body2
                                                 )
                                             }

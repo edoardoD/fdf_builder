@@ -105,7 +105,49 @@ data class ImpiantoEmergenza(
         premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative, 
         cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche
     )
+
+    fun withSiglaDocumentale(sigla: EmergenzaSiglaDoc): ImpiantoEmergenza =
+        copy(
+            codIntervento = sigla.codIntervento,
+            nomeCompleto = sigla.nomeCompleto
+        )
+
+    val siglaDocumentale: EmergenzaSiglaDoc
+        get() = EmergenzaSiglaDoc.fromCod(codIntervento)
 }
+
+@Serializable
+enum class EmergenzaSiglaDoc(
+    val codIntervento: String,
+    val label: String,
+    val nomeCompleto: String
+) {
+    EM(
+        codIntervento = "EM",
+        label = "Illuminazione di emergenza",
+        nomeCompleto = "Illuminazione di emergenza"
+    ),
+    IS(
+        codIntervento = "IS",
+        label = "Illuminazione di sicurezza",
+        nomeCompleto = "Illuminazione di sicurezza"
+    );
+
+    val labelBreve: String
+        get() = when (this) {
+            EM -> "Emergenza"
+            IS -> "Sicurezza"
+        }
+
+    val displayLabel: String
+        get() = "$codIntervento ($labelBreve)"
+
+    companion object {
+        fun fromCod(cod: String?): EmergenzaSiglaDoc =
+            if (cod?.equals("IS", ignoreCase = true) == true) IS else EM
+    }
+}
+
 
 /**
  * Interfaccia per impianti di rilevazione/allarme che dispongono di conteggio o inventario
@@ -342,9 +384,10 @@ enum class TipoComponenteStandard {
 
 @Serializable
 data class Attivita(
-    val nAttivita: Int,
-    val tipoAttivita: String?,
-    val descrizione: String?,
+    @kotlinx.serialization.Transient
+    val nAttivita: Int = 0,
+    val tipoAttivita: String? = null,
+    val descrizione: String? = null,
     val frequenza: Periodo, // Ordinamento basato su questo oggetto
     val visibile: Boolean = true, // Per gestire la visibilità condizionale (es. attività custom Antincendio)
     val componentRef: String? = null, // ID del componente che attiva questa attività
@@ -405,13 +448,69 @@ data class Cantiere(
     val id: String,
     val nome: String,
     val clienteId: String,
+    @Deprecated("Usare dataIntervento; mantenuto per retrocompatibilità JSON/BSON", ReplaceWith("dataIntervento"))
     val dataInizioIntervento: String? = null,
+    val dataInizioContratto: String? = null,
+    val dataIntervento: String? = null,
+    val dataInterventoPrecedente: String? = null,
     val nomeManutentore: String? = null,
     /** Indirizzo della sede operativa / cantiere (R3). Opzionale per retrocompatibilità. */
     val indirizzo: String? = null,
     /** Percorso o Data URI base64 della firma digitale del tecnico manutentore (R26). */
     val firmaManutentore: String? = null
-)
+) {
+    /**
+     * Data intervento effettiva con fallback automatico su [dataInizioIntervento]
+     * per garantire retrocompatibilità trasparente con record legacy JSON e MongoDB.
+     */
+    val effectiveDataIntervento: String?
+        get() = dataIntervento?.trim()?.ifBlank { null } ?: dataInizioIntervento?.trim()?.ifBlank { null }
+
+    /**
+     * Alias italiano per [effectiveDataIntervento].
+     */
+    val dataInterventoEffettiva: String?
+        get() = effectiveDataIntervento
+}
+
+/**
+ * Normalizza le date del cantiere, migrando [dataInizioIntervento] su [dataIntervento] se non ancora valorizzato.
+ * Garantisce la sincronizzazione bidirezionale tra dataIntervento e il campo legacy dataInizioIntervento.
+ */
+fun Cantiere.normalizeDates(): Cantiere {
+    val eff = effectiveDataIntervento
+    val trimmedContratto = dataInizioContratto?.trim()?.ifBlank { null }
+    val trimmedPrecedente = dataInterventoPrecedente?.trim()?.ifBlank { null }
+    return if (dataInizioContratto != trimmedContratto ||
+        dataInterventoPrecedente != trimmedPrecedente ||
+        dataIntervento != eff ||
+        dataInizioIntervento != eff
+    ) {
+        copy(
+            dataInizioContratto = trimmedContratto,
+            dataIntervento = eff,
+            dataInizioIntervento = eff,
+            dataInterventoPrecedente = trimmedPrecedente
+        )
+    } else {
+        this
+    }
+}
+
+/**
+ * Promuove l'attuale data intervento (da [effectiveDataIntervento]) a [dataInterventoPrecedente],
+ * impostando opzionalmente la nuova data di intervento sia su [dataIntervento] che su [dataInizioIntervento].
+ */
+fun Cantiere.promoteInterventoToPrecedente(nuovaDataIntervento: String? = null): Cantiere {
+    val currentEffettiva = effectiveDataIntervento
+    val trimmedNuova = nuovaDataIntervento?.trim()?.ifBlank { null }
+    return copy(
+        dataInterventoPrecedente = currentEffettiva ?: dataInterventoPrecedente,
+        dataIntervento = trimmedNuova,
+        dataInizioIntervento = trimmedNuova
+    )
+}
+
 
 /**
  * Normalizza il tipo concreto dell'impianto a partire dal suo codice intervento,
@@ -419,6 +518,9 @@ data class Cantiere(
  * come la rispettiva sottoclasse polimorfica (QuadroBT, ImpiantoEmergenza, RilevazioneAntincendio, RilevazioneGas).
  */
 fun Impianto.normalizeType(): Impianto {
+    val numberedAttivita = listaAttivita.mapIndexed { idx, att ->
+        if (att.nAttivita == idx + 1) att else att.copy(nAttivita = idx + 1)
+    }
     return when {
         this !is ImpiantoEmergenza && (codIntervento.equals("EM", ignoreCase = true) || codIntervento.equals("IS", ignoreCase = true)) -> {
             ImpiantoEmergenza(
@@ -426,7 +528,7 @@ fun Impianto.normalizeType(): Impianto {
                 codIntervento = codIntervento,
                 nomeCompleto = nomeCompleto,
                 premessa = premessa,
-                listaAttivita = listaAttivita,
+                listaAttivita = numberedAttivita,
                 listaNormative = listaNormative,
                 cantiereId = cantiereId,
                 quantita = quantita,
@@ -440,7 +542,7 @@ fun Impianto.normalizeType(): Impianto {
                 codIntervento = codIntervento,
                 nomeCompleto = nomeCompleto,
                 premessa = premessa,
-                listaAttivita = listaAttivita,
+                listaAttivita = numberedAttivita,
                 listaNormative = listaNormative,
                 cantiereId = cantiereId,
                 quantita = quantita,
@@ -456,7 +558,7 @@ fun Impianto.normalizeType(): Impianto {
                 codIntervento = codIntervento,
                 nomeCompleto = nomeCompleto,
                 premessa = premessa,
-                listaAttivita = listaAttivita,
+                listaAttivita = numberedAttivita,
                 listaNormative = listaNormative,
                 cantiereId = cantiereId,
                 quantita = quantita,
@@ -472,7 +574,7 @@ fun Impianto.normalizeType(): Impianto {
                 codIntervento = codIntervento,
                 nomeCompleto = nomeCompleto,
                 premessa = premessa,
-                listaAttivita = listaAttivita,
+                listaAttivita = numberedAttivita,
                 listaNormative = listaNormative,
                 cantiereId = cantiereId,
                 quantita = quantita,
@@ -485,7 +587,7 @@ fun Impianto.normalizeType(): Impianto {
                 codIntervento = codIntervento,
                 nomeCompleto = nomeCompleto,
                 premessa = premessa,
-                listaAttivita = listaAttivita,
+                listaAttivita = numberedAttivita,
                 listaNormative = listaNormative,
                 cantiereId = cantiereId,
                 quantita = quantita,
@@ -493,7 +595,7 @@ fun Impianto.normalizeType(): Impianto {
                 tipoInterruttore = (this as? QuadroMQT)?.tipoInterruttore
             )
         }
-        else -> this
+        else -> if (numberedAttivita != listaAttivita) copyWithBasicParams(listaAttivita = numberedAttivita) else this
     }
 }
 

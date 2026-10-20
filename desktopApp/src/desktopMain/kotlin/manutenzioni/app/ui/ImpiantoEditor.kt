@@ -476,53 +476,36 @@ fun ImpiantoEditor(
                     }
                 }
                 if (isEmergenza) {
+                    val currentSigla = EmergenzaSiglaDoc.fromCod(codIntervento)
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text("Sigla Documentale:", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable {
-                                codIntervento = "EM"
-                                if (nomeCompleto.isBlank() || nomeCompleto.equals("Illuminazione di sicurezza", ignoreCase = true)) {
-                                    nomeCompleto = "Illuminazione di emergenza"
-                                }
-                            }
-                        ) {
-                            RadioButton(
-                                selected = codIntervento.equals("EM", ignoreCase = true),
-                                onClick = {
-                                    codIntervento = "EM"
-                                    if (nomeCompleto.isBlank() || nomeCompleto.equals("Illuminazione di sicurezza", ignoreCase = true)) {
-                                        nomeCompleto = "Illuminazione di emergenza"
+                        EmergenzaSiglaDoc.values().forEach { sigla ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable {
+                                    codIntervento = sigla.codIntervento
+                                    if (nomeCompleto.isBlank() || EmergenzaSiglaDoc.values().any { it.nomeCompleto.equals(nomeCompleto.trim(), ignoreCase = true) }) {
+                                        nomeCompleto = sigla.nomeCompleto
                                     }
                                 }
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Text("EM (Emergenza)", fontSize = 13.sp)
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable {
-                                codIntervento = "IS"
-                                if (nomeCompleto.isBlank() || nomeCompleto.equals("Illuminazione di emergenza", ignoreCase = true)) {
-                                    nomeCompleto = "Illuminazione di sicurezza"
-                                }
+                            ) {
+                                RadioButton(
+                                    selected = currentSigla == sigla,
+                                    onClick = {
+                                        codIntervento = sigla.codIntervento
+                                        if (nomeCompleto.isBlank() || EmergenzaSiglaDoc.values().any { it.nomeCompleto.equals(nomeCompleto.trim(), ignoreCase = true) }) {
+                                            nomeCompleto = sigla.nomeCompleto
+                                        }
+                                    },
+                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(sigla.displayLabel, fontSize = 13.sp)
                             }
-                        ) {
-                            RadioButton(
-                                selected = codIntervento.equals("IS", ignoreCase = true),
-                                onClick = {
-                                    codIntervento = "IS"
-                                    if (nomeCompleto.isBlank() || nomeCompleto.equals("Illuminazione di emergenza", ignoreCase = true)) {
-                                        nomeCompleto = "Illuminazione di sicurezza"
-                                    }
-                                }
-                            )
-                            Spacer(Modifier.width(4.dp))
-                            Text("IS (Sicurezza)", fontSize = 13.sp)
                         }
                     }
                 }
@@ -1020,9 +1003,7 @@ fun ImpiantoEditor(
                 fontWeight = FontWeight.SemiBold
             )
             TextButton(onClick = {
-                val newNum = (attivitaList.maxOfOrNull { it.nAttivita } ?: 0) + 1
                 attivitaList = attivitaList + Attivita(
-                    nAttivita = newNum,
                     tipoAttivita = "Controllo visivo",
                     descrizione = "",
                     frequenza = Periodo(TipoPeriodo.M, 1)
@@ -1035,8 +1016,9 @@ fun ImpiantoEditor(
         }
         }
 
-        itemsIndexed(attivitaList, key = { idx, att -> "${att.nAttivita}_$idx" }) { index, att ->
+        itemsIndexed(attivitaList, key = { idx, att -> "${idx}_${att.tipoAttivita}_${att.descrizione}" }) { index, att ->
                 AttivitaCard(
+                    numeroAttivita = index + 1,
                     attivita = att,
                     onUpdate = { updated ->
                         attivitaList = attivitaList.toMutableList().also { it[index] = updated }
@@ -1054,6 +1036,7 @@ fun ImpiantoEditor(
  */
 @Composable
 private fun AttivitaCard(
+    numeroAttivita: Int,
     attivita: Attivita,
     onUpdate: (Attivita) -> Unit,
     onDelete: () -> Unit
@@ -1073,7 +1056,7 @@ private fun AttivitaCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Attività #${attivita.nAttivita}",
+                    text = "Attività #$numeroAttivita",
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
                     color = MaterialTheme.colors.primary
