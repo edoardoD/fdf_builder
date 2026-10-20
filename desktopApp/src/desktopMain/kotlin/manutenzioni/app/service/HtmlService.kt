@@ -46,7 +46,10 @@ class HtmlService(
         cantiereNome: String?,
         dataInizioIntervento: String?,
         nomeManutentore: String?,
-        firmaManutentore: String?
+        firmaManutentore: String?,
+        dataInizioContratto: String?,
+        dataIntervento: String?,
+        dataInterventoPrecedente: String?
     ): String {
         var html = loadTemplate()
 
@@ -70,6 +73,7 @@ class HtmlService(
             impianto.nomeCompleto
         }
         html = html.replace("<!-- COD_SCHEDA -->", escapeHtml(cod))
+        html = html.replace("<!-- COD_IMPIANTO -->", escapeHtml(impianto.codIntervento))
         html = html.replace("<!-- OGGETTO -->", escapeHtml(oggetto))
         html = html.replace("<!-- PERIODICITA -->", escapeHtml(frequenza.codiceCartiglio()))
 
@@ -107,14 +111,43 @@ class HtmlService(
         }
         html = html.replace("<p>Cliente</p>", "<p>$clienteText</p>")
 
-        // Precompilazione AcroForm starting_date con dataInizioIntervento (R24)
-        if (!dataInizioIntervento.isNullOrBlank()) {
-            val escapedDate = escapeHtml(dataInizioIntervento.trim())
+        // Precompilazione AcroForm starting_date (Data inizio contratto / fallback dataInizioIntervento)
+        val contrattoDate = dataInizioContratto?.trim()?.ifBlank { null }
+            ?: dataInizioIntervento?.trim()?.ifBlank { null }
+        if (!contrattoDate.isNullOrBlank()) {
+            val escapedDate = escapeHtml(contrattoDate)
+            html = html.replace("value=\"<!-- DATA_INIZIO_CONTRATTO -->\"", "value=\"$escapedDate\"")
+            html = html.replace("<!-- DATA_INIZIO_CONTRATTO -->", escapedDate)
             html = html.replace("value=\"<!-- DATA_INIZIO -->\"", "value=\"$escapedDate\"")
             html = html.replace("<!-- DATA_INIZIO -->", escapedDate)
         } else {
+            html = html.replace(" value=\"<!-- DATA_INIZIO_CONTRATTO -->\"", "")
+            html = html.replace("<!-- DATA_INIZIO_CONTRATTO -->", "")
             html = html.replace(" value=\"<!-- DATA_INIZIO -->\"", "")
             html = html.replace("<!-- DATA_INIZIO -->", "")
+        }
+
+        // Precompilazione AcroForm previous_date (Data intervento precedente)
+        val precedenteDate = dataInterventoPrecedente?.trim()?.ifBlank { null }
+        if (!precedenteDate.isNullOrBlank()) {
+            val escapedDate = escapeHtml(precedenteDate)
+            html = html.replace("value=\"<!-- DATA_PRECEDENTE -->\"", "value=\"$escapedDate\"")
+            html = html.replace("<!-- DATA_PRECEDENTE -->", escapedDate)
+        } else {
+            html = html.replace(" value=\"<!-- DATA_PRECEDENTE -->\"", "")
+            html = html.replace("<!-- DATA_PRECEDENTE -->", "")
+        }
+
+        // Precompilazione AcroForm actual_date (Data intervento / fallback dataInizioIntervento)
+        val interventoDate = dataIntervento?.trim()?.ifBlank { null }
+            ?: dataInizioIntervento?.trim()?.ifBlank { null }
+        if (!interventoDate.isNullOrBlank()) {
+            val escapedDate = escapeHtml(interventoDate)
+            html = html.replace("value=\"<!-- DATA_INTERVENTO -->\"", "value=\"$escapedDate\"")
+            html = html.replace("<!-- DATA_INTERVENTO -->", escapedDate)
+        } else {
+            html = html.replace(" value=\"<!-- DATA_INTERVENTO -->\"", "")
+            html = html.replace("<!-- DATA_INTERVENTO -->", "")
         }
 
         // Iniezione Verificatore/Manutentore (R25)
@@ -144,7 +177,8 @@ class HtmlService(
                     clienteNome = clienteNome,
                     cantiereNome = cantiereNome,
                     dataInizioIntervento = dataInizioIntervento,
-                    nomeManutentore = nomeManutentore
+                    nomeManutentore = nomeManutentore,
+                    dataInizioContratto = dataInizioContratto
                 )
             }
 
@@ -221,13 +255,20 @@ class HtmlService(
         val esiti = listOf("P", "PI", "NA", "NP", "VN", "B")
         val codImpianto = impianto.codIntervento
 
-        attivita.forEachIndexed { index, att ->
+        // Ordinamento canonico delle attività da 01-06 (Mesi) a 1-n (Anni), preservando l'ordine relativo
+        val attivitaOrdinate = attivita.sortedWith(
+            compareBy<Attivita> { it.frequenza.inMesi() }
+                .thenBy { if (it.frequenza.tipo == manutenzioni.domain.model.TipoPeriodo.M) 0 else 1 }
+                .thenBy { it.frequenza.valore }
+        )
+
+        attivitaOrdinate.forEachIndexed { index, att ->
             val rowNum = index + 1
             val radioName = "esito_${codImpianto}_${rowNum}"
 
-            // Risoluzione testo colonna Zona (R32):
+            // Risoluzione testo colonna Zona (R32 & R3):
             // Se att.zona è presente, usa la zona (con sostituzione dello switch type per QuadroMQT).
-            // Rimosso il fallback sulla periodicità.
+            // Se assente o vuota, riempie comunque la casella con il generico "attività".
             val colZonaText = when {
                 !att.zona.isNullOrBlank() -> {
                     if (att.zona.equals("interruttore", ignoreCase = true) && impianto is QuadroMQT) {
@@ -236,13 +277,14 @@ class HtmlService(
                         att.zona
                     }
                 }
-                else -> ""
+                else -> "attività"
             }
 
             sb.appendLine("""                <tr class="row--data">""")
-            sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(att.nAttivita.toString())}</p></td>""")
+            sb.appendLine("""                    <td class="cell--data-empty"><p>$rowNum</p></td>""")
             sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(att.tipoAttivita ?: "")}</p></td>""")
             sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(colZonaText)}</p></td>""")
+            sb.appendLine("""                    <td class="cell--data-empty"><p>${escapeHtml(att.frequenza.codiceCartiglio())}</p></td>""")
             sb.appendLine("""                    <td class="cell--data-empty"><p style="text-align:justify;">${escapeHtml(att.descrizione ?: "")}</p></td>""")
             // Colonne esito con radio button:
             // P, PI, NA, NP, B appartengono al radio group principale (mutuamente esclusivo tra loro).
@@ -267,19 +309,49 @@ class HtmlService(
             sb.appendLine("""                </tr>""")
         }
 
-        // Griglia fissa a 30 righe (R23): se N < 30, genera 30 - N righe neutre di riempimento (non compilabili)
+        // Griglia fissa a 30 righe (R2 & R23): se N < 30, genera campi AcroForm compilabili su tutte le righe N+1..30
         val targetRows = 30
         if (attivita.size < targetRows) {
             for (fillerIndex in (attivita.size + 1)..targetRows) {
+                val fillerRadioName = "esito_${codImpianto}_${fillerIndex}"
+                val fillerNoteId = "note_${codImpianto}_${fillerIndex}"
+                val fillerTipoId = "tipo_${codImpianto}_${fillerIndex}"
+                val fillerZonaId = "zona_${codImpianto}_${fillerIndex}"
+                val fillerPeriodicitaId = "periodicita_${codImpianto}_${fillerIndex}"
+                val fillerAttivitaId = "attivita_${codImpianto}_${fillerIndex}"
+
                 sb.appendLine("""                <tr class="row--data">""")
                 sb.appendLine("""                    <td class="cell--data-empty"><p>$fillerIndex</p></td>""")
-                sb.appendLine("""                    <td class="cell--data-empty"></td>""")
-                sb.appendLine("""                    <td class="cell--data-empty"></td>""")
-                sb.appendLine("""                    <td class="cell--data-empty"></td>""")
-                for (i in 1..6) {
-                    sb.appendLine("""                    <td class="cell--data-empty"></td>""")
+                sb.appendLine("""                    <td class="cell--data-empty">""")
+                sb.appendLine("""                        <input type="text" name="$fillerTipoId" id="$fillerTipoId" />""")
+                sb.appendLine("""                        <label for="$fillerTipoId" class="visually-hidden">Tipo di Attività</label>""")
+                sb.appendLine("""                    </td>""")
+                sb.appendLine("""                    <td class="cell--data-empty">""")
+                sb.appendLine("""                        <input type="text" name="$fillerZonaId" id="$fillerZonaId" />""")
+                sb.appendLine("""                        <label for="$fillerZonaId" class="visually-hidden">Zona</label>""")
+                sb.appendLine("""                    </td>""")
+                sb.appendLine("""                    <td class="cell--data-empty">""")
+                sb.appendLine("""                        <input type="text" name="$fillerPeriodicitaId" id="$fillerPeriodicitaId" />""")
+                sb.appendLine("""                        <label for="$fillerPeriodicitaId" class="visually-hidden">Periodicità</label>""")
+                sb.appendLine("""                    </td>""")
+                sb.appendLine("""                    <td class="cell--data-empty">""")
+                sb.appendLine("""                        <input type="text" name="$fillerAttivitaId" id="$fillerAttivitaId" />""")
+                sb.appendLine("""                        <label for="$fillerAttivitaId" class="visually-hidden">Attività</label>""")
+                sb.appendLine("""                    </td>""")
+
+                for (esito in esiti) {
+                    val fieldName = if (esito == "VN") "esito_vn_${codImpianto}_${fillerIndex}" else fillerRadioName
+                    val id = "${fillerRadioName}_${esito.lowercase()}"
+                    sb.appendLine("""                    <td class="cell--data-empty">""")
+                    sb.appendLine("""                        <input type="radio" name="$fieldName" id="$id" value="$esito" />""")
+                    sb.appendLine("""                        <label for="$id" class="visually-hidden">$esito</label>""")
+                    sb.appendLine("""                    </td>""")
                 }
-                sb.appendLine("""                    <td class="cell--data-standard"></td>""")
+
+                sb.appendLine("""                    <td class="cell--data-standard">""")
+                sb.appendLine("""                        <input type="text" name="$fillerNoteId" id="$fillerNoteId" />""")
+                sb.appendLine("""                        <label for="$fillerNoteId" class="visually-hidden">Nota</label>""")
+                sb.appendLine("""                    </td>""")
                 sb.appendLine("""                    <td class="cell--spacer"></td>""")
                 sb.appendLine("""                </tr>""")
             }
