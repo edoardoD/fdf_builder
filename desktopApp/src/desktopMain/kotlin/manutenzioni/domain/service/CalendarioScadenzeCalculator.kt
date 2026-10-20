@@ -1,7 +1,10 @@
 package manutenzioni.domain.service
 
 import manutenzioni.domain.model.Cantiere
+import manutenzioni.domain.model.CantiereScadenzaInMese
+import manutenzioni.domain.model.Cliente
 import manutenzioni.domain.model.Impianto
+import manutenzioni.domain.model.MeseScadenzaGlobaleGroup
 import manutenzioni.domain.model.MeseScadenzaGroup
 import manutenzioni.domain.model.QuadroBT
 import manutenzioni.domain.model.ScadenzaImpiantoItem
@@ -9,7 +12,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
- * Motore puro di dominio per il calcolo del Calendario Scadenze (R27).
+ * Motore puro di dominio per il calcolo del Calendario Scadenze (R27), sia per singolo cantiere
+ * sia aggregato a livello globale su tutti i cantieri.
  *
  * A partire dalla data di inizio contratto / inizio attività del cantiere e dalle frequenze
  * degli impianti configurati, proietta le scadenze future su un orizzonte di N mesi,
@@ -56,7 +60,7 @@ object CalendarioScadenzeCalculator {
     }
 
     /**
-     * Calcola le scadenze mensili raggruppate per il cantiere su un orizzonte di [mesiOrizzonte] mesi.
+     * Calcola le scadenze mensili raggruppate per un singolo cantiere su un orizzonte di [mesiOrizzonte] mesi.
      */
     fun calcolaScadenze(
         cantiere: Cantiere,
@@ -107,6 +111,11 @@ object CalendarioScadenzeCalculator {
                         impianto.codIntervento
                     }
 
+                    val attivitaFormattate = attivitaRisolte.mapIndexed { idx, att ->
+                        val zonaLabel = att.zona?.takeIf { it.isNotBlank() }?.let { " [$it]" } ?: ""
+                        "${idx + 1}. ${att.tipoAttivita}$zonaLabel: ${att.descrizione} (${att.frequenza.label()})"
+                    }
+
                     scadenzeMese.add(
                         ScadenzaImpiantoItem(
                             impiantoId = impianto.id,
@@ -114,7 +123,8 @@ object CalendarioScadenzeCalculator {
                             descrizioneImpianto = descrizione,
                             frequenzaMassima = freqMassima,
                             frequenzeIncluse = frequenzeInScadenza,
-                            numeroAttivita = attivitaRisolte.size
+                            numeroAttivita = attivitaRisolte.size,
+                            attivitaInScadenza = attivitaFormattate
                         )
                     )
                 }
@@ -136,5 +146,70 @@ object CalendarioScadenzeCalculator {
         }
 
         return groups
+    }
+
+    /**
+     * Calcola il Calendario Globale Multi-Cantiere aggregando per mese (`annoMese`, es. `"2026-05"` / `"Maggio 2026"`)
+     * tutti i cantieri che presentano impianti e attività in scadenza su un orizzonte di [mesiOrizzonte] mesi.
+     */
+    fun calcolaScadenzeGlobali(
+        clienti: List<Cliente>,
+        cantieri: List<Cantiere>,
+        tuttiImpianti: List<Impianto>,
+        mesiOrizzonte: Int = 12,
+        fallbackDate: LocalDate = LocalDate.of(2026, 1, 1)
+    ): List<MeseScadenzaGlobaleGroup> {
+        if (cantieri.isEmpty() || mesiOrizzonte <= 0) return emptyList()
+
+        val clientiById = clienti.associateBy { it.id }
+        val impiantiByCantiere = tuttiImpianti
+            .filter { !it.cantiereId.isNullOrBlank() }
+            .groupBy { it.cantiereId!! }
+
+        // Mappa ordinabile per annoMese ("2026-05") -> (etichettaMese, lista CantiereScadenzaInMese)
+        val bucketPerMese = linkedMapOf<String, Pair<String, MutableList<CantiereScadenzaInMese>>>()
+
+        for (cantiere in cantieri) {
+            val impiantiCantiere = impiantiByCantiere[cantiere.id].orEmpty()
+            if (impiantiCantiere.isEmpty()) continue
+
+            val cliente = clientiById[cantiere.clienteId]
+            val scadenzeCantiere = calcolaScadenze(
+                cantiere = cantiere,
+                impianti = impiantiCantiere,
+                mesiOrizzonte = mesiOrizzonte,
+                fallbackDate = fallbackDate
+            )
+
+            for (meseGroup in scadenzeCantiere) {
+                val entry = bucketPerMese.getOrPut(meseGroup.annoMese) {
+                    meseGroup.etichettaMese to mutableListOf()
+                }
+                entry.second.add(
+                    CantiereScadenzaInMese(
+                        cantiere = cantiere,
+                        cliente = cliente,
+                        dataPrevista = meseGroup.dataPrevista,
+                        indiceMeseDalContratto = meseGroup.indiceMese,
+                        scadenzeImpianti = meseGroup.scadenze
+                    )
+                )
+            }
+        }
+
+        return bucketPerMese.entries
+            .sortedBy { it.key }
+            .map { (annoMese, pair) ->
+                val (etichetta, cantieriList) = pair
+                val sortedCantieri = cantieriList.sortedWith(
+                    compareBy<CantiereScadenzaInMese> { it.cliente?.nome?.lowercase() ?: "" }
+                        .thenBy { it.cantiere.nome.lowercase() }
+                )
+                MeseScadenzaGlobaleGroup(
+                    annoMese = annoMese,
+                    etichettaMese = etichetta,
+                    cantieriInScadenza = sortedCantieri
+                )
+            }
     }
 }

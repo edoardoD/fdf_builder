@@ -89,7 +89,7 @@ fun AdminDashboardScreen(
                         utenti = state.utenti,
                         utenteAttivo = state.utenteAttivo,
                         clienti = state.clienti,
-                        cantieriDisponibili = state.cantieriDisponibili,
+                        cantieriDisponibili = state.tuttiCantieri.ifEmpty { state.cantieriDisponibili },
                         onSelectUtenteAttivo = viewModel::selectUtenteAttivo,
                         onSaveUtente = viewModel::saveUtente,
                         onDeleteUtente = viewModel::deleteUtente

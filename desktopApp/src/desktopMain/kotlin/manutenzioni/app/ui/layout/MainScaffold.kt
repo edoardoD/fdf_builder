@@ -11,6 +11,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -38,7 +39,15 @@ fun MainScaffold(
                     selected = currentSection == AppSection.OPERATIVITA,
                     onClick = { onSectionSelected(AppSection.OPERATIVITA) },
                     icon = { Icon(Icons.Default.Build, contentDescription = "Operatività") },
-                    label = { Text("Operatività") },
+                    label = { Text("Operatività", fontSize = 10.sp) },
+                    selectedContentColor = MaterialTheme.colors.primary,
+                    unselectedContentColor = MaterialTheme.colors.secondary
+                )
+                NavigationRailItem(
+                    selected = currentSection == AppSection.CALENDARIO,
+                    onClick = { onSectionSelected(AppSection.CALENDARIO) },
+                    icon = { Icon(Icons.Default.DateRange, contentDescription = "Calendario") },
+                    label = { Text("Calendario", fontSize = 10.sp) },
                     selectedContentColor = MaterialTheme.colors.primary,
                     unselectedContentColor = MaterialTheme.colors.secondary
                 )
