@@ -113,6 +113,22 @@ class FrequencyFilterTest {
         assertEquals(listOf(1, 1, 3, 3, 6), result.map { it.frequenza.inMesi() })
     }
 
+    @Test
+    fun `risultati ordinati canonicamente da 01-06 (TipoPeriodo M) a 1-n (TipoPeriodo A)`() {
+        val attivitaNonOrdinate = listOf(
+            Attivita(nAttivita = 1, tipoAttivita = "A2", descrizione = "Biennale", frequenza = Periodo(TipoPeriodo.A, 2)),
+            Attivita(nAttivita = 2, tipoAttivita = "M6", descrizione = "Semestrale", frequenza = Periodo(TipoPeriodo.M, 6)),
+            Attivita(nAttivita = 3, tipoAttivita = "A1", descrizione = "Annuale", frequenza = Periodo(TipoPeriodo.A, 1)),
+            Attivita(nAttivita = 4, tipoAttivita = "M1", descrizione = "Mensile", frequenza = Periodo(TipoPeriodo.M, 1)),
+            Attivita(nAttivita = 5, tipoAttivita = "M3", descrizione = "Trimestrale", frequenza = Periodo(TipoPeriodo.M, 3))
+        )
+        val result = FrequencyFilter.filterByFrequenza(attivitaNonOrdinate, Periodo(TipoPeriodo.A, 2))
+        assertEquals(
+            listOf("01", "03", "06", "1", "2"),
+            result.map { it.frequenza.codiceCartiglio() }
+        )
+    }
+
     // =========== LISTA VUOTA ===========
 
     @Test

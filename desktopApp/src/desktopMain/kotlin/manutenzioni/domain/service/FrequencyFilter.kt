@@ -2,6 +2,7 @@ package manutenzioni.domain.service
 
 import manutenzioni.domain.model.Attivita
 import manutenzioni.domain.model.Periodo
+import manutenzioni.domain.model.TipoPeriodo
 
 /**
  * Logica di frequenza inclusiva.
@@ -17,7 +18,8 @@ object FrequencyFilter {
 
     /**
      * Filtra le attività incluse nella frequenza selezionata.
-     * Le attività sono ordinate per frequenza crescente e poi per numero attività.
+     * Le attività sono ordinate per periodicità canonica crescente:
+     * prima i Mesi ("01".."06"), poi gli Anni ("1".."n"), preservando l'ordine relativo a parità di frequenza.
      */
     fun filterByFrequenza(
         attivita: List<Attivita>,
@@ -26,7 +28,12 @@ object FrequencyFilter {
         val mesiTarget = frequenzaSelezionata.inMesi()
         return attivita
             .filter { mesiTarget % it.frequenza.inMesi() == 0 }
-            .sortedWith(compareBy({ it.frequenza.inMesi() }, { it.nAttivita }))
+            .sortedWith(
+                compareBy<Attivita> { it.frequenza.inMesi() }
+                    .thenBy { if (it.frequenza.tipo == TipoPeriodo.M) 0 else 1 }
+                    .thenBy { it.frequenza.valore }
+                    .thenBy { it.nAttivita }
+            )
     }
 
     /**
