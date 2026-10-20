@@ -81,16 +81,16 @@ object CrossPlantAttivitaResolver {
         // 1. Filtro base per frequenza inclusiva
         val attivitaFrequenzaOk = FrequencyFilter.filterByFrequenza(impianto.listaAttivita, frequenza)
 
-        // Se non contiene alcuna attività condizionata, restituisce direttamente la lista
+        // Se non contiene alcuna attività condizionata, restituisce direttamente la lista rinumerata 1..N
         if (impianto.listaAttivita.none { it.targetImpiantoCod != null }) {
-            return attivitaFrequenzaOk
+            return attivitaFrequenzaOk.mapIndexed { index, att -> att.copy(nAttivita = index + 1) }
         }
 
-        // 2. Filtro contestuale in base agli impianti presenti nel cantiere
+        // 2. Filtro contestuale in base agli impianti presenti nel cantiere e rinumerazione 1..N
         return attivitaFrequenzaOk.filter { att ->
             val target = att.targetImpiantoCod?.trim()?.uppercase()
             target == null || target in codiciPresenti
-        }
+        }.mapIndexed { index, att -> att.copy(nAttivita = index + 1) }
     }
 
     /**
