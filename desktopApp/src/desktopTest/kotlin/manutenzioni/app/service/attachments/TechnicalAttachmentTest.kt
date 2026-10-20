@@ -110,10 +110,7 @@ class TechnicalAttachmentTest {
         )
 
         val summary = emergenzaProvider.buildPremessaSummary(emergenza)
-        assertNotNull(summary)
-        assertContains(summary, "Lampade di emergenza presenti (2):")
-        assertContains(summary, "[EM-01] Beghelli Formula 65 — Beghelli (Autonomia: 1h) | Corridoio Ovest")
-        assertContains(summary, "[EM-02] Eaton NEXI 600 — Eaton (Autonomia: 3h) | Uscita Sicurezza Scala B")
+        assertNull(summary)
 
         val sheetData = emergenzaProvider.buildSheetData(emergenza, Periodo(TipoPeriodo.M, 6), "Ospedale Civile")
         assertNotNull(sheetData)
@@ -162,9 +159,9 @@ class TechnicalAttachmentTest {
             clienteNome = "Azienda Ospedaliera"
         )
 
-        // Foglio 1: attività e premessa
+        // Foglio 1: attività e premessa (R1: la lista lampade NON deve apparire nella premessa del Foglio 1)
         assertContains(html, "Verifica visiva lampade")
-        assertContains(html, "Lampade di emergenza presenti (1):")
+        kotlin.test.assertFalse(html.contains("Lampade di emergenza presenti"), "L'elenco lampade non deve apparire nella premessa del Foglio 1")
         assertContains(html, "Azienda Ospedaliera")
 
         // Foglio 2: secondo foglio allegato
@@ -190,8 +187,7 @@ class TechnicalAttachmentTest {
         )
         assertTrue(emergenzaProvider.canHandle(emerg))
         val summary = emergenzaProvider.buildPremessaSummary(emerg)
-        assertNotNull(summary)
-        assertContains(summary, "Lampade di emergenza presenti (1):")
+        assertNull(summary)
     }
 
     @Test
@@ -248,5 +244,32 @@ class TechnicalAttachmentTest {
             tempHtml.delete()
             tempPdf.delete()
         }
+    }
+
+    @Test
+    fun `buildHtml per ImpiantoEmergenza esclude lista lampade da premessa Foglio 1 e mantiene Foglio 2 completo`() {
+        val emergenza = ImpiantoEmergenza(
+            codIntervento = "EM",
+            nomeCompleto = "Illuminazione di emergenza",
+            premessa = "Premessa custom del cantiere.",
+            listaAttivita = listOf(Attivita(1, "Controllo", "Verifica lampade", Periodo(TipoPeriodo.M, 6))),
+            listaLampade = listOf(
+                LampadaEmergenza(sigla = "EM-01", modello = "Formula 65", autonomia = "1h", posizione = "Corridoio"),
+                LampadaEmergenza(sigla = "EM-02", modello = "NEXI 600", autonomia = "3h", posizione = "Scala")
+            )
+        )
+        val html = htmlService.buildHtml(emergenza, emergenza.listaAttivita, Periodo(TipoPeriodo.M, 6), "Cliente Test")
+
+        // Foglio 1 Premessa checks
+        assertContains(html, "Premessa custom del cantiere.")
+        assertFalse(html.contains("Lampade di emergenza presenti"))
+        assertFalse(html.contains("• [EM-01]"))
+
+        // Foglio 2 Attachment checks
+        assertContains(html, "LAMPADE DI EMERGENZA")
+        assertContains(html, "EM-01")
+        assertContains(html, "Formula 65")
+        assertContains(html, "EM-02")
+        assertContains(html, "NEXI 600")
     }
 }

@@ -15,21 +15,7 @@ class EmergenzaAttachmentProvider : TechnicalAttachmentProvider {
         return impianto is ImpiantoEmergenza && impianto.listaLampade.isNotEmpty()
     }
 
-    override fun buildPremessaSummary(impianto: Impianto): String? {
-        val emerg = impianto as? ImpiantoEmergenza ?: return null
-        if (emerg.listaLampade.isEmpty()) return null
-
-        val totale = emerg.listaLampade.size
-        return buildString {
-            append("Lampade di emergenza presenti ($totale):\n")
-            append(emerg.listaLampade.joinToString("\n") {
-                val sigla = if (it.sigla.isNotBlank()) "[${it.sigla}] " else ""
-                val prod = if (!it.produttore.isNullOrBlank()) " — ${it.produttore}" else ""
-                val pos = if (!it.posizione.isNullOrBlank()) " | ${it.posizione}" else ""
-                "• $sigla${it.modello}$prod (Autonomia: ${it.autonomia})$pos"
-            })
-        }
-    }
+    override fun buildPremessaSummary(impianto: Impianto): String? = null
 
     override fun buildSheetData(
         impianto: Impianto,

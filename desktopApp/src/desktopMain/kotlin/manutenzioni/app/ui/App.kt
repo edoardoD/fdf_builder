@@ -40,10 +40,12 @@ fun App(viewModel: ManutenzioniViewModel, onDisconnect: () -> Unit = {}) {
                                 state = uiState,
                                 onBack = { viewModel.selectCantiere(null) },
                                 onImpiantoSelectionChanged = viewModel::toggleImpiantoSelection,
+                                onImpiantiSelectionChanged = viewModel::toggleImpiantiSelection,
                                 onEditImpianto = { impianto -> viewModel.selectImpianto(impianto) },
                                 onSaveImpianto = viewModel::saveImpianto,
                                 onFrequenzaPerImpiantoSelected = viewModel::updateFrequenzaForImpianto,
                                 onFrequenzaPerImpiantoToggled = viewModel::toggleFrequenzaForImpianto,
+                                onFrequenzaForImpiantiToggled = viewModel::toggleFrequenzaForImpianti,
                                 onGeneraPdf = viewModel::generatePdf,
                                 onOpenPdf = viewModel::openPdfInSystem,
                                 onCreateNewImpianto = viewModel::createNewImpianto,
@@ -62,6 +64,7 @@ fun App(viewModel: ManutenzioniViewModel, onDisconnect: () -> Unit = {}) {
                                 onSelectFirmaManutentore = viewModel::selectFirmaManutentoreFile,
                                 onRemoveFirmaManutentore = { viewModel.updateFirmaManutentoreCantiere(null) },
                                 onUpdateMqtSwitchType = viewModel::updateMqtSwitchType,
+                                onUpdateEmergenzaSiglaDocumentale = viewModel::updateEmergenzaSiglaDocumentale,
                                 onAddImpiantiFromTemplates = viewModel::addImpiantiFromTemplates
                             )
                         }
