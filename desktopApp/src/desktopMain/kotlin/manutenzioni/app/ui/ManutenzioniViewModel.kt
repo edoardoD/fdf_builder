@@ -36,6 +36,7 @@ import javax.swing.JFileChooser
 /** Sezioni principali dell'applicazione */
 enum class AppSection {
     OPERATIVITA,
+    CALENDARIO,
     DATABASE
 }
 
@@ -82,6 +83,12 @@ data class ManutenzioniUiState(
     val catalogoApprovato: List<ComponenteApprovato> = emptyList(),
     /** Scadenze future calcolate per il cantiere selezionato (R27) */
     val scadenzeCantiere: List<manutenzioni.domain.model.MeseScadenzaGroup> = emptyList(),
+    /** Lista completa di tutti i cantieri registrati nel database (per vista Calendario Globale e RBAC) */
+    val tuttiCantieri: List<Cantiere> = emptyList(),
+    /** Calendario Globale Multi-Cantiere raggruppato per mese (es. "Maggio 2026" -> tutti i cantieri con manutenzioni previste — R27) */
+    val calendarioGlobale: List<manutenzioni.domain.model.MeseScadenzaGlobaleGroup> = emptyList(),
+    /** Filtro mese attivo nel Calendario Globale (es. "2026-05" per Maggio 2026, oppure null per tutti i mesi) */
+    val meseCalendarioSelezionato: String? = null,
     /** Orizzonte temporale in mesi per il calcolo del calendario scadenze (default 12 mesi) */
     val orizzonteScadenzeMesi: Int = 12,
     /** Storico sessioni di verifica salvate per il cantiere selezionato (R25, R30) */
@@ -183,6 +190,53 @@ class ManutenzioniViewModel(
         loadImpiantiGlobali()
     }
 
+    /** Ricalcola il Calendario Globale Multi-Cantiere filtrando i cantieri in base ai permessi RBAC dell'utente attivo */
+    private fun computeGlobalCalendar(
+        clienti: List<Cliente>,
+        tuttiCantieri: List<Cantiere>,
+        impianti: List<Impianto>,
+        orizzonteMesi: Int,
+        utenteAttivo: manutenzioni.domain.model.Utente
+    ): List<manutenzioni.domain.model.MeseScadenzaGlobaleGroup> {
+        val cantieriConsentiti = if (utenteAttivo.ruolo == manutenzioni.domain.model.RuoloUtente.ADMIN) {
+            tuttiCantieri
+        } else {
+            tuttiCantieri.filter { it.id in utenteAttivo.cantieriAssegnatiIds }
+        }
+        return manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenzeGlobali(
+            clienti = clienti,
+            cantieri = cantieriConsentiti,
+            tuttiImpianti = impianti,
+            mesiOrizzonte = orizzonteMesi
+        )
+    }
+
+    /** Carica tutti i cantieri di tutti i clienti per popolare il Calendario Globale Multi-Cantiere */
+    private fun loadTuttiCantieri() {
+        scope.launch {
+            try {
+                val clienti = withContext(Dispatchers.IO) { repository.caricaClienti() }
+                val tuttiCantieri = withContext(Dispatchers.IO) {
+                    clienti.flatMap { cli -> repository.getCantieriForCliente(cli.id) }
+                }
+                _uiState.update { state ->
+                    val globalCal = computeGlobalCalendar(
+                        clienti = clienti,
+                        tuttiCantieri = tuttiCantieri,
+                        impianti = state.impianti,
+                        orizzonteMesi = state.orizzonteScadenzeMesi,
+                        utenteAttivo = state.utenteAttivo
+                    )
+                    state.copy(
+                        clienti = clienti,
+                        tuttiCantieri = tuttiCantieri,
+                        calendarioGlobale = globalCal
+                    )
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
     /** Carica gli impianti dal repository e arricchisce eventuali zone mancanti dai master bundled (R32) */
     private fun loadImpianti() {
         scope.launch {
@@ -190,10 +244,18 @@ class ManutenzioniViewModel(
             try {
                 val rawImpianti = repository.caricaImpianti()
                 val impianti = enrichImpiantiZonaIfNeeded(rawImpianti)
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    val globalCal = computeGlobalCalendar(
+                        clienti = state.clienti,
+                        tuttiCantieri = state.tuttiCantieri,
+                        impianti = impianti,
+                        orizzonteMesi = state.orizzonteScadenzeMesi,
+                        utenteAttivo = state.utenteAttivo
+                    )
+                    state.copy(
                         impianti = impianti,
                         impiantiGlobali = impianti.filter { imp -> imp.cantiereId == null },
+                        calendarioGlobale = globalCal,
                         isLoading = false,
                         statusMessage = "${impianti.size} impianti caricati"
                     )
@@ -471,6 +533,7 @@ class ManutenzioniViewModel(
                         errorMessage = null
                     )
                 }
+                loadTuttiCantieri()
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(errorMessage = "Errore salvataggio cantiere: ${e.message}")
@@ -531,10 +594,20 @@ class ManutenzioniViewModel(
                 impianti = state.impiantiDelCantiere,
                 mesiOrizzonte = state.orizzonteScadenzeMesi
             )
+            val updatedTutti = state.tuttiCantieri.map { if (it.id == updated.id) updated else it }
+            val globalCal = computeGlobalCalendar(
+                clienti = state.clienti,
+                tuttiCantieri = updatedTutti,
+                impianti = state.impianti,
+                orizzonteMesi = state.orizzonteScadenzeMesi,
+                utenteAttivo = state.utenteAttivo
+            )
             state.copy(
                 selectedCantiere = updated,
                 cantieriDisponibili = state.cantieriDisponibili.map { if (it.id == updated.id) updated else it },
-                scadenzeCantiere = scadenze
+                tuttiCantieri = updatedTutti,
+                scadenzeCantiere = scadenze,
+                calendarioGlobale = globalCal
             )
         }
         scope.launch(Dispatchers.IO) {
@@ -778,6 +851,9 @@ class ManutenzioniViewModel(
             return
         }
         _uiState.update { it.copy(currentSection = section, errorMessage = null) }
+        if (section == AppSection.CALENDARIO) {
+            loadTuttiCantieri()
+        }
     }
 
     fun setAdminTab(tab: AdminTab) {
@@ -1129,13 +1205,22 @@ class ManutenzioniViewModel(
         scope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                val impiantiDelCantiere = withContext(Dispatchers.IO) {
+                val (impiantiDelCantiere, tuttiImpianti) = withContext(Dispatchers.IO) {
                     nuoviImpianti.forEach { repository.salvaImpianto(it) }
-                    repository.getImpiantiForCantiere(cantiereId)
+                    repository.getImpiantiForCantiere(cantiereId) to repository.caricaImpianti()
                 }
-                _uiState.update {
-                    it.copy(
-                        impiantiDelCantiere = if (it.selectedCantiere?.id == cantiereId) impiantiDelCantiere else it.impiantiDelCantiere,
+                _uiState.update { state ->
+                    val globalCal = computeGlobalCalendar(
+                        clienti = state.clienti,
+                        tuttiCantieri = state.tuttiCantieri,
+                        impianti = tuttiImpianti,
+                        orizzonteMesi = state.orizzonteScadenzeMesi,
+                        utenteAttivo = state.utenteAttivo
+                    )
+                    state.copy(
+                        impianti = tuttiImpianti,
+                        impiantiDelCantiere = if (state.selectedCantiere?.id == cantiereId) impiantiDelCantiere else state.impiantiDelCantiere,
+                        calendarioGlobale = globalCal,
                         isLoading = false,
                         statusMessage = "✓ ${nuoviImpianti.size} attività di verifica aggiunte: " +
                             nuoviImpianti.joinToString(", ") { imp -> imp.codIntervento },
@@ -1226,10 +1311,18 @@ class ManutenzioniViewModel(
                     repository.getImpiantiForCantiere(cantiereId)
                 } ?: emptyList()
                 
-                _uiState.update {
-                    it.copy(
+                _uiState.update { state ->
+                    val globalCal = computeGlobalCalendar(
+                        clienti = state.clienti,
+                        tuttiCantieri = state.tuttiCantieri,
+                        impianti = impiantiAggiornati,
+                        orizzonteMesi = state.orizzonteScadenzeMesi,
+                        utenteAttivo = state.utenteAttivo
+                    )
+                    state.copy(
                         impianti = impiantiAggiornati,
                         impiantiDelCantiere = impiantiDelCantiereAggiornati, // Fix: ricarica lista
+                        calendarioGlobale = globalCal,
                         selectedImpianto = impiantoToSave,
                         statusMessage = "✓ Impianto ${impiantoToSave.id} salvato",
                         errorMessage = null
@@ -1262,10 +1355,18 @@ class ManutenzioniViewModel(
                     val isCurrent = state.selectedImpianto?.id == id
                     val updatedSelection = state.impiantiSelezionati.toMutableMap()
                     updatedSelection.remove(id)
+                    val globalCal = computeGlobalCalendar(
+                        clienti = state.clienti,
+                        tuttiCantieri = state.tuttiCantieri,
+                        impianti = impiantiAggiornati,
+                        orizzonteMesi = state.orizzonteScadenzeMesi,
+                        utenteAttivo = state.utenteAttivo
+                    )
 
                     state.copy(
                         impianti = impiantiAggiornati,
                         impiantiDelCantiere = impiantiDelCantiereAggiornati,
+                        calendarioGlobale = globalCal,
                         selectedImpianto = if (isCurrent) null else state.selectedImpianto,
                         impiantiSelezionati = updatedSelection,
                         statusMessage = "✓ Impianto eliminato con successo",
@@ -1308,6 +1409,7 @@ class ManutenzioniViewModel(
     fun refresh() {
         loadImpianti()
         loadClienti()
+        loadTuttiCantieri()
         loadComponentiStandard()
         loadCatalogoApprovato()
         loadUtenti()
@@ -1748,10 +1850,120 @@ class ManutenzioniViewModel(
                     mesiOrizzonte = validMesi
                 )
             } ?: emptyList()
+            val globalCal = computeGlobalCalendar(
+                clienti = state.clienti,
+                tuttiCantieri = state.tuttiCantieri,
+                impianti = state.impianti,
+                orizzonteMesi = validMesi,
+                utenteAttivo = state.utenteAttivo
+            )
             state.copy(
                 orizzonteScadenzeMesi = validMesi,
-                scadenzeCantiere = scadenze
+                scadenzeCantiere = scadenze,
+                calendarioGlobale = globalCal
             )
+        }
+    }
+
+    /** Filtra la vista del Calendario Globale per uno specifico mese ("2026-05") oppure mostra tutti i mesi (null) */
+    fun selectMeseCalendarioGlobale(annoMese: String?) {
+        _uiState.update { it.copy(meseCalendarioSelezionato = annoMese) }
+    }
+
+    /**
+     * Apre un cantiere direttamente dal Calendario Globale posizionandosi nella sezione Operatività
+     * e pre-selezionando automaticamente gli impianti e le periodicità in scadenza in quel mese,
+     * così da mostrare immediatamente quali verifiche/modifiche fare e preparare il batch PDF.
+     */
+    fun apriCantiereDaCalendario(cantiereScadenza: manutenzioni.domain.model.CantiereScadenzaInMese) {
+        val stateSnap = _uiState.value
+        val cantiere = cantiereScadenza.cantiere
+        val cliente = cantiereScadenza.cliente ?: stateSnap.clienti.find { it.id == cantiere.clienteId }
+
+        val preselectedImpianti = cantiereScadenza.scadenzeImpianti.associate { it.impiantoId to true }
+        val preselectedMultiFreq = stateSnap.frequenzeSelezionatePerImpianto.toMutableMap().apply {
+            cantiereScadenza.scadenzeImpianti.forEach { item ->
+                put(item.impiantoId, item.frequenzeIncluse.toSet())
+            }
+        }
+        val preselectedSingleFreq = stateSnap.frequenzePerImpianto.toMutableMap().apply {
+            cantiereScadenza.scadenzeImpianti.forEach { item ->
+                put(item.impiantoId, item.frequenzaMassima)
+            }
+        }
+
+        _uiState.update { state ->
+            state.copy(
+                currentSection = AppSection.OPERATIVITA,
+                selectedCliente = cliente,
+                selectedCantiere = cantiere,
+                selectedImpianto = null,
+                impiantiSelezionati = preselectedImpianti,
+                frequenzeSelezionatePerImpianto = preselectedMultiFreq,
+                frequenzePerImpianto = preselectedSingleFreq,
+                statusMessage = "✓ Cantiere '${cantiere.nome}' aperto dal Calendario (${cantiereScadenza.dataPrevista}: ${cantiereScadenza.totaleImpiantiInScadenza} impianti pre-selezionati)",
+                errorMessage = null
+            )
+        }
+        cliente?.id?.let { loadCantieriForCliente(it) }
+        loadImpiantiForCantiere(cantiere.id)
+        loadSessioniPerCantiere(cantiere.id)
+    }
+
+    /**
+     * Esporta il Foglio di Riepilogo Generale PDF (R28) direttamente dal Calendario Globale per un cantiere specifico.
+     */
+    fun exportRiepilogoDaCalendarioGlobale(
+        cantiereScadenza: manutenzioni.domain.model.CantiereScadenzaInMese,
+        outputPdfFile: File? = null
+    ) {
+        val stateSnap = _uiState.value
+        val cantiere = cantiereScadenza.cantiere
+        val cliente = cantiereScadenza.cliente ?: stateSnap.clienti.find { it.id == cantiere.clienteId }
+        scope.launch(Dispatchers.IO) {
+            try {
+                val impiantiCantiere = repository.getImpiantiForCantiere(cantiere.id)
+                val scadenze = manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
+                    cantiere = cantiere,
+                    impianti = impiantiCantiere,
+                    mesiOrizzonte = stateSnap.orizzonteScadenzeMesi
+                )
+                val freqMulti = cantiereScadenza.scadenzeImpianti.associate { it.impiantoId to it.frequenzeIncluse.toSet() }
+                val freqSingle = cantiereScadenza.scadenzeImpianti.associate { it.impiantoId to it.frequenzaMassima }
+                val renderer = manutenzioni.app.service.RiepilogoInterventoHtmlRenderer()
+                val html = renderer.buildRiepilogoHtml(
+                    cliente = cliente,
+                    cantiere = cantiere,
+                    impianti = impiantiCantiere,
+                    frequenzeSelezionatePerImpianto = freqMulti,
+                    frequenzePerImpianto = freqSingle,
+                    scadenze = scadenze
+                )
+                val tempHtml = File.createTempFile("riepilogo_globale_", ".html")
+                tempHtml.writeText(html, Charsets.UTF_8)
+                val subfolder = resolveTemporalSubfolderName(cantiereScadenza.dataPrevista)
+                val safeCantiere = cantiere.nome.trim().replace(" ", "_").replace("/", "-").ifBlank { "Cantiere" }
+                val targetPdf = outputPdfFile ?: File.createTempFile("RIEPILOGO_INTERVENTO_${safeCantiere}_${subfolder}_", ".pdf")
+                manutenzioni.app.service.Pdf().buildPdf(tempHtml.absolutePath, targetPdf.absolutePath)
+                tempHtml.delete()
+
+                if (outputPdfFile == null) {
+                    withContext(Dispatchers.Main) {
+                        try {
+                            java.awt.Desktop.getDesktop().open(targetPdf)
+                        } catch (_: Exception) {}
+                    }
+                }
+                _uiState.update {
+                    it.copy(
+                        pdfFile = targetPdf,
+                        statusMessage = "✓ Riepilogo PDF generato per '${cantiere.nome}': ${targetPdf.name}",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore generazione Riepilogo PDF: ${e.message}") }
+            }
         }
     }
 
@@ -1873,11 +2085,24 @@ class ManutenzioniViewModel(
             val isTecnico = utente.ruolo == manutenzioni.domain.model.RuoloUtente.TECNICO
             val cantiereConsentito = !isTecnico ||
                 (state.selectedCantiere != null && state.selectedCantiere.id in utente.cantieriAssegnatiIds)
+            val nextSection = if (isTecnico && state.currentSection == AppSection.DATABASE) {
+                AppSection.OPERATIVITA
+            } else {
+                state.currentSection
+            }
+            val globalCal = computeGlobalCalendar(
+                clienti = state.clienti,
+                tuttiCantieri = state.tuttiCantieri,
+                impianti = state.impianti,
+                orizzonteMesi = state.orizzonteScadenzeMesi,
+                utenteAttivo = utente
+            )
             state.copy(
                 utenteAttivo = utente,
-                currentSection = if (isTecnico) AppSection.OPERATIVITA else state.currentSection,
+                currentSection = nextSection,
                 selectedCantiere = if (cantiereConsentito) state.selectedCantiere else null,
                 impiantiDelCantiere = if (cantiereConsentito) state.impiantiDelCantiere else emptyList(),
+                calendarioGlobale = globalCal,
                 statusMessage = "Profilo attivo: ${utente.nomeCompleto} (${utente.ruolo.label})",
                 errorMessage = null
             )

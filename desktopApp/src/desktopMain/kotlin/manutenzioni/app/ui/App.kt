@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import manutenzioni.app.ui.features.amministrazione.AdminDashboardScreen
+import manutenzioni.app.ui.features.calendario.CalendarioGlobaleScreen
 import manutenzioni.app.ui.features.operativita.CantiereDetailScreen
 import manutenzioni.app.ui.features.operativita.OperativitaScreen
 import manutenzioni.app.ui.layout.MainScaffold
@@ -77,6 +78,15 @@ fun App(viewModel: ManutenzioniViewModel, onDisconnect: () -> Unit = {}) {
                                 onDeleteSessioneVerifica = viewModel::deleteSessioneVerifica
                             )
                         }
+                    }
+                    AppSection.CALENDARIO -> {
+                        CalendarioGlobaleScreen(
+                            state = uiState,
+                            onOrizzonteChanged = viewModel::setOrizzonteScadenze,
+                            onSelectMese = viewModel::selectMeseCalendarioGlobale,
+                            onApriCantiereDaCalendario = viewModel::apriCantiereDaCalendario,
+                            onExportRiepilogoCantierePdf = { viewModel.exportRiepilogoDaCalendarioGlobale(it) }
+                        )
                     }
                     AppSection.DATABASE -> {
                         AdminDashboardScreen(

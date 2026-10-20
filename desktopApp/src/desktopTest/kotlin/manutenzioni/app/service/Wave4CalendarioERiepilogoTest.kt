@@ -161,4 +161,50 @@ class Wave4CalendarioERiepilogoTest {
             tempPdf.delete()
         }
     }
+
+    @Test
+    fun `calcolaScadenzeGlobali aggrega multipli cantieri per mese (es Maggio 2026) con dettaglio attivita da fare`() {
+        val cliente1 = Cliente(id = "cli-w4", nome = "Logistica Integrata S.p.A.")
+        val cliente2 = Cliente(id = "cli-2", nome = "Ospedali Riuniti")
+
+        // Cantiere 1 inizia il 15/01/2026 -> a Maggio 2026 (mese +4) ha GE (mensile)
+        // Cantiere 2 inizia il 10/11/2025 -> a Maggio 2026 (mese +6) ha Quadro BT semestrale (6M)
+        val cantiere2 = Cantiere(
+            id = "cant-2",
+            nome = "Villa Salus",
+            clienteId = cliente2.id,
+            dataInizioContratto = "10/11/2025",
+            nomeManutentore = "Per. Ind. Rossi"
+        )
+        val quadroSemestraleC2 = QuadroBT(
+            id = "imp-q-c2",
+            codIntervento = "Q",
+            nomeCompleto = "Quadri Elettrici BT",
+            sigla = "Q-CHIR",
+            descrizioneQuadro = "Quadro Reparto Chirurgia",
+            listaAttivita = listOf(
+                Attivita(1, "Prova Strumentale", "Prova scatto differenziali", Periodo(TipoPeriodo.M, 6), zona = "Interruttori")
+            ),
+            cantiereId = cantiere2.id
+        )
+
+        val globale = CalendarioScadenzeCalculator.calcolaScadenzeGlobali(
+            clienti = listOf(cliente1, cliente2),
+            cantieri = listOf(cantiereBase, cantiere2),
+            tuttiImpianti = listOf(impiantoGe, impiantoQmt, quadroSemestraleC2),
+            mesiOrizzonte = 12
+        )
+
+        val maggio2026 = globale.firstOrNull { it.annoMese == "2026-05" }
+        assertNotNull(maggio2026, "Maggio 2026 deve essere presente nel calendario globale")
+        assertEquals("Maggio 2026", maggio2026.etichettaMese)
+        assertEquals(2, maggio2026.totaleCantieri, "A Maggio 2026 devono risultare entrambi i cantieri in scadenza")
+
+        val scadenzaVillaSalus = maggio2026.cantieriInScadenza.first { it.cantiere.id == "cant-2" }
+        assertEquals("Ospedali Riuniti", scadenzaVillaSalus.cliente?.nome)
+        assertEquals("10/05/2026", scadenzaVillaSalus.dataPrevista)
+        val impChir = scadenzaVillaSalus.scadenzeImpianti.first()
+        assertEquals("Q - Q-CHIR", impChir.codIntervento)
+        assertTrue(impChir.attivitaInScadenza.any { it.contains("Prova scatto differenziali") })
+    }
 }
