@@ -22,6 +22,7 @@ import manutenzioni.app.ui.AppSection
 fun MainScaffold(
     currentSection: AppSection,
     onSectionSelected: (AppSection) -> Unit,
+    isAdmin: Boolean = true,
     content: @Composable () -> Unit
 ) {
     Surface(
@@ -41,14 +42,16 @@ fun MainScaffold(
                     selectedContentColor = MaterialTheme.colors.primary,
                     unselectedContentColor = MaterialTheme.colors.secondary
                 )
-                NavigationRailItem(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Database") },
-                    label = { Text("Database", fontSize = 10.sp) },
-                    selected = currentSection == AppSection.DATABASE,
-                    onClick = { onSectionSelected(AppSection.DATABASE) },
-                    selectedContentColor = MaterialTheme.colors.primary,
-                    unselectedContentColor = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
-                )
+                if (isAdmin) {
+                    NavigationRailItem(
+                        icon = { Icon(Icons.Default.Settings, contentDescription = "Database") },
+                        label = { Text("Database", fontSize = 10.sp) },
+                        selected = currentSection == AppSection.DATABASE,
+                        onClick = { onSectionSelected(AppSection.DATABASE) },
+                        selectedContentColor = MaterialTheme.colors.primary,
+                        unselectedContentColor = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                    )
+                }
             }
             
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {

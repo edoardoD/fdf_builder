@@ -93,14 +93,14 @@ fun OperativitaScreen(
                 clienti = state.clienti,
                 selectedCliente = state.selectedCliente,
                 onClienteSelected = onClienteSelected,
-                onNewClienteClick = { showNuovoClienteDialog = true }
+                onNewClienteClick = if (state.isAdmin) ({ showNuovoClienteDialog = true }) else null
             )
         }
 
         Divider(color = SlateBorder, thickness = 1.dp)
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Cantieri Grid
+        // Cantieri Grid (filtrata da RBAC tramite state.cantieriVisibili — R31)
         if (state.selectedCliente != null) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 300.dp),
@@ -108,10 +108,12 @@ fun OperativitaScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                item {
-                    AddCantiereCard(onClick = { showNuovoCantiereDialog = true })
+                if (state.isAdmin) {
+                    item {
+                        AddCantiereCard(onClick = { showNuovoCantiereDialog = true })
+                    }
                 }
-                items(state.cantieriDisponibili) { cantiere ->
+                items(state.cantieriVisibili) { cantiere ->
                     CantiereCard(
                         cantiere = cantiere,
                         onClick = { onCantiereSelected(cantiere) }

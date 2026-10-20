@@ -36,6 +36,8 @@ class JsonManutenzioneRepository(
     private var cacheCantieri: MutableList<Cantiere>? = null
     private var cacheComponenti: MutableList<manutenzioni.domain.model.ComponenteStandard>? = null
     private var cacheCatalogoApprovato: MutableList<manutenzioni.domain.model.ComponenteApprovato>? = null
+    private var cacheSessioniVerifica: MutableList<manutenzioni.domain.model.SessioneVerifica>? = null
+    private var cacheUtenti: MutableList<manutenzioni.domain.model.Utente>? = null
 
     init {
         println("📂 Database log: ${dbFile.absolutePath}")
@@ -92,10 +94,39 @@ class JsonManutenzioneRepository(
         clienti: List<Cliente> = getClientiCache(), 
         cantieri: List<Cantiere> = getCantieriCache(),
         componenti: List<manutenzioni.domain.model.ComponenteStandard> = getComponentiCache(),
-        catalogoApprovato: List<manutenzioni.domain.model.ComponenteApprovato> = getCatalogoApprovatoCache()
+        catalogoApprovato: List<manutenzioni.domain.model.ComponenteApprovato> = getCatalogoApprovatoCache(),
+        sessioniVerifica: List<manutenzioni.domain.model.SessioneVerifica> = getSessioniVerificaCache(),
+        utenti: List<manutenzioni.domain.model.Utente> = getUtentiCache()
     ) {
-        val db = ManutenzioniDatabase(impianti, clienti, cantieri, componenti, catalogoApprovato)
+        val db = ManutenzioniDatabase(impianti, clienti, cantieri, componenti, catalogoApprovato, sessioniVerifica, utenti)
         dbFile.writeText(json.encodeToString(ManutenzioniDatabase.serializer(), db))
+    }
+
+    private fun getSessioniVerificaCache(): MutableList<manutenzioni.domain.model.SessioneVerifica> {
+        if (cacheSessioniVerifica == null) {
+            val db = loadFromDisk()
+            cacheSessioniVerifica = db.sessioniVerifica.toMutableList()
+        }
+        return cacheSessioniVerifica!!
+    }
+
+    private fun getUtentiCache(): MutableList<manutenzioni.domain.model.Utente> {
+        if (cacheUtenti == null) {
+            val db = loadFromDisk()
+            val loaded = db.utenti.toMutableList()
+            if (loaded.isEmpty()) {
+                loaded.add(
+                    manutenzioni.domain.model.Utente(
+                        id = "usr-admin-default",
+                        username = "admin",
+                        nomeCompleto = "Amministratore di Sistema",
+                        ruolo = manutenzioni.domain.model.RuoloUtente.ADMIN
+                    )
+                )
+            }
+            cacheUtenti = loaded
+        }
+        return cacheUtenti!!
     }
 
     private fun getImpiantiCache(): MutableList<Impianto> {
@@ -354,5 +385,53 @@ class JsonManutenzioneRepository(
 
     override suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato> = mutex.withLock {
         return getCatalogoApprovatoCache().filter { it.etimClassId == etimClassId }
+    }
+
+    // === Storicizzazione Sessioni di Verifica (Wave 4: R25, R30) ===
+    override suspend fun salvaSessioneVerifica(sessione: manutenzioni.domain.model.SessioneVerifica) = mutex.withLock {
+        val list = getSessioniVerificaCache()
+        val index = list.indexOfFirst { it.id == sessione.id }
+        if (index >= 0) {
+            list[index] = sessione
+        } else {
+            list.add(0, sessione)
+        }
+        saveToDisk()
+    }
+
+    override suspend fun getSessioniPerCantiere(cantiereId: String): List<manutenzioni.domain.model.SessioneVerifica> = mutex.withLock {
+        return getSessioniVerificaCache().filter { it.cantiereId == cantiereId }
+    }
+
+    override suspend fun eliminaSessioneVerifica(id: String) = mutex.withLock {
+        val list = getSessioniVerificaCache()
+        list.removeAll { it.id == id }
+        saveToDisk()
+    }
+
+    // === Gestione Utenti & RBAC (Wave 4: R31) ===
+    override suspend fun caricaUtenti(): List<manutenzioni.domain.model.Utente> = mutex.withLock {
+        return getUtentiCache().toList()
+    }
+
+    override suspend fun salvaUtente(utente: manutenzioni.domain.model.Utente) = mutex.withLock {
+        val list = getUtentiCache()
+        val index = list.indexOfFirst { it.id == utente.id }
+        if (index >= 0) {
+            list[index] = utente
+        } else {
+            list.add(utente)
+        }
+        saveToDisk()
+    }
+
+    override suspend fun eliminaUtente(id: String) = mutex.withLock {
+        val list = getUtentiCache()
+        if (list.count { it.ruolo == manutenzioni.domain.model.RuoloUtente.ADMIN && it.id != id } > 0 ||
+            list.firstOrNull { it.id == id }?.ruolo != manutenzioni.domain.model.RuoloUtente.ADMIN
+        ) {
+            list.removeAll { it.id == id }
+            saveToDisk()
+        }
     }
 }

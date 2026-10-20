@@ -34,4 +34,14 @@ interface ManutenzioneRepository {
     suspend fun caricaCatalogoApprovato(): List<manutenzioni.domain.model.ComponenteApprovato>
     suspend fun salvaOAggiornaComponenteApprovato(approvato: manutenzioni.domain.model.ComponenteApprovato)
     suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato>
+
+    // --- Storicizzazione Sessioni di Verifica (Wave 4: R25, R30) ---
+    suspend fun salvaSessioneVerifica(sessione: manutenzioni.domain.model.SessioneVerifica) {}
+    suspend fun getSessioniPerCantiere(cantiereId: String): List<manutenzioni.domain.model.SessioneVerifica> = emptyList()
+    suspend fun eliminaSessioneVerifica(id: String) {}
+
+    // --- Gestione Utenti & RBAC (Wave 4: R31) ---
+    suspend fun caricaUtenti(): List<manutenzioni.domain.model.Utente> = emptyList()
+    suspend fun salvaUtente(utente: manutenzioni.domain.model.Utente) {}
+    suspend fun eliminaUtente(id: String) {}
 }

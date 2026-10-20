@@ -28,6 +28,8 @@ class MongoManutenzioneRepository(
     private val cantieriCollection = database.getCollection<Cantiere>("cantieri")
     private val componentiCollection = database.getCollection<manutenzioni.domain.model.ComponenteStandard>("componenti")
     private val catalogoApprovatoCollection = database.getCollection<manutenzioni.domain.model.ComponenteApprovato>("catalogo_approvato")
+    private val sessioniVerificaCollection = database.getCollection<manutenzioni.domain.model.SessioneVerifica>("sessioni_verifica")
+    private val utentiCollection = database.getCollection<manutenzioni.domain.model.Utente>("utenti")
 
     override suspend fun salvaImpianto(impianto: Impianto) {
         // Upsert by id
@@ -178,5 +180,49 @@ class MongoManutenzioneRepository(
 
     override suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato> {
         return catalogoApprovatoCollection.find(eq("etimClassId", etimClassId)).toList()
+    }
+
+    // --- Storicizzazione Sessioni di Verifica (Wave 4: R25, R30) ---
+    override suspend fun salvaSessioneVerifica(sessione: manutenzioni.domain.model.SessioneVerifica) {
+        sessioniVerificaCollection.replaceOne(
+            filter = eq("id", sessione.id),
+            replacement = sessione,
+            options = ReplaceOptions().upsert(true)
+        )
+    }
+
+    override suspend fun getSessioniPerCantiere(cantiereId: String): List<manutenzioni.domain.model.SessioneVerifica> {
+        return sessioniVerificaCollection.find(eq("cantiereId", cantiereId)).toList()
+    }
+
+    override suspend fun eliminaSessioneVerifica(id: String) {
+        sessioniVerificaCollection.deleteOne(eq("id", id))
+    }
+
+    // --- Gestione Utenti & RBAC (Wave 4: R31) ---
+    override suspend fun caricaUtenti(): List<manutenzioni.domain.model.Utente> {
+        val loaded = utentiCollection.find().toList()
+        return loaded.ifEmpty {
+            listOf(
+                manutenzioni.domain.model.Utente(
+                    id = "usr-admin-default",
+                    username = "admin",
+                    nomeCompleto = "Amministratore di Sistema",
+                    ruolo = manutenzioni.domain.model.RuoloUtente.ADMIN
+                )
+            )
+        }
+    }
+
+    override suspend fun salvaUtente(utente: manutenzioni.domain.model.Utente) {
+        utentiCollection.replaceOne(
+            filter = eq("id", utente.id),
+            replacement = utente,
+            options = ReplaceOptions().upsert(true)
+        )
+    }
+
+    override suspend fun eliminaUtente(id: String) {
+        utentiCollection.deleteOne(eq("id", id))
     }
 }

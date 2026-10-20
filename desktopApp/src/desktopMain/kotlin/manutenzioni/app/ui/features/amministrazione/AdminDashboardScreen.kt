@@ -84,6 +84,17 @@ fun AdminDashboardScreen(
                         onUpdateGlobale = viewModel::updateImpiantoGlobale
                     )
                 }
+                AdminTab.UTENTI -> {
+                    AdminUtentiTab(
+                        utenti = state.utenti,
+                        utenteAttivo = state.utenteAttivo,
+                        clienti = state.clienti,
+                        cantieriDisponibili = state.cantieriDisponibili,
+                        onSelectUtenteAttivo = viewModel::selectUtenteAttivo,
+                        onSaveUtente = viewModel::saveUtente,
+                        onDeleteUtente = viewModel::deleteUtente
+                    )
+                }
             }
         }
     }
