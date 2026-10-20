@@ -599,3 +599,47 @@ fun Impianto.normalizeType(): Impianto {
     }
 }
 
+/**
+ * Snapshot immutabile di una sessione di verifica / generazione schede PDF per un cantiere (R25, R30).
+ * Garantisce che il nome del manutentore, le date dell'intervento e i file PDF generati
+ * rimangano storicizzati nel tempo senza essere sovrascritti dai cicli successivi.
+ */
+@Serializable
+data class SessioneVerifica(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val cantiereId: String,
+    val clienteId: String = "",
+    val meseAnno: String = "",
+    val dataInizioContratto: String? = null,
+    val dataIntervento: String? = null,
+    val dataInterventoPrecedente: String? = null,
+    val nomeManutentore: String? = null,
+    val dataCreazione: String = "",
+    val cartellaOutput: String? = null,
+    val elencoFilePdf: List<String> = emptyList(),
+    val riepilogoImpianti: List<String> = emptyList(),
+    val noteSessione: String? = null
+)
+
+/**
+ * Ruoli utente per il controllo accessi RBAC (R31).
+ */
+@Serializable
+enum class RuoloUtente(val label: String) {
+    ADMIN("Amministratore"),
+    TECNICO("Tecnico Manutentore")
+}
+
+/**
+ * Profilo utente per la gestione permessi e visibilità cantieri (R31).
+ */
+@Serializable
+data class Utente(
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val username: String,
+    val nomeCompleto: String,
+    val ruolo: RuoloUtente = RuoloUtente.TECNICO,
+    val cantieriAssegnatiIds: Set<String> = emptySet()
+)
+
+

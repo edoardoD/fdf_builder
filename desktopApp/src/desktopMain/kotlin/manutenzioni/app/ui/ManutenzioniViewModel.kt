@@ -44,7 +44,9 @@ enum class AdminTab(val label: String) {
     CLIENTI("CLIENTI"),
     CANTIERI("CANTIERI"),
     /** Template master globali delle schede (R1: ex "Impianti Locali / Globali") */
-    IMPIANTI_GLOBALI("MASTER SCHEDE DI VERIFICA")
+    IMPIANTI_GLOBALI("MASTER SCHEDE DI VERIFICA"),
+    /** Gestione profili utenti e permessi RBAC (R31) */
+    UTENTI("UTENTI E PERMESSI")
 }
 
 /**
@@ -77,8 +79,34 @@ data class ManutenzioniUiState(
     val componentiStandard: List<manutenzioni.domain.model.ComponenteStandard> = emptyList(),
     val isSearchingComponenti: Boolean = false,
     val candidateComponents: List<ComponentCandidate> = emptyList(),
-    val catalogoApprovato: List<ComponenteApprovato> = emptyList()
-)
+    val catalogoApprovato: List<ComponenteApprovato> = emptyList(),
+    /** Scadenze future calcolate per il cantiere selezionato (R27) */
+    val scadenzeCantiere: List<manutenzioni.domain.model.MeseScadenzaGroup> = emptyList(),
+    /** Orizzonte temporale in mesi per il calcolo del calendario scadenze (default 12 mesi) */
+    val orizzonteScadenzeMesi: Int = 12,
+    /** Storico sessioni di verifica salvate per il cantiere selezionato (R25, R30) */
+    val sessioniVerificaCantiere: List<manutenzioni.domain.model.SessioneVerifica> = emptyList(),
+    /** Lista profili utenti per controllo accessi RBAC (R31) */
+    val utenti: List<manutenzioni.domain.model.Utente> = emptyList(),
+    /** Utente attivo nella sessione corrente (default: Amministratore) */
+    val utenteAttivo: manutenzioni.domain.model.Utente = manutenzioni.domain.model.Utente(
+        id = "usr-admin-default",
+        username = "admin",
+        nomeCompleto = "Amministratore di Sistema",
+        ruolo = manutenzioni.domain.model.RuoloUtente.ADMIN
+    )
+) {
+    val isAdmin: Boolean
+        get() = utenteAttivo.ruolo == manutenzioni.domain.model.RuoloUtente.ADMIN
+
+    /** Cantieri visibili in base al ruolo RBAC (R31): tutti per ADMIN, solo quelli assegnati per TECNICO */
+    val cantieriVisibili: List<Cantiere>
+        get() = if (isAdmin) {
+            cantieriDisponibili
+        } else {
+            cantieriDisponibili.filter { it.id in utenteAttivo.cantieriAssegnatiIds }
+        }
+}
 
 /**
  * Calcola il nome della sottocartella temporale `YYYY_MM` (es. `2026_10`) a partire dalla
@@ -458,6 +486,8 @@ class ManutenzioniViewModel(
                     selectedCantiere = null,
                     impiantiDelCantiere = emptyList(),
                     impiantiSelezionati = emptyMap(),
+                    scadenzeCantiere = emptyList(),
+                    sessioniVerificaCantiere = emptyList(),
                     statusMessage = "Seleziona un cantiere."
                 )
             }
@@ -469,11 +499,14 @@ class ManutenzioniViewModel(
                 selectedImpianto = null, // Fix: Chiudi editor impianto precedente
                 impiantiDelCantiere = emptyList(),
                 impiantiSelezionati = emptyMap(),
+                scadenzeCantiere = emptyList(),
+                sessioniVerificaCantiere = emptyList(),
                 statusMessage = "Cantiere: ${cantiere.nome}. Seleziona gli impianti.",
                 errorMessage = null
             )
         }
         loadImpiantiForCantiere(cantiere.id)
+        loadSessioniPerCantiere(cantiere.id)
     }
 
     /** Aggiorna e storicizza nel database la data di inizio contratto, data intervento, data intervento precedente e il nome del manutentore per il cantiere attivo */
@@ -493,9 +526,15 @@ class ManutenzioniViewModel(
             nomeManutentore = manutentore?.trim()?.ifBlank { null }
         )
         _uiState.update { state ->
+            val scadenze = manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
+                cantiere = updated,
+                impianti = state.impiantiDelCantiere,
+                mesiOrizzonte = state.orizzonteScadenzeMesi
+            )
             state.copy(
                 selectedCantiere = updated,
-                cantieriDisponibili = state.cantieriDisponibili.map { if (it.id == updated.id) updated else it }
+                cantieriDisponibili = state.cantieriDisponibili.map { if (it.id == updated.id) updated else it },
+                scadenzeCantiere = scadenze
             )
         }
         scope.launch(Dispatchers.IO) {
@@ -580,12 +619,38 @@ class ManutenzioniViewModel(
             try {
                 val rawImpianti = repository.getImpiantiForCantiere(cantiereId)
                 val impianti = enrichImpiantiZonaIfNeeded(rawImpianti)
-                _uiState.update { it.copy(impiantiDelCantiere = impianti) }
+                _uiState.update { state ->
+                    val cantiere = state.selectedCantiere
+                    val scadenze = if (cantiere != null && cantiere.id == cantiereId) {
+                        manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
+                            cantiere = cantiere,
+                            impianti = impianti,
+                            mesiOrizzonte = state.orizzonteScadenzeMesi
+                        )
+                    } else state.scadenzeCantiere
+                    state.copy(
+                        impiantiDelCantiere = impianti,
+                        scadenzeCantiere = scadenze
+                    )
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(errorMessage = "Errore caricamento impianti: ${e.message}")
                 }
             }
+        }
+    }
+
+    private fun loadSessioniPerCantiere(cantiereId: String) {
+        scope.launch {
+            try {
+                val sessioni = withContext(Dispatchers.IO) { repository.getSessioniPerCantiere(cantiereId) }
+                _uiState.update { state ->
+                    if (state.selectedCantiere?.id == cantiereId) {
+                        state.copy(sessioniVerificaCantiere = sessioni)
+                    } else state
+                }
+            } catch (_: Exception) {}
         }
     }
 
@@ -704,9 +769,15 @@ class ManutenzioniViewModel(
         }
     }
 
-    /** Cambia la sezione corrente dell'app */
+    /** Cambia la sezione corrente dell'app (bloccando l'accesso a DATABASE per ruolo TECNICO — R31) */
     fun setSection(section: AppSection) {
-        _uiState.update { it.copy(currentSection = section) }
+        if (section == AppSection.DATABASE && !_uiState.value.isAdmin) {
+            _uiState.update {
+                it.copy(errorMessage = "Accesso negato: il ruolo Tecnico non dispone dei permessi per l'Amministrazione Database")
+            }
+            return
+        }
+        _uiState.update { it.copy(currentSection = section, errorMessage = null) }
     }
 
     fun setAdminTab(tab: AdminTab) {
@@ -778,24 +849,25 @@ class ManutenzioniViewModel(
             return
         }
 
+        val cantiere = state.selectedCantiere
+        val subfolderName = resolveTemporalSubfolderName(cantiere?.dataInterventoEffettiva)
+
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                errorMessage = null,
+                batchProgress = "Avvio generazione...",
+                statusMessage = "Generazione PDF in $subfolderName in corso...",
+                generatedFiles = emptyList()
+            )
+        }
+
         scope.launch {
             val impiantiDaGenerare = state.impiantiDelCantiere.filter { it.id in impiantiSelezionatiIds }
-            val cantiere = state.selectedCantiere
 
             // Sottocartella temporale YYYY_MM (es. 2026_10) derivata da dataInterventoEffettiva (R29 & R4)
-            val subfolderName = resolveTemporalSubfolderName(cantiere?.dataInterventoEffettiva)
             val targetOutputDir = File(outputDir, subfolderName).apply {
                 if (!exists()) mkdirs()
-            }
-
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    errorMessage = null,
-                    batchProgress = "Avvio generazione...",
-                    statusMessage = "Generazione PDF in $subfolderName in corso...",
-                    generatedFiles = emptyList()
-                )
             }
 
             val allGeneratedFiles = mutableListOf<File>()
@@ -844,6 +916,37 @@ class ManutenzioniViewModel(
                         }
                     } catch (e: Exception) {
                         totalErrors["${impianto.id}_${frequenza.codiceCartiglio()}"] = e.message ?: "Errore sconosciuto"
+                    }
+                }
+            }
+
+            // Storicizzazione automatica immutabile della sessione di verifica (Wave 4: R25, R30)
+            // Viene salvata PRIMA della promozione della data così da fotografare esattamente l'intervento eseguito
+            if (totalSuccessCount > 0 && cantiere != null) {
+                val nowTimestamp = java.time.LocalDateTime.now()
+                    .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                val sessione = manutenzioni.domain.model.SessioneVerifica(
+                    cantiereId = cantiere.id,
+                    clienteId = cantiere.clienteId,
+                    meseAnno = subfolderName,
+                    dataInizioContratto = cantiere.dataInizioContratto,
+                    dataIntervento = cantiere.effectiveDataIntervento,
+                    dataInterventoPrecedente = cantiere.dataInterventoPrecedente,
+                    nomeManutentore = cantiere.nomeManutentore,
+                    dataCreazione = nowTimestamp,
+                    cartellaOutput = targetOutputDir.absolutePath,
+                    elencoFilePdf = allGeneratedFiles.map { it.absolutePath },
+                    riepilogoImpianti = impiantiDaGenerare.map { imp ->
+                        if (imp is QuadroBT && imp.sigla.isNotBlank()) "${imp.codIntervento}-${imp.sigla}" else imp.codIntervento
+                    }
+                )
+                withContext(Dispatchers.IO) {
+                    try {
+                        repository.salvaSessioneVerifica(sessione)
+                        val sessioniAggiornate = repository.getSessioniPerCantiere(cantiere.id)
+                        _uiState.update { it.copy(sessioniVerificaCantiere = sessioniAggiornate) }
+                    } catch (e: Exception) {
+                        println("Warning: salvataggio sessione verifica fallito: ${e.message}")
                     }
                 }
             }
@@ -1207,8 +1310,23 @@ class ManutenzioniViewModel(
         loadClienti()
         loadComponentiStandard()
         loadCatalogoApprovato()
+        loadUtenti()
         _uiState.value.selectedCliente?.let {
             loadCantieriForCliente(it.id)
+        }
+    }
+
+    private fun loadUtenti() {
+        scope.launch {
+            try {
+                val utenti = withContext(Dispatchers.IO) { repository.caricaUtenti() }
+                if (utenti.isNotEmpty()) {
+                    _uiState.update { state ->
+                        val active = utenti.find { it.id == state.utenteAttivo.id } ?: utenti.first()
+                        state.copy(utenti = utenti, utenteAttivo = active)
+                    }
+                }
+            } catch (_: Exception) {}
         }
     }
 
@@ -1614,6 +1732,202 @@ class ManutenzioniViewModel(
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, errorMessage = "Errore svuotamento registro: ${e.message}") }
+            }
+        }
+    }
+
+    // === Wave 4: Calendario Scadenze & Foglio di Riepilogo Generale (R27, R28) ===
+
+    fun setOrizzonteScadenze(mesi: Int) {
+        val validMesi = mesi.coerceIn(1, 120)
+        _uiState.update { state ->
+            val scadenze = state.selectedCantiere?.let { cantiere ->
+                manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
+                    cantiere = cantiere,
+                    impianti = state.impiantiDelCantiere,
+                    mesiOrizzonte = validMesi
+                )
+            } ?: emptyList()
+            state.copy(
+                orizzonteScadenzeMesi = validMesi,
+                scadenzeCantiere = scadenze
+            )
+        }
+    }
+
+    /**
+     * Genera ed esporta il PDF del Foglio di Riepilogo Generale Intervento (Master Checklist — R28).
+     */
+    fun exportRiepilogoGeneralePdf(outputPdfFile: File? = null) {
+        val stateSnap = _uiState.value
+        val cantiere = stateSnap.selectedCantiere
+        if (cantiere == null) {
+            _uiState.update { it.copy(errorMessage = "Seleziona un cantiere prima di generare il Foglio di Riepilogo Generale") }
+            return
+        }
+        scope.launch(Dispatchers.IO) {
+            try {
+                val scadenze = manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
+                    cantiere = cantiere,
+                    impianti = stateSnap.impiantiDelCantiere,
+                    mesiOrizzonte = stateSnap.orizzonteScadenzeMesi
+                )
+                val renderer = manutenzioni.app.service.RiepilogoInterventoHtmlRenderer()
+                val html = renderer.buildRiepilogoHtml(
+                    cliente = stateSnap.selectedCliente,
+                    cantiere = cantiere,
+                    impianti = stateSnap.impiantiDelCantiere,
+                    frequenzeSelezionatePerImpianto = stateSnap.frequenzeSelezionatePerImpianto,
+                    frequenzePerImpianto = stateSnap.frequenzePerImpianto,
+                    scadenze = scadenze
+                )
+                val tempHtml = File.createTempFile("riepilogo_intervento_", ".html")
+                tempHtml.writeText(html, Charsets.UTF_8)
+                val subfolder = resolveTemporalSubfolderName(cantiere.dataInterventoEffettiva)
+                val safeCantiere = cantiere.nome.trim().replace(" ", "_").replace("/", "-").ifBlank { "Cantiere" }
+                val targetPdf = outputPdfFile ?: File.createTempFile("RIEPILOGO_INTERVENTO_${safeCantiere}_${subfolder}_", ".pdf")
+                manutenzioni.app.service.Pdf().buildPdf(tempHtml.absolutePath, targetPdf.absolutePath)
+                tempHtml.delete()
+
+                if (outputPdfFile == null) {
+                    withContext(Dispatchers.Main) {
+                        try {
+                            java.awt.Desktop.getDesktop().open(targetPdf)
+                        } catch (_: Exception) {}
+                    }
+                }
+                _uiState.update {
+                    it.copy(
+                        pdfFile = targetPdf,
+                        scadenzeCantiere = scadenze,
+                        statusMessage = "✓ Foglio di Riepilogo Generale generato: ${targetPdf.name}",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore generazione Foglio di Riepilogo Generale: ${e.message}") }
+            }
+        }
+    }
+
+    // === Wave 4: Storico Sessioni di Verifica & RBAC (R25, R30, R31) ===
+
+    /**
+     * Ripristina nel cantiere corrente i metadati di intervento (manutentore, date) di una sessione storica (R30).
+     */
+    fun ripristinaDatiDaSessione(sessione: manutenzioni.domain.model.SessioneVerifica) {
+        updateDatiInterventoCantiere(
+            dataInizioContratto = sessione.dataInizioContratto,
+            dataIntervento = sessione.dataIntervento,
+            dataInterventoPrecedente = sessione.dataInterventoPrecedente,
+            manutentore = sessione.nomeManutentore
+        )
+        _uiState.update {
+            it.copy(
+                statusMessage = "✓ Ripristinati dati sessione ${sessione.meseAnno} (Manutentore: ${sessione.nomeManutentore ?: "-"})",
+                errorMessage = null
+            )
+        }
+    }
+
+    fun deleteSessioneVerifica(sessioneId: String) {
+        val cantiereId = _uiState.value.selectedCantiere?.id ?: return
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) { repository.eliminaSessioneVerifica(sessioneId) }
+                val sessioni = withContext(Dispatchers.IO) { repository.getSessioniPerCantiere(cantiereId) }
+                _uiState.update {
+                    it.copy(
+                        sessioniVerificaCantiere = sessioni,
+                        statusMessage = "✓ Sessione storica rimossa",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore eliminazione sessione: ${e.message}") }
+            }
+        }
+    }
+
+    fun openSessionePdfFile(filePath: String) {
+        val file = File(filePath)
+        if (!file.exists()) {
+            _uiState.update { it.copy(errorMessage = "Il file PDF non è più presente nel percorso: $filePath") }
+            return
+        }
+        try {
+            java.awt.Desktop.getDesktop().open(file)
+            _uiState.update { it.copy(pdfFile = file, statusMessage = "Apertura ${file.name}...") }
+        } catch (e: Exception) {
+            _uiState.update { it.copy(errorMessage = "Impossibile aprire il file: ${e.message}") }
+        }
+    }
+
+    /**
+     * Cambia l'utente attivo per il controllo accessi RBAC (R31).
+     * Se il nuovo utente ha ruolo TECNICO, garantisce il posizionamento su OPERATIVITA
+     * e deseleziona l'eventuale cantiere non assegnato a quel tecnico.
+     */
+    fun selectUtenteAttivo(utente: manutenzioni.domain.model.Utente) {
+        _uiState.update { state ->
+            val isTecnico = utente.ruolo == manutenzioni.domain.model.RuoloUtente.TECNICO
+            val cantiereConsentito = !isTecnico ||
+                (state.selectedCantiere != null && state.selectedCantiere.id in utente.cantieriAssegnatiIds)
+            state.copy(
+                utenteAttivo = utente,
+                currentSection = if (isTecnico) AppSection.OPERATIVITA else state.currentSection,
+                selectedCantiere = if (cantiereConsentito) state.selectedCantiere else null,
+                impiantiDelCantiere = if (cantiereConsentito) state.impiantiDelCantiere else emptyList(),
+                statusMessage = "Profilo attivo: ${utente.nomeCompleto} (${utente.ruolo.label})",
+                errorMessage = null
+            )
+        }
+    }
+
+    fun saveUtente(utente: manutenzioni.domain.model.Utente) {
+        if (utente.nomeCompleto.isBlank() || utente.username.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Username e nome completo sono obbligatori") }
+            return
+        }
+        val normalized = utente.copy(
+            username = utente.username.trim(),
+            nomeCompleto = utente.nomeCompleto.trim()
+        )
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) { repository.salvaUtente(normalized) }
+                val utenti = withContext(Dispatchers.IO) { repository.caricaUtenti() }
+                _uiState.update { state ->
+                    val updatedActive = if (state.utenteAttivo.id == normalized.id) normalized else state.utenteAttivo
+                    state.copy(
+                        utenti = utenti,
+                        utenteAttivo = updatedActive,
+                        statusMessage = "✓ Utente ${normalized.nomeCompleto} (${normalized.ruolo.label}) salvato",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore salvataggio utente: ${e.message}") }
+            }
+        }
+    }
+
+    fun deleteUtente(utenteId: String) {
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) { repository.eliminaUtente(utenteId) }
+                val utenti = withContext(Dispatchers.IO) { repository.caricaUtenti() }
+                _uiState.update { state ->
+                    val active = utenti.find { it.id == state.utenteAttivo.id } ?: utenti.firstOrNull() ?: state.utenteAttivo
+                    state.copy(
+                        utenti = utenti,
+                        utenteAttivo = active,
+                        statusMessage = "✓ Utente rimosso",
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "Errore eliminazione utente: ${e.message}") }
             }
         }
     }

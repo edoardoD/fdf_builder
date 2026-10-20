@@ -253,22 +253,22 @@ develop
 
 #### 🌿 Branch 1: `feat/admin-anagrafica-and-wording`
 * **Richieste coperte:** `1`, `2`, `3`, `4`, `5`, `12`
-- [ ] **Domain Model:** Verificare campo `indirizzo: String? = null` in `Cantiere` ([ManutenzioneModels.kt](file:///Users/edoardo/development_prdj/fdf_builder/desktopApp/src/desktopMain/kotlin/manutenzioni/domain/model/ManutenzioneModels.kt)).
-- [ ] **Repository Layer:** Verificare persistenza e serializzazione dell'indirizzo cantiere in `MongoManutenzioneRepository` e `JsonManutenzioneRepository`.
-- [ ] **UI Admin Dashboard:** Rinominare tab in *"MASTER SCHEDE DI VERIFICA"* in `AdminDashboardScreen.kt`.
-- [ ] **UI Admin Clienti:** Nel dialog di modifica di `AdminClientiTab.kt`, aggiungere campi editabili per `indirizzo` e `partitaIva`.
-- [ ] **UI Admin Cantieri:** Nel dialog di aggiunta/modifica cantiere di `AdminCantieriTab.kt`, aggiungere campo `indirizzo`.
-- [ ] **UI Operatività:** Rinominare pulsante cliente in *"GESTIONE VERIFICHE PERIODICHE"* in `OperativitaScreen.kt`.
-- [ ] **UI Dettaglio Cantiere:** Rinominare pulsante in *"AGGIUNGI ATTIVITA DI VERIFICA"* e tab in *"Generazione schede di Verifica"* in `CantiereDetailScreen.kt`.
-- [ ] **Testing:** Eseguire `CantiereSerializationTest` e verificare navigazione.
+- [x] **Domain Model:** Verificare campo `indirizzo: String? = null` in `Cantiere` ([ManutenzioneModels.kt](file:///Users/edoardo/development_prdj/fdf_builder/desktopApp/src/desktopMain/kotlin/manutenzioni/domain/model/ManutenzioneModels.kt)).
+- [x] **Repository Layer:** Verificare persistenza e serializzazione dell'indirizzo cantiere in `MongoManutenzioneRepository` e `JsonManutenzioneRepository`.
+- [x] **UI Admin Dashboard:** Rinominare tab in *"MASTER SCHEDE DI VERIFICA"* in `AdminDashboardScreen.kt`.
+- [x] **UI Admin Clienti:** Nel dialog di modifica di `AdminClientiTab.kt`, aggiungere campi editabili per `indirizzo` e `partitaIva`.
+- [x] **UI Admin Cantieri:** Nel dialog di aggiunta/modifica cantiere di `AdminCantieriTab.kt`, aggiungere campo `indirizzo`.
+- [x] **UI Operatività:** Rinominare pulsante cliente in *"GESTIONE VERIFICHE PERIODICHE"* in `OperativitaScreen.kt`.
+- [x] **UI Dettaglio Cantiere:** Rinominare pulsante in *"AGGIUNGI ATTIVITA DI VERIFICA"* e tab in *"Generazione schede di Verifica"* in `CantiereDetailScreen.kt`.
+- [x] **Testing:** Eseguire `CantiereSerializationTest` e verificare navigazione.
 
 #### 🌿 Branch 2: `feat/cantiere-selection-multi`
 * **Richieste coperte:** `6`
-- [ ] **UI State:** In `NuovoImpiantoDialog.kt`, aggiungere stato reattivo `selectedImpiantoIds: Set<String>`.
-- [ ] **Layout Dialog:** Sostituire selezione singola con elenco dotato di Checkbox multi-selezione.
-- [ ] **Allineamento:** Impostare allineamento orizzontale a sinistra dei titoli e codici delle attività.
-- [ ] **ViewModel:** Aggiornare azione di salvataggio per inserire in blocco tutti gli impianti selezionati nel cantiere corrente.
-- [ ] **Testing:** Test di aggiunta simultanea di 3+ impianti al cantiere.
+- [x] **UI State:** In `NuovoImpiantoDialog.kt`, aggiungere stato reattivo `selectedImpiantoIds: Set<String>`.
+- [x] **Layout Dialog:** Sostituire selezione singola con elenco dotato di Checkbox multi-selezione.
+- [x] **Allineamento:** Impostare allineamento orizzontale a sinistra dei titoli e codici delle attività.
+- [x] **ViewModel:** Aggiornare azione di salvataggio per inserire in blocco tutti gli impianti selezionati nel cantiere corrente.
+- [x] **Testing:** Test di aggiunta simultanea di 3+ impianti al cantiere.
 
 ---
 
@@ -389,22 +389,22 @@ develop
 
 #### 🌿 Branch 9: `feat/calendario-scadenze-riepilogo`
 * **Richieste coperte:** `27`, `28`
-- [ ] **Scheduler Engine:** Implementare funzione di dominio che calcola le date delle future verifiche da `dataInizioIntervento` + frequenze.
-- [ ] **UI Tab Calendario:** Creare schermata con timeline / calendario delle scadenze raggruppate per mese (R27).
-- [ ] **Foglio di Riepilogo Generale:** Creare nuovo renderer per il PDF di riepilogo complessivo dell'intervento di cantiere (R28).
-- [ ] **Testing:** Test di calcolo scadenze su cantieri con interventi misti (1M, 6M, 1A, 5A).
+- [x] **Scheduler Engine:** Implementare funzione di dominio che calcola le date delle future verifiche da `dataInizioIntervento` + frequenze.
+- [x] **UI Tab Calendario:** Creare schermata con timeline / calendario delle scadenze raggruppate per mese (R27).
+- [x] **Foglio di Riepilogo Generale:** Creare nuovo renderer per il PDF di riepilogo complessivo dell'intervento di cantiere (R28).
+- [x] **Testing:** Test di calcolo scadenze su cantieri con interventi misti (1M, 6M, 1A, 5A).
 
 #### 🌿 Branch 10: `feat/storicizzazione-and-rbac`
 * **Richieste coperte:** `30`, `31`
-- [ ] **Storicizzazione Verifiche & Registro Manutentori:**
-  - [ ] Creare entità `@Serializable data class SessioneVerifica(id, cantiereId, dataInizioIntervento, nomeManutentore, dataCreazione, elencoFilePdf: List<String>)` per memorizzare snapshot immutabili di ciascun ciclo di manutenzione (R30).
-  - [ ] Garantire che il nome del manutentore inserito per un ciclo non venga sovrascritto o perso negli interventi successivi, ma rimanga storicizzato nello storico verifiche del cantiere (R25, R30).
-- [ ] **UI Storico Cantiere:** Lista delle sessioni pregresse con possibilità di consultare il registro manutentori passati e scaricare/riaprire i fogli PDF associati.
-- [ ] **RBAC Domain Model:** Entità `Utente` con ruoli `ADMIN` e `TECNICO` (R31).
-- [ ] **Filtraggio Permessi UI:** 
+- [x] **Storicizzazione Verifiche & Registro Manutentori:**
+  - [x] Creare entità `@Serializable data class SessioneVerifica(id, cantiereId, dataInizioIntervento, nomeManutentore, dataCreazione, elencoFilePdf: List<String>)` per memorizzare snapshot immutabili di ciascun ciclo di manutenzione (R30).
+  - [x] Garantire che il nome del manutentore inserito per un ciclo non venga sovrascritto o perso negli interventi successivi, ma rimanga storicizzato nello storico verifiche del cantiere (R25, R30).
+- [x] **UI Storico Cantiere:** Lista delle sessioni pregresse con possibilità di consultare il registro manutentori passati e scaricare/riaprire i fogli PDF associati.
+- [x] **RBAC Domain Model:** Entità `Utente` con ruoli `ADMIN` e `TECNICO` (R31).
+- [x] **Filtraggio Permessi UI:** 
   - Utente Tecnico: accesso limitato ai propri cantieri assegnati, sola compilazione schede.
   - Utente Admin: visibilità totale su anagrafiche, master e configurazioni.
-- [ ] **Testing:** Test di persistenza e richiamo della sessione storicizzata con verifica del manutentore associato.
+- [x] **Testing:** Test di persistenza e richiamo della sessione storicizzata con verifica del manutentore associato.
 
 ---
 
