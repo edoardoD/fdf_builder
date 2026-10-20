@@ -30,6 +30,7 @@ class MongoManutenzioneRepository(
     private val catalogoApprovatoCollection = database.getCollection<manutenzioni.domain.model.ComponenteApprovato>("catalogo_approvato")
     private val sessioniVerificaCollection = database.getCollection<manutenzioni.domain.model.SessioneVerifica>("sessioni_verifica")
     private val utentiCollection = database.getCollection<manutenzioni.domain.model.Utente>("utenti")
+    private val eventiManutenzioneCollection = database.getCollection<manutenzioni.domain.model.EventoManutenzione>("eventi_manutenzione")
 
     override suspend fun salvaImpianto(impianto: Impianto) {
         // Upsert by id
@@ -224,5 +225,78 @@ class MongoManutenzioneRepository(
 
     override suspend fun eliminaUtente(id: String) {
         utentiCollection.deleteOne(eq("id", id))
+    }
+
+    // --- Eventi di Manutenzione & Scheduler Ricorrenze ---
+
+    override suspend fun salvaEventoManutenzione(evento: manutenzioni.domain.model.EventoManutenzione) {
+        eventiManutenzioneCollection.replaceOne(
+            filter = eq("id", evento.id),
+            replacement = evento,
+            options = ReplaceOptions().upsert(true)
+        )
+    }
+
+    override suspend fun salvaEventiManutenzioneBatch(eventi: List<manutenzioni.domain.model.EventoManutenzione>) {
+        for (evento in eventi) {
+            salvaEventoManutenzione(evento)
+        }
+    }
+
+    override suspend fun caricaEventiManutenzione(): List<manutenzioni.domain.model.EventoManutenzione> {
+        return eventiManutenzioneCollection.find().toList()
+    }
+
+    override suspend fun caricaEventiPerMese(annoMese: String): List<manutenzioni.domain.model.EventoManutenzione> {
+        val all = eventiManutenzioneCollection.find().toList()
+        val normalized = annoMese.replace("_", "-")
+        return all.filter { ev ->
+            val d = ev.dataPianificata.trim()
+            val parts = d.split("/", "-", ".")
+            if (parts.size == 3) {
+                val y = if (parts[0].length == 4) parts[0] else parts[2]
+                val m = (if (parts[0].length == 4) parts[1] else parts[1]).padStart(2, '0')
+                "$y-$m" == normalized
+            } else false
+        }
+    }
+
+    override suspend fun caricaEventiPerCantiere(cantiereId: String): List<manutenzioni.domain.model.EventoManutenzione> {
+        return eventiManutenzioneCollection.find(eq("cantiereId", cantiereId)).toList()
+    }
+
+    override suspend fun eliminaEventoManutenzione(id: String, eliminaSerieFutura: Boolean) {
+        if (!eliminaSerieFutura) {
+            eventiManutenzioneCollection.deleteOne(eq("id", id))
+        } else {
+            val target = eventiManutenzioneCollection.find(eq("id", id)).firstOrNull()
+            if (target != null && !target.serieRicorrenzaId.isNullOrBlank()) {
+                val allInSerie = eventiManutenzioneCollection.find(eq("serieRicorrenzaId", target.serieRicorrenzaId)).toList()
+                val baseDate = manutenzioni.domain.service.CalendarioScadenzeCalculator.parseDataRiferimento(target.dataPianificata)
+                for (ev in allInSerie) {
+                    val evDate = manutenzioni.domain.service.CalendarioScadenzeCalculator.parseDataRiferimento(ev.dataPianificata)
+                    if (evDate >= baseDate) {
+                        eventiManutenzioneCollection.deleteOne(eq("id", ev.id))
+                    }
+                }
+            } else {
+                eventiManutenzioneCollection.deleteOne(eq("id", id))
+            }
+        }
+    }
+
+    override suspend fun aggiornaStatoEvento(
+        id: String,
+        nuovoStato: manutenzioni.domain.model.StatoEventoManutenzione,
+        dataCompletamento: String?
+    ) {
+        val target = eventiManutenzioneCollection.find(eq("id", id)).firstOrNull() ?: return
+        val updated = target.copy(
+            stato = nuovoStato,
+            dataCompletamentoEffettiva = if (nuovoStato == manutenzioni.domain.model.StatoEventoManutenzione.COMPLETATO) {
+                dataCompletamento ?: target.dataPianificata
+            } else target.dataCompletamentoEffettiva
+        )
+        salvaEventoManutenzione(updated)
     }
 }
