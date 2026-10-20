@@ -119,6 +119,10 @@ fun AdminCantieriTab(
                                         Spacer(modifier = Modifier.height(2.dp))
                                         Text("📍 $indirizzo", fontSize = 12.sp, color = MaterialTheme.colors.secondary)
                                     }
+                                    cantiere.dataInizioContratto?.let { dataContratto ->
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text("📅 Inizio contratto: $dataContratto", fontSize = 12.sp, color = MaterialTheme.colors.primary)
+                                    }
                                 }
                                 IconButton(onClick = {
                                     cantiereInModifica = cantiere
@@ -135,9 +139,9 @@ fun AdminCantieriTab(
 }
 
 /**
- * Dialog unico per creazione e modifica di un cantiere (R3).
- * In modifica (`initialCantiere != null`) aggiorna solo nome e indirizzo via `copy()`,
- * preservando i metadati di intervento (data inizio, manutentore).
+ * Dialog unico per creazione e modifica di un cantiere (R3, R4).
+ * In modifica (`initialCantiere != null`) aggiorna nome, indirizzo e data inizio contratto via `copy()`,
+ * preservando i metadati di intervento (data intervento, data intervento precedente, manutentore).
  */
 @Composable
 fun NuovoCantiereDialog(
@@ -148,6 +152,7 @@ fun NuovoCantiereDialog(
 ) {
     var nome by remember { mutableStateOf(initialCantiere?.nome ?: "") }
     var indirizzo by remember { mutableStateOf(initialCantiere?.indirizzo ?: "") }
+    var dataInizioContratto by remember { mutableStateOf(initialCantiere?.dataInizioContratto ?: "") }
     var nomeError by remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -174,6 +179,14 @@ fun NuovoCantiereDialog(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
+                OutlinedTextField(
+                    value = dataInizioContratto,
+                    onValueChange = { dataInizioContratto = it },
+                    label = { Text("Data inizio contratto") },
+                    placeholder = { Text("GG/MM/AAAA (es. 01/01/2026)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
             }
         },
         confirmButton = {
@@ -182,13 +195,18 @@ fun NuovoCantiereDialog(
                     nomeError = true
                 } else {
                     val indirizzoPulito = indirizzo.trim().ifBlank { null }
-                    val cantiere = initialCantiere?.copy(nome = nome.trim(), indirizzo = indirizzoPulito)
-                        ?: Cantiere(
-                            id = UUID.randomUUID().toString(),
-                            nome = nome.trim(),
-                            clienteId = clienteId,
-                            indirizzo = indirizzoPulito
-                        )
+                    val dataInizioContrattoPulita = dataInizioContratto.trim().ifBlank { null }
+                    val cantiere = initialCantiere?.copy(
+                        nome = nome.trim(),
+                        indirizzo = indirizzoPulito,
+                        dataInizioContratto = dataInizioContrattoPulita
+                    ) ?: Cantiere(
+                        id = UUID.randomUUID().toString(),
+                        nome = nome.trim(),
+                        clienteId = clienteId,
+                        indirizzo = indirizzoPulito,
+                        dataInizioContratto = dataInizioContrattoPulita
+                    )
                     onConfirm(cantiere)
                 }
             }) {

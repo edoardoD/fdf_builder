@@ -8,6 +8,7 @@ import manutenzioni.domain.model.Cantiere
 import manutenzioni.domain.model.Cliente
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.normalizeType
+import manutenzioni.domain.model.normalizeDates
 import java.io.File
 
 /**
@@ -105,7 +106,7 @@ class JsonManutenzioneRepository(
                 cacheClienti = db.clienti.toMutableList()
             }
             if (cacheCantieri == null) {
-                cacheCantieri = db.cantieri.toMutableList()
+                cacheCantieri = db.cantieri.map { it.normalizeDates() }.toMutableList()
             }
             if (cacheComponenti == null) {
                 cacheComponenti = db.componenti.toMutableList()
@@ -125,7 +126,7 @@ class JsonManutenzioneRepository(
                 cache = db.impianti.map { it.normalizeType() }.toMutableList()
             }
             if (cacheCantieri == null) {
-                cacheCantieri = db.cantieri.toMutableList()
+                cacheCantieri = db.cantieri.map { it.normalizeDates() }.toMutableList()
             }
             if (cacheComponenti == null) {
                 cacheComponenti = db.componenti.toMutableList()
@@ -140,7 +141,7 @@ class JsonManutenzioneRepository(
     private fun getCantieriCache(): MutableList<Cantiere> {
         if (cacheCantieri == null) {
             val db = loadFromDisk()
-            cacheCantieri = db.cantieri.toMutableList()
+            cacheCantieri = db.cantieri.map { it.normalizeDates() }.toMutableList()
             // Assicura che anche le altre cache siano popolate
             getImpiantiCache()
             getClientiCache()
@@ -276,7 +277,7 @@ class JsonManutenzioneRepository(
     // === Getters for new workflow ===
 
     override suspend fun getCantieriForCliente(clienteId: String): List<Cantiere> = mutex.withLock {
-        return getCantieriCache().filter { it.clienteId == clienteId }
+        return getCantieriCache().filter { it.clienteId == clienteId }.map { it.normalizeDates() }
     }
 
     override suspend fun getImpiantiForCantiere(cantiereId: String): List<Impianto> = mutex.withLock {
@@ -286,12 +287,13 @@ class JsonManutenzioneRepository(
     // === Cantieri CRUD ===
 
     override suspend fun salvaCantiere(cantiere: Cantiere) = mutex.withLock {
+        val normalized = cantiere.normalizeDates()
         val list = getCantieriCache()
-        val index = list.indexOfFirst { it.id == cantiere.id }
+        val index = list.indexOfFirst { it.id == normalized.id }
         if (index >= 0) {
-            list[index] = cantiere
+            list[index] = normalized
         } else {
-            list.add(cantiere)
+            list.add(normalized)
         }
         saveToDisk()
     }
@@ -301,7 +303,7 @@ class JsonManutenzioneRepository(
         val index = list.indexOfFirst { it.id == id }
         if (index >= 0) {
             val cantiere = list[index]
-            list[index] = cantiere.copy(nome = newName)
+            list[index] = cantiere.copy(nome = newName).normalizeDates()
             saveToDisk()
         }
     }

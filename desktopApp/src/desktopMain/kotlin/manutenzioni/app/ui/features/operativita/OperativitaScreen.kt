@@ -229,6 +229,15 @@ fun CantiereCard(
                     color = MaterialTheme.colors.secondary
                 )
             }
+            cantiere.dataInizioContratto?.let { dataContratto ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "📅 Inizio contratto: $dataContratto",
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.primary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
             Spacer(modifier = Modifier.height(24.dp))
             
             Button(

@@ -34,7 +34,10 @@ class HtmlToPdfStrategy(
         cantiereNome: String?,
         dataInizioIntervento: String?,
         nomeManutentore: String?,
-        firmaManutentore: String?
+        firmaManutentore: String?,
+        dataInizioContratto: String?,
+        dataIntervento: String?,
+        dataInterventoPrecedente: String?
     ): File {
         // 1. Filtra attività per frequenza inclusiva e componenti del cantiere
         val attivitaFiltrate = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveAttivita(
@@ -58,7 +61,10 @@ class HtmlToPdfStrategy(
             cantiereNome = cantiereNome,
             dataInizioIntervento = dataInizioIntervento,
             nomeManutentore = nomeManutentore,
-            firmaManutentore = firmaManutentore
+            firmaManutentore = firmaManutentore,
+            dataInizioContratto = dataInizioContratto,
+            dataIntervento = dataIntervento,
+            dataInterventoPrecedente = dataInterventoPrecedente
         )
 
         // 3. Scrivi HTML temporaneo

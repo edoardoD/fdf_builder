@@ -22,6 +22,9 @@ interface Html {
         cantiereNome: String? = null,
         dataInizioIntervento: String? = null,
         nomeManutentore: String? = null,
-        firmaManutentore: String? = null
+        firmaManutentore: String? = null,
+        dataInizioContratto: String? = null,
+        dataIntervento: String? = null,
+        dataInterventoPrecedente: String? = null
     ): String
 }

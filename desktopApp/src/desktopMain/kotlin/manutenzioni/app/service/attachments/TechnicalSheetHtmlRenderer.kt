@@ -22,14 +22,16 @@ class TechnicalSheetHtmlRenderer {
         clienteNome: String?,
         cantiereNome: String? = null,
         dataInizioIntervento: String? = null,
-        nomeManutentore: String? = null
+        nomeManutentore: String? = null,
+        dataInizioContratto: String? = null
     ): String {
         val sb = StringBuilder()
         val clienteText = if (!clienteNome.isNullOrBlank()) escapeHtml(clienteNome) else "Cliente"
         val codSchedaEscaped = escapeHtml(data.codScheda)
         val prefix = escapeHtml(data.campoAcroFormPrefix)
         val sitoOImpianto = escapeHtml(data.sitoLabel ?: cantiereNome?.takeIf { it.isNotBlank() } ?: data.impiantoLabel)
-        val dataInizioAttr = if (!dataInizioIntervento.isNullOrBlank()) """ value="${escapeHtml(dataInizioIntervento)}"""" else ""
+        val startingDateEffective = dataInizioContratto ?: dataInizioIntervento
+        val dataInizioAttr = if (!startingDateEffective.isNullOrBlank()) """ value="${escapeHtml(startingDateEffective)}"""" else ""
         val manutentoreAttr = if (!nomeManutentore.isNullOrBlank()) """ value="${escapeHtml(nomeManutentore)}"""" else ""
 
         val containerCssClass = when (data.campoAcroFormPrefix) {
@@ -88,9 +90,9 @@ class TechnicalSheetHtmlRenderer {
         sb.appendLine("""                        <p style="font-size: 6.5pt; font-weight: bold; margin: 0;">$clienteText</p>""")
         sb.appendLine("""                    </td>""")
         sb.appendLine("""                    <td style="border: 0.0133cm solid #000; padding: 2px 4px; vertical-align: top;">""")
-        sb.appendLine("""                        <p style="font-size: 5pt; margin: 0;">Data inizio periodo attività</p>""")
+        sb.appendLine("""                        <p style="font-size: 5pt; margin: 0;">Data inizio contratto</p>""")
         sb.appendLine("""                        <input type="text" name="${prefix}_data_inizio" id="${prefix}_data_inizio"$dataInizioAttr placeholder="gg/mm/aaaa" style="width: 100%; height: 0.44cm; font-size: 7.5pt; box-sizing: border-box;" />""")
-        sb.appendLine("""                        <label for="${prefix}_data_inizio" class="visually-hidden">Data inizio periodo attività</label>""")
+        sb.appendLine("""                        <label for="${prefix}_data_inizio" class="visually-hidden">Data inizio contratto</label>""")
         sb.appendLine("""                    </td>""")
         sb.appendLine("""                </tr>""")
 

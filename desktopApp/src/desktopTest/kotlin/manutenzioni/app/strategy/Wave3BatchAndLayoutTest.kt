@@ -76,10 +76,10 @@ class Wave3BatchAndLayoutTest {
         val dataRowCount = Regex("""<tr class="row--data">""").findAll(html).count()
         assertEquals(30, dataRowCount, "La scheda deve avere esattamente 30 righe nella griglia dati")
 
-        // Solo le prime 2 righe hanno i radio button AcroForm; le righe 3..30 sono neutre
+        // Tutte le 30 righe hanno i radio button AcroForm (R2)
         assertContains(html, "name=\"esito_AMB_1\"")
         assertContains(html, "name=\"esito_AMB_2\"")
-        assertFalse(html.contains("name=\"esito_AMB_3\""), "Le righe di riempimento 3..30 non devono avere campi AcroForm")
+        assertTrue(html.contains("name=\"esito_AMB_3\""), "Le righe di riempimento 3..30 devono avere campi AcroForm")
         assertContains(html, "<td class=\"cell--data-empty\"><p>30</p></td>")
     }
 
@@ -312,6 +312,122 @@ class Wave3BatchAndLayoutTest {
             }
         } finally {
             tempPdf.delete()
+        }
+    }
+
+    @Test
+    fun `ViewModel - toggleImpiantiSelection e toggleFrequenzaForImpianti aggiornano lo stato in blocco`() = runBlocking {
+        val cliente = Cliente(id = "cli-bulk", nome = "Cliente Bulk")
+        val cantiere = Cantiere(id = "cant-bulk", nome = "Cantiere Bulk", clienteId = cliente.id)
+        val q1 = QuadroBT(id = "q1", codIntervento = "Q", nomeCompleto = "Quadro 1", sigla = "Q1", cantiereId = cantiere.id)
+        val q2 = QuadroBT(id = "q2", codIntervento = "Q", nomeCompleto = "Quadro 2", sigla = "Q2", cantiereId = cantiere.id)
+        val repo = InMemoryW3Repo(
+            clienti = mutableListOf(cliente),
+            cantieri = mutableListOf(cantiere),
+            impianti = mutableListOf(q1, q2)
+        )
+        val viewModel = ManutenzioniViewModel(repository = repo, pdfStrategy = HtmlToPdfStrategy())
+        delay(100)
+        viewModel.selectCliente(cliente)
+        delay(50)
+        viewModel.selectCantiere(cantiere)
+        delay(100)
+
+        // Selezione massiva
+        viewModel.toggleImpiantiSelection(listOf("q1", "q2"), true)
+        val state = viewModel.uiState.value
+        assertEquals(true, state.impiantiSelezionati["q1"])
+        assertEquals(true, state.impiantiSelezionati["q2"])
+
+        // Assegnazione frequenza massiva
+        val semestrale = Periodo(TipoPeriodo.M, 6)
+        viewModel.toggleFrequenzaForImpianti(listOf("q1", "q2"), semestrale)
+        val updatedFreqs = viewModel.uiState.value.frequenzeSelezionatePerImpianto
+        assertEquals(setOf(semestrale), updatedFreqs["q1"])
+        assertEquals(setOf(semestrale), updatedFreqs["q2"])
+
+        // Deselezione massiva
+        viewModel.toggleImpiantiSelection(listOf("q1"), false)
+        assertNull(viewModel.uiState.value.impiantiSelezionati["q1"])
+        assertEquals(true, viewModel.uiState.value.impiantiSelezionati["q2"])
+    }
+
+    @Test
+    fun `ViewModel - updateDatiInterventoCantiere a 4 argomenti e promozione automatica data precedente dopo generazione batch`() = runBlocking {
+        val cliente = Cliente(id = "cli-date", nome = "Azienda Ospedaliera")
+        val cantiere = Cantiere(
+            id = "cant-date",
+            nome = "Sede Principale",
+            clienteId = cliente.id,
+            dataInizioContratto = "01/01/2025",
+            dataInizioIntervento = "10/05/2026",
+            dataInterventoPrecedente = "10/11/2025",
+            nomeManutentore = "Tecnico Rossi"
+        )
+        val q = QuadroBT(
+            id = "q-date",
+            codIntervento = "Q",
+            nomeCompleto = "Quadro MT/BT",
+            sigla = "Q1",
+            cantiereId = cantiere.id,
+            listaAttivita = listOf(
+                Attivita(1, "Ispezione", "Controllo generale", Periodo(TipoPeriodo.M, 6))
+            )
+        )
+        val repo = InMemoryW3Repo(
+            clienti = mutableListOf(cliente),
+            cantieri = mutableListOf(cantiere),
+            impianti = mutableListOf(q)
+        )
+        val viewModel = ManutenzioniViewModel(repository = repo, pdfStrategy = HtmlToPdfStrategy())
+        delay(100)
+        viewModel.selectCliente(cliente)
+        delay(50)
+        viewModel.selectCantiere(cantiere)
+        delay(100)
+
+        // Aggiornamento con 4 parametri
+        viewModel.updateDatiInterventoCantiere(
+            dataInizioContratto = "01/01/2024",
+            dataIntervento = "20/10/2026",
+            dataInterventoPrecedente = "15/04/2026",
+            manutentore = "Ing. Bianchi"
+        )
+        delay(100)
+
+        val updatedCantiere = viewModel.uiState.value.selectedCantiere
+        assertNotNull(updatedCantiere)
+        assertEquals("20/10/2026", updatedCantiere.dataIntervento)
+        assertEquals("20/10/2026", updatedCantiere.dataInizioIntervento)
+        assertEquals("Ing. Bianchi", updatedCantiere.nomeManutentore)
+        assertEquals("01/01/2024", updatedCantiere.dataInizioContratto)
+        assertEquals("15/04/2026", updatedCantiere.dataInterventoPrecedente)
+
+        // Seleziona impianto e genera PDF batch per verificare promozione della data precedente
+        viewModel.toggleImpiantoSelection("q-date", true)
+        viewModel.updateFrequenzaForImpianto("q-date", Periodo(TipoPeriodo.M, 6))
+
+        val tempDir = Files.createTempDirectory("batch_date_test").toFile()
+        try {
+            viewModel.generatePdfToDirectory(outputDir = tempDir)
+            var attempts = 0
+            while (viewModel.uiState.value.isLoading && attempts < 50) {
+                delay(100)
+                attempts++
+            }
+            delay(150)
+
+            // La dataInterventoPrecedente deve essere stata promossa al valore di dataIntervento ("20/10/2026")
+            val cantierePostGen = viewModel.uiState.value.selectedCantiere
+            assertNotNull(cantierePostGen)
+            assertEquals("20/10/2026", cantierePostGen.dataInterventoPrecedente, "dataInterventoPrecedente deve essere aggiornata alla data dell'intervento appena completato")
+
+            // Verifica anche sul repository
+            val repoCantiere = repo.getCantieriForCliente(cliente.id).firstOrNull { it.id == cantiere.id }
+            assertNotNull(repoCantiere)
+            assertEquals("20/10/2026", repoCantiere.dataInterventoPrecedente)
+        } finally {
+            tempDir.deleteRecursively()
         }
     }
 

@@ -45,7 +45,10 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
         cantiereNome: String? = null,
         dataInizioIntervento: String? = null,
         nomeManutentore: String? = null,
-        firmaManutentore: String? = null
+        firmaManutentore: String? = null,
+        dataInizioContratto: String? = null,
+        dataIntervento: String? = null,
+        dataInterventoPrecedente: String? = null
     ): File
 
     /**
@@ -66,7 +69,10 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
         dataInizioIntervento: String?,
         nomeManutentore: String?,
         firmaManutentore: String?,
-        onProgress: (current: Int, total: Int) -> Unit
+        onProgress: (current: Int, total: Int) -> Unit,
+        dataInizioContratto: String?,
+        dataIntervento: String?,
+        dataInterventoPrecedente: String?
     ): BatchResult {
         require(copies >= 1) { "Il numero di copie deve essere >= 1" }
 
@@ -96,7 +102,10 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
                     cantiereNome = cantiereNome,
                     dataInizioIntervento = dataInizioIntervento,
                     nomeManutentore = nomeManutentore,
-                    firmaManutentore = firmaManutentore
+                    firmaManutentore = firmaManutentore,
+                    dataInizioContratto = dataInizioContratto,
+                    dataIntervento = dataIntervento,
+                    dataInterventoPrecedente = dataInterventoPrecedente
                 )
                 generatedFiles.add(file)
             } catch (e: Exception) {

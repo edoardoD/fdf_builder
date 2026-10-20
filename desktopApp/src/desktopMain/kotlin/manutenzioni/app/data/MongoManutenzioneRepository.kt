@@ -11,6 +11,7 @@ import manutenzioni.domain.model.Cantiere
 import manutenzioni.domain.model.Cliente
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.normalizeType
+import manutenzioni.domain.model.normalizeDates
 
 import manutenzioni.domain.model.QuadroMQT
 import manutenzioni.domain.model.RilevazioneAntincendio
@@ -110,7 +111,7 @@ class MongoManutenzioneRepository(
     }
 
     override suspend fun getCantieriForCliente(clienteId: String): List<Cantiere> {
-        return cantieriCollection.find(eq("clienteId", clienteId)).toList()
+        return cantieriCollection.find(eq("clienteId", clienteId)).toList().map { it.normalizeDates() }
     }
 
     override suspend fun getImpiantiForCantiere(cantiereId: String): List<Impianto> {
@@ -118,15 +119,16 @@ class MongoManutenzioneRepository(
     }
 
     override suspend fun salvaCantiere(cantiere: Cantiere) {
+        val normalized = cantiere.normalizeDates()
         cantieriCollection.replaceOne(
-            filter = eq("id", cantiere.id),
-            replacement = cantiere,
+            filter = eq("id", normalized.id),
+            replacement = normalized,
             options = ReplaceOptions().upsert(true)
         )
     }
 
     override suspend fun updateCantiere(id: String, newName: String) {
-        val cantiere = cantieriCollection.find(eq("id", id)).firstOrNull()
+        val cantiere = cantieriCollection.find(eq("id", id)).firstOrNull()?.normalizeDates()
         if (cantiere != null) {
             salvaCantiere(cantiere.copy(nome = newName))
         }

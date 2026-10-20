@@ -2,6 +2,7 @@ package manutenzioni.app.service
 
 import com.itextpdf.html2pdf.ConverterProperties
 import com.itextpdf.html2pdf.HtmlConverter
+import com.itextpdf.html2pdf.resolver.font.DefaultFontProvider
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.kernel.pdf.PdfWriter
 import manutenzioni.domain.service.IPdf
@@ -29,6 +30,7 @@ class Pdf : IPdf {
                     // Configurazione proprietà
                     val converterProperties = ConverterProperties().apply {
                         setCreateAcroForm(true) // Abilita i form compilabili
+                        setFontProvider(DefaultFontProvider(true, true, true))
                     }
 
                     // Esecuzione conversione

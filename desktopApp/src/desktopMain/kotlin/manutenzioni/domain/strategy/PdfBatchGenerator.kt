@@ -41,6 +41,9 @@ interface PdfBatchGenerator {
         dataInizioIntervento: String? = null,
         nomeManutentore: String? = null,
         firmaManutentore: String? = null,
-        onProgress: (current: Int, total: Int) -> Unit = { _, _ -> }
+        onProgress: (current: Int, total: Int) -> Unit = { _, _ -> },
+        dataInizioContratto: String? = null,
+        dataIntervento: String? = null,
+        dataInterventoPrecedente: String? = null
     ): BatchResult
 }
