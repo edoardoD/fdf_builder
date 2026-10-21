@@ -262,4 +262,20 @@ class RicorrenzeManutenzioneTest {
         val secondeScadenze = future.filter { it.dataPianificata == "22/10/2027" }
         assertEquals(5, secondeScadenze.size)
     }
+
+    @Test
+    fun `filtro granulare impianti per ID seleziona solo i target specificati`() {
+        val imp1 = ImpiantoPianificatoSnapshot("imp-q1", "Q", "Quadro Generale (QG)", Periodo(TipoPeriodo.M, 6), 5)
+        val imp2 = ImpiantoPianificatoSnapshot("imp-q2", "Q", "Quadro Pompe (QP)", Periodo(TipoPeriodo.M, 6), 3)
+        val imp3 = ImpiantoPianificatoSnapshot("imp-em", "EM", "Emergenza", Periodo(TipoPeriodo.M, 6), 4)
+
+        val tutti = listOf(imp1, imp2, imp3)
+        val selectedIds = listOf("imp-q2", "imp-em")
+
+        val filtrati = tutti.filter { it.impiantoId in selectedIds }
+        assertEquals(2, filtrati.size)
+        assertTrue(filtrati.any { it.impiantoId == "imp-q2" && it.descrizione.contains("QP") })
+        assertTrue(filtrati.any { it.impiantoId == "imp-em" })
+        assertTrue(filtrati.none { it.impiantoId == "imp-q1" })
+    }
 }

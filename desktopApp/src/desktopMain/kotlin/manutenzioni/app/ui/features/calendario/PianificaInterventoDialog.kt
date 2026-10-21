@@ -67,6 +67,7 @@ fun PianificaInterventoDialog(
     onPianifica: (
         dataPianificata: String,
         cantieriIds: List<String>,
+        impiantiIds: List<String>,
         impiantiCodici: List<String>,
         frequenza: Periodo,
         manutentore: String?,
@@ -82,8 +83,8 @@ fun PianificaInterventoDialog(
     var selectedCantieriIds by remember { mutableStateOf(setOf<String>()) }
     var searchCantiereQuery by remember { mutableStateOf("") }
 
-    var selectedImpiantiCodici by remember { mutableStateOf(setOf<String>()) }
-    var allImpiantiSelected by remember { mutableStateOf(true) }
+    var selectedImpiantiIds by remember { mutableStateOf(setOf<String>()) }
+    var previousCantieriIds by remember { mutableStateOf(setOf<String>()) }
 
     var selectedFrequenza by remember { mutableStateOf(Periodo(TipoPeriodo.M, 6)) }
     var manutentore by remember { mutableStateOf("") }
@@ -113,33 +114,19 @@ fun PianificaInterventoDialog(
         else tuttiImpianti.filter { it.cantiereId in selectedCantieriIds }
     }
 
-    // Raggruppamento per codice impianto presente nei cantieri selezionati
-    val tipologieImpiantiDisponibili = remember(impiantiDeiCantieriSelezionati) {
-        impiantiDeiCantieriSelezionati
-            .groupBy { it.codIntervento.uppercase() }
-            .map { (cod, list) ->
-                val first = list.first()
-                val nomeDesc = when (first) {
-                    is QuadroBT -> "Quadri BT"
-                    is ImpiantoEmergenza -> "Emergenza"
-                    is RilevazioneAntincendio -> "Antincendio"
-                    is RilevazioneGas -> "Gas"
-                    is QuadroMQT -> "Quadri MT"
-                    else -> first.nomeCompleto.take(20)
-                }
-                Triple(cod, nomeDesc, list.size)
-            }
-            .sortedBy { it.first }
+    // Lista ordinata dei cantieri selezionati
+    val selectedCantieriList = remember(selectedCantieriIds, cantieriDisponibili) {
+        cantieriDisponibili.filter { it.id in selectedCantieriIds }
     }
 
-    // Allinea la selezione impianti se la lista dei cantieri cambia
-    LaunchedEffect(tipologieImpiantiDisponibili) {
-        val availableCodes = tipologieImpiantiDisponibili.map { it.first }.toSet()
-        val validSelected = selectedImpiantiCodici.filter { it in availableCodes }.toSet()
-        if (validSelected != selectedImpiantiCodici) {
-            selectedImpiantiCodici = validSelected
-            if (validSelected.isEmpty()) allImpiantiSelected = true
-        }
+    // Allinea la selezione impianti in base ai cantieri scelti
+    LaunchedEffect(selectedCantieriIds, tuttiImpianti) {
+        val validIds = tuttiImpianti.filter { it.cantiereId in selectedCantieriIds }.map { it.id }.toSet()
+        val newlyAdded = selectedCantieriIds - previousCantieriIds
+        val plantsToAdd = tuttiImpianti.filter { it.cantiereId in newlyAdded }.map { it.id }
+
+        selectedImpiantiIds = (selectedImpiantiIds.intersect(validIds)) + plantsToAdd
+        previousCantieriIds = selectedCantieriIds
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -363,17 +350,39 @@ fun PianificaInterventoDialog(
                         }
                     }
 
-                    // 3. Impianti Coinvolti (DINAMICO SUI CANTIERI SELEZIONATI)
+                    // 2. Impianti Coinvolti nell'Intervento (CHECKLIST RAGGRUPPATA PER CANTIERE)
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "2. Impianti Coinvolti nell'Intervento:",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF334155)
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "2. Impianti Coinvolti nell'Intervento (${selectedImpiantiIds.size} di ${impiantiDeiCantieriSelezionati.size} selezionati):",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF334155)
+                            )
+                            if (impiantiDeiCantieriSelezionati.isNotEmpty()) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    TextButton(
+                                        onClick = { selectedImpiantiIds = impiantiDeiCantieriSelezionati.map { it.id }.toSet() },
+                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text("Seleziona Tutti", fontSize = 10.sp)
+                                    }
+                                    TextButton(
+                                        onClick = { selectedImpiantiIds = emptySet() },
+                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text("Deseleziona Tutti", fontSize = 10.sp)
+                                    }
+                                }
+                            }
+                        }
 
                         if (selectedCantieriIds.isEmpty()) {
                             Surface(
@@ -394,77 +403,204 @@ fun PianificaInterventoDialog(
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Text(
-                                        text = "Seleziona almeno un cantiere sopra per visualizzare e filtrare gli impianti presenti.",
+                                        text = "Seleziona almeno un cantiere sopra per visualizzare e selezionare gli impianti presenti.",
                                         fontSize = 11.sp,
                                         color = Color(0xFF64748B)
                                     )
                                 }
                             }
-                        } else if (tipologieImpiantiDisponibili.isEmpty()) {
+                        } else if (impiantiDeiCantieriSelezionati.isEmpty()) {
                             Surface(
                                 color = Color(0xFFFFFBEB),
                                 shape = RoundedCornerShape(8.dp),
                                 border = BorderStroke(1.dp, Color(0xFFFDE68A)),
-                                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                                modifier = Modifier.fillMaxWidth().padding(4.dp)
                             ) {
                                 Text(
                                     text = "Nessun impianto censito nei cantieri selezionati.",
                                     fontSize = 11.sp,
                                     color = Color(0xFFB45309),
-                                    modifier = Modifier.padding(8.dp)
+                                    modifier = Modifier.padding(10.dp)
                                 )
                             }
                         } else {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            // Checklist verticale raggruppata per cantiere di riferimento
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                // Opzione "Tutti gli impianti"
-                                Surface(
-                                    color = if (allImpiantiSelected) Color(0xFF1E3A8A) else Color(0xFFF1F5F9),
-                                    shape = RoundedCornerShape(14.dp),
-                                    border = BorderStroke(1.dp, if (allImpiantiSelected) Color(0xFF1E3A8A) else Color(0xFFCBD5E1)),
-                                    modifier = Modifier.clickable {
-                                        allImpiantiSelected = true
-                                        selectedImpiantiCodici = emptySet()
+                                selectedCantieriList.forEach { cantiere ->
+                                    val cantiereImpianti = remember(cantiere.id, tuttiImpianti) {
+                                        tuttiImpianti.filter { it.cantiereId == cantiere.id }
                                     }
-                                ) {
-                                    Text(
-                                        text = "Tutti gli impianti (${impiantiDeiCantieriSelezionati.size})",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (allImpiantiSelected) Color.White else Color(0xFF334155),
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                                    )
-                                }
+                                    val cantiereSelectedIds = cantiereImpianti.map { it.id }.filter { it in selectedImpiantiIds }
+                                    val isAllSelectedInCantiere = cantiereImpianti.isNotEmpty() && cantiereSelectedIds.size == cantiereImpianti.size
 
-                                // Chip dinamici per tutti i tipi d'impianto presenti nei cantieri selezionati
-                                tipologieImpiantiDisponibili.forEach { (cod, nomeDesc, count) ->
-                                    val isChecked = !allImpiantiSelected && cod in selectedImpiantiCodici
-                                    Surface(
-                                        color = if (isChecked) MaterialTheme.colors.primary else Color(0xFFF1F5F9),
-                                        shape = RoundedCornerShape(14.dp),
-                                        border = BorderStroke(1.dp, if (isChecked) MaterialTheme.colors.primary else Color(0xFFCBD5E1)),
-                                        modifier = Modifier.clickable {
-                                            allImpiantiSelected = false
-                                            selectedImpiantiCodici = if (isChecked) {
-                                                selectedImpiantiCodici - cod
-                                            } else {
-                                                selectedImpiantiCodici + cod
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(8.dp),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            if (cantiereSelectedIds.isNotEmpty()) Color(0xFFBFDBFE) else Color(0xFFE2E8F0)
+                                        ),
+                                        backgroundColor = Color.White,
+                                        elevation = 1.dp
+                                    ) {
+                                        Column(modifier = Modifier.fillMaxWidth()) {
+                                            // Header Cantiere
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .background(if (cantiereSelectedIds.isNotEmpty()) Color(0xFFF0F7FF) else Color(0xFFF8FAFC))
+                                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = cantiere.nome,
+                                                        fontSize = 12.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFF0F172A)
+                                                    )
+                                                    Text(
+                                                        text = clientiMap[cantiere.clienteId]?.nome ?: "Cliente",
+                                                        fontSize = 10.sp,
+                                                        color = Color(0xFF64748B)
+                                                    )
+                                                }
+
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    Surface(
+                                                        color = if (cantiereSelectedIds.isNotEmpty()) Color(0xFFDBEAFE) else Color(0xFFF1F5F9),
+                                                        shape = RoundedCornerShape(10.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "${cantiereSelectedIds.size}/${cantiereImpianti.size} impianti",
+                                                            fontSize = 9.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = if (cantiereSelectedIds.isNotEmpty()) Color(0xFF1E40AF) else Color(0xFF64748B),
+                                                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+
+                                                    if (cantiereImpianti.isNotEmpty()) {
+                                                        TextButton(
+                                                            onClick = {
+                                                                selectedImpiantiIds = if (isAllSelectedInCantiere) {
+                                                                    selectedImpiantiIds - cantiereImpianti.map { it.id }.toSet()
+                                                                } else {
+                                                                    selectedImpiantiIds + cantiereImpianti.map { it.id }
+                                                                }
+                                                            },
+                                                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = if (isAllSelectedInCantiere) "Nessuno" else "Tutti",
+                                                                fontSize = 10.sp,
+                                                                fontWeight = FontWeight.SemiBold
+                                                            )
+                                                        }
+                                                    }
+                                                }
                                             }
-                                            if (selectedImpiantiCodici.isEmpty()) {
-                                                allImpiantiSelected = true
+
+                                            Divider(color = Color(0xFFE2E8F0))
+
+                                            // Checklist Impianti del Cantiere
+                                            if (cantiereImpianti.isEmpty()) {
+                                                Box(
+                                                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = "Nessun impianto censito in questo cantiere.",
+                                                        fontSize = 11.sp,
+                                                        color = Color(0xFF94A3B8)
+                                                    )
+                                                }
+                                            } else {
+                                                Column(
+                                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
+                                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                                ) {
+                                                    cantiereImpianti.forEach { imp ->
+                                                        val isChecked = imp.id in selectedImpiantiIds
+                                                        val siglaStr = (imp as? QuadroBT)?.sigla?.takeIf { it.isNotBlank() }?.let { " ($it)" } ?: ""
+                                                        val extraDettaglio = when (imp) {
+                                                            is QuadroBT -> "${imp.listaInterruttori.size} interruttori"
+                                                            is ImpiantoEmergenza -> "${imp.listaLampade.size} lampade"
+                                                            else -> null
+                                                        }
+
+                                                        Row(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .background(
+                                                                    if (isChecked) Color(0xFFF8FAFC) else Color.Transparent,
+                                                                    RoundedCornerShape(4.dp)
+                                                                )
+                                                                .clickable {
+                                                                    selectedImpiantiIds = if (isChecked) {
+                                                                        selectedImpiantiIds - imp.id
+                                                                    } else {
+                                                                        selectedImpiantiIds + imp.id
+                                                                    }
+                                                                }
+                                                                .padding(horizontal = 6.dp, vertical = 4.dp),
+                                                            verticalAlignment = Alignment.CenterVertically,
+                                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                        ) {
+                                                            Checkbox(
+                                                                checked = isChecked,
+                                                                onCheckedChange = { checked ->
+                                                                    selectedImpiantiIds = if (checked) {
+                                                                        selectedImpiantiIds + imp.id
+                                                                    } else {
+                                                                        selectedImpiantiIds - imp.id
+                                                                    }
+                                                                },
+                                                                colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary),
+                                                                modifier = Modifier.size(20.dp)
+                                                            )
+
+                                                            Surface(
+                                                                color = Color(0xFFEFF6FF),
+                                                                border = BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                                                                shape = RoundedCornerShape(4.dp)
+                                                            ) {
+                                                                Text(
+                                                                    text = imp.codIntervento,
+                                                                    fontSize = 9.sp,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = Color(0xFF1D4ED8),
+                                                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                                                )
+                                                            }
+
+                                                            Column(modifier = Modifier.weight(1f)) {
+                                                                Text(
+                                                                    text = "${imp.nomeCompleto}$siglaStr",
+                                                                    fontSize = 11.sp,
+                                                                    fontWeight = if (isChecked) FontWeight.SemiBold else FontWeight.Medium,
+                                                                    color = Color(0xFF0F172A)
+                                                                )
+                                                                if (extraDettaglio != null) {
+                                                                    Text(
+                                                                        text = extraDettaglio,
+                                                                        fontSize = 9.sp,
+                                                                        color = Color(0xFF64748B)
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
-                                    ) {
-                                        Text(
-                                            text = "$cod • $nomeDesc ($count)",
-                                            fontSize = 11.sp,
-                                            fontWeight = if (isChecked) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isChecked) Color.White else Color(0xFF1E293B),
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                                        )
                                     }
                                 }
                             }
@@ -565,10 +701,10 @@ fun PianificaInterventoDialog(
                             color = if (selectedCantieriIds.isNotEmpty()) Color(0xFF15803D) else Color(0xFFEF4444)
                         )
                         if (selectedCantieriIds.isNotEmpty()) {
-                            val impiantiSummary = if (allImpiantiSelected) {
-                                "Tutti gli impianti (${impiantiDeiCantieriSelezionati.size})"
-                            } else {
-                                "${selectedImpiantiCodici.size} tipologie (${selectedImpiantiCodici.joinToString()})"
+                            val impiantiSummary = when {
+                                selectedImpiantiIds.isEmpty() -> "Nessun impianto selezionato"
+                                selectedImpiantiIds.size == impiantiDeiCantieriSelezionati.size -> "Tutti gli impianti (${selectedImpiantiIds.size})"
+                                else -> "${selectedImpiantiIds.size} di ${impiantiDeiCantieriSelezionati.size} impianti selezionati"
                             }
                             Text(
                                 text = impiantiSummary,
@@ -587,7 +723,8 @@ fun PianificaInterventoDialog(
                                 onPianifica(
                                     dataPianificata,
                                     selectedCantieriIds.toList(),
-                                    if (allImpiantiSelected) emptyList() else selectedImpiantiCodici.toList(),
+                                    selectedImpiantiIds.toList(),
+                                    emptyList(),
                                     selectedFrequenza,
                                     manutentore,
                                     note,
@@ -595,7 +732,7 @@ fun PianificaInterventoDialog(
                                 )
                                 onDismiss()
                             },
-                            enabled = selectedCantieriIds.isNotEmpty() && dataPianificata.isNotBlank(),
+                            enabled = selectedCantieriIds.isNotEmpty() && dataPianificata.isNotBlank() && selectedImpiantiIds.isNotEmpty(),
                             colors = ButtonDefaults.buttonColors(
                                 backgroundColor = MaterialTheme.colors.primary,
                                 contentColor = Color.White
