@@ -32,7 +32,7 @@ class Wave4CalendarioERiepilogoTest {
         clienteId = "cli-w4",
         indirizzo = "Via dell'Industria 42, Milano",
         dataInizioContratto = "15/01/2026",
-        dataIntervento = "15/07/2026",
+        dataIntervento = "15/01/2026",
         dataInterventoPrecedente = "15/01/2026",
         nomeManutentore = "Ing. Edoardo Desiderio"
     )
@@ -206,5 +206,88 @@ class Wave4CalendarioERiepilogoTest {
         val impChir = scadenzaVillaSalus.scadenzeImpianti.first()
         assertEquals("Q - Q-CHIR", impChir.codIntervento)
         assertTrue(impChir.attivitaInScadenza.any { it.contains("Prova scatto differenziali") })
+    }
+
+    @Test
+    fun `calcolaScadenze privilegia dataIntervento rispetto a dataInizioContratto`() {
+        val cantiereTest = Cantiere(
+            id = "cant-date-prio",
+            nome = "Cantiere Test Priorita Data",
+            clienteId = "cli-test",
+            dataInizioContratto = "01/01/2026",
+            dataIntervento = "15/10/2026"
+        )
+        val impiantoSemestrale = ImpiantoStandard(
+            id = "imp-sem",
+            codIntervento = "EM",
+            nomeCompleto = "Illuminazione di Emergenza",
+            listaAttivita = listOf(
+                Attivita(1, "Verifica", "Controllo semestrale", Periodo(TipoPeriodo.M, 6))
+            ),
+            cantiereId = cantiereTest.id
+        )
+
+        val scadenze = CalendarioScadenzeCalculator.calcolaScadenze(
+            cantiere = cantiereTest,
+            impianti = listOf(impiantoSemestrale),
+            mesiOrizzonte = 12
+        )
+
+        // Se prendesse dataInizioContratto ("01/01/2026"), la prima scadenza a 6 mesi cadrebbe a Luglio 2026 ("01/07/2026").
+        // Poiché deve privilegiare dataIntervento ("15/10/2026"), la prima scadenza a 6 mesi deve cadere ad Aprile 2027 ("15/04/2027")!
+        assertTrue(scadenze.none { it.annoMese == "2026-07" }, "Luglio 2026 non deve comparire perché la data intervento base è Ottobre 2026")
+
+        val primaScadenza = scadenze.firstOrNull()
+        assertNotNull(primaScadenza, "Deve esserci una prima scadenza a 6 mesi")
+        assertEquals("2027-04", primaScadenza.annoMese, "La prima scadenza a 6 mesi deve essere Aprile 2027")
+        assertEquals("15/04/2027", primaScadenza.dataPrevista)
+        assertEquals(6, primaScadenza.indiceMese)
+    }
+
+    @Test
+    fun `calcolaScadenze filtra sulle sole frequenze configurate per il cantiere`() {
+        val cantiereTest = Cantiere(
+            id = "cant-freq-filter",
+            nome = "Cantiere Test Filtro Frequenze",
+            clienteId = "cli-test",
+            dataIntervento = "01/01/2026"
+        )
+        // Impianto ha attività teoriche mensili (1M), trimestrali (3M) e semestrali (6M)
+        val impiantoMultiAttivita = ImpiantoStandard(
+            id = "imp-multi",
+            codIntervento = "Q",
+            nomeCompleto = "Quadro Generale",
+            listaAttivita = listOf(
+                Attivita(1, "Controllo", "Controllo mensile", Periodo(TipoPeriodo.M, 1)),
+                Attivita(2, "Verifica", "Verifica trimestrale", Periodo(TipoPeriodo.M, 3)),
+                Attivita(3, "Manutenzione", "Prova semestrale", Periodo(TipoPeriodo.M, 6))
+            ),
+            cantiereId = cantiereTest.id
+        )
+
+        // Configuriamo per questo cantiere ESCLUSIVAMENTE la frequenza a 6 mesi
+        val freqConfigurate = mapOf(
+            impiantoMultiAttivita.id to setOf(Periodo(TipoPeriodo.M, 6))
+        )
+
+        val scadenze = CalendarioScadenzeCalculator.calcolaScadenze(
+            cantiere = cantiereTest,
+            impianti = listOf(impiantoMultiAttivita),
+            mesiOrizzonte = 12,
+            frequenzeConfiguratePerImpianto = freqConfigurate
+        )
+
+        // Non devono comparire scadenze nei mesi 1, 2, 3, 4, 5
+        val mesiIntermedi = listOf("2026-02", "2026-03", "2026-04", "2026-05", "2026-06")
+        for (mese in mesiIntermedi) {
+            assertTrue(scadenze.none { it.annoMese == mese }, "Il mese $mese non deve avere scadenze poiché è attiva solo la frequenza 6M")
+        }
+
+        // Devono comparire solo mese +6 (Luglio 2026) e mese +12 (Gennaio 2027)
+        assertEquals(2, scadenze.size, "Su 12 mesi con frequenza 6M devono esserci esattamente 2 gruppi di scadenza")
+        assertEquals("2026-07", scadenze[0].annoMese)
+        assertEquals("2027-01", scadenze[1].annoMese)
+        assertEquals("01/07/2026", scadenze[0].dataPrevista)
+        assertEquals("01/01/2027", scadenze[1].dataPrevista)
     }
 }
