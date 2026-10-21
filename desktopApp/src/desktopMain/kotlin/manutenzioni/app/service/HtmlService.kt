@@ -301,7 +301,7 @@ class HtmlService(
 
             // Colonna nota
             val noteId = "note_${codImpianto}_${rowNum}"
-            sb.appendLine("""                    <td class="cell--data-standard">""")
+            sb.appendLine("""                    <td class="cell--data-input cell--data-standard">""")
             sb.appendLine("""                        <input type="text" name="$noteId" id="$noteId" />""")
             sb.appendLine("""                        <label for="$noteId" class="visually-hidden">Nota</label>""")
             sb.appendLine("""                    </td>""")
@@ -322,19 +322,19 @@ class HtmlService(
 
                 sb.appendLine("""                <tr class="row--data">""")
                 sb.appendLine("""                    <td class="cell--data-empty"><p>$fillerIndex</p></td>""")
-                sb.appendLine("""                    <td class="cell--data-empty">""")
+                sb.appendLine("""                    <td class="cell--data-input">""")
                 sb.appendLine("""                        <input type="text" name="$fillerTipoId" id="$fillerTipoId" />""")
                 sb.appendLine("""                        <label for="$fillerTipoId" class="visually-hidden">Tipo di Attività</label>""")
                 sb.appendLine("""                    </td>""")
-                sb.appendLine("""                    <td class="cell--data-empty">""")
+                sb.appendLine("""                    <td class="cell--data-input">""")
                 sb.appendLine("""                        <input type="text" name="$fillerZonaId" id="$fillerZonaId" />""")
                 sb.appendLine("""                        <label for="$fillerZonaId" class="visually-hidden">Zona</label>""")
                 sb.appendLine("""                    </td>""")
-                sb.appendLine("""                    <td class="cell--data-empty">""")
+                sb.appendLine("""                    <td class="cell--data-input">""")
                 sb.appendLine("""                        <input type="text" name="$fillerPeriodicitaId" id="$fillerPeriodicitaId" />""")
                 sb.appendLine("""                        <label for="$fillerPeriodicitaId" class="visually-hidden">Periodicità</label>""")
                 sb.appendLine("""                    </td>""")
-                sb.appendLine("""                    <td class="cell--data-empty">""")
+                sb.appendLine("""                    <td class="cell--data-input">""")
                 sb.appendLine("""                        <input type="text" name="$fillerAttivitaId" id="$fillerAttivitaId" />""")
                 sb.appendLine("""                        <label for="$fillerAttivitaId" class="visually-hidden">Attività</label>""")
                 sb.appendLine("""                    </td>""")
@@ -348,7 +348,7 @@ class HtmlService(
                     sb.appendLine("""                    </td>""")
                 }
 
-                sb.appendLine("""                    <td class="cell--data-standard">""")
+                sb.appendLine("""                    <td class="cell--data-input cell--data-standard">""")
                 sb.appendLine("""                        <input type="text" name="$fillerNoteId" id="$fillerNoteId" />""")
                 sb.appendLine("""                        <label for="$fillerNoteId" class="visually-hidden">Nota</label>""")
                 sb.appendLine("""                    </td>""")

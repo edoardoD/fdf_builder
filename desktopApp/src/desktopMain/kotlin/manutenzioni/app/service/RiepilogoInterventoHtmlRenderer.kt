@@ -92,7 +92,7 @@ class RiepilogoInterventoHtmlRenderer {
                     <td style="text-align:center;"><input type="radio" name="$radioGroup" value="OK" /></td>
                     <td style="text-align:center;"><input type="radio" name="$radioGroup" value="OSS" /></td>
                     <td style="text-align:center;"><input type="radio" name="$radioGroup" value="NC" /></td>
-                    <td><input type="text" name="riepilogo_note_${rowNum}" value="" style="width:100%; border:none; font-size:7pt;" /></td>
+                    <td style="padding: 0;"><input type="text" name="riepilogo_note_${rowNum}" value="" style="width:100%; height:100%; min-height:0.40cm; line-height:0.40cm; border:none; outline:none; background:transparent; font-size:7pt; margin:0; padding:0 3px; box-sizing:border-box; vertical-align:middle;" /></td>
                 </tr>
                 """.trimIndent()
             )
@@ -165,6 +165,17 @@ class RiepilogoInterventoHtmlRenderer {
                     font-size: 7.5pt;
                     text-align: center;
                 }
+                input[type="text"] {
+                    width: 100%;
+                    border: none;
+                    outline: none;
+                    background: transparent;
+                    margin: 0;
+                    padding: 0 3px;
+                    box-sizing: border-box;
+                    font-family: Calibri, Arial, sans-serif;
+                    vertical-align: middle;
+                }
             </style>
         </head>
         <body>
@@ -182,21 +193,21 @@ class RiepilogoInterventoHtmlRenderer {
                         <td style="width:25%;"><strong>Indirizzo:</strong><br/>$cantiereIndirizzo</td>
                         <td style="width:20%;">
                             <strong>Data Inizio Contratto:</strong><br/>
-                            <input type="text" name="riepilogo_starting_date" value="$dataContratto" style="width:100%; font-size:7.5pt;" />
+                            <input type="text" name="riepilogo_starting_date" value="$dataContratto" style="width:100%; height:0.40cm; line-height:0.40cm; border:none; outline:none; background:transparent; margin:0; padding:0 2px; font-size:7.5pt; box-sizing:border-box;" />
                         </td>
                     </tr>
                     <tr>
                         <td>
                             <strong>Data Intervento Precedente:</strong><br/>
-                            <input type="text" name="riepilogo_previous_date" value="$dataPrecedente" style="width:100%; font-size:7.5pt;" />
+                            <input type="text" name="riepilogo_previous_date" value="$dataPrecedente" style="width:100%; height:0.40cm; line-height:0.40cm; border:none; outline:none; background:transparent; margin:0; padding:0 2px; font-size:7.5pt; box-sizing:border-box;" />
                         </td>
                         <td>
                             <strong>Data Intervento Attuale:</strong><br/>
-                            <input type="text" name="riepilogo_actual_date" value="$dataIntervento" style="width:100%; font-size:7.5pt;" />
+                            <input type="text" name="riepilogo_actual_date" value="$dataIntervento" style="width:100%; height:0.40cm; line-height:0.40cm; border:none; outline:none; background:transparent; margin:0; padding:0 2px; font-size:7.5pt; box-sizing:border-box;" />
                         </td>
                         <td>
                             <strong>Verificatore / Manutentore:</strong><br/>
-                            <input type="text" name="riepilogo_manutentore" value="$manutentore" style="width:100%; font-weight:bold; font-size:7.5pt;" />
+                            <input type="text" name="riepilogo_manutentore" value="$manutentore" style="width:100%; height:0.40cm; line-height:0.40cm; border:none; outline:none; background:transparent; margin:0; padding:0 2px; font-weight:bold; font-size:7.5pt; box-sizing:border-box;" />
                         </td>
                         <td>
                             <strong>Firma Tecnico:</strong><br/>
@@ -242,8 +253,8 @@ class RiepilogoInterventoHtmlRenderer {
                         <td class="section-header">3. Osservazioni Generali sull'Intervento</td>
                     </tr>
                     <tr>
-                        <td>
-                            <input type="text" name="riepilogo_osservazioni_generali" id="riepilogo_osservazioni_generali" value="" style="width:100%; height:1.5cm; border:none; font-family:Calibri, Arial, sans-serif; font-size:8pt;" />
+                        <td style="padding: 0;">
+                            <input type="text" name="riepilogo_osservazioni_generali" id="riepilogo_osservazioni_generali" value="" style="width:100%; height:1.5cm; line-height:1.5cm; border:none; outline:none; background:transparent; margin:0; padding:0 4px; font-family:Calibri, Arial, sans-serif; font-size:8pt; box-sizing:border-box;" />
                         </td>
                     </tr>
                 </table>

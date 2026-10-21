@@ -233,7 +233,8 @@ class TechnicalAttachmentTest {
             val emergRect = emergNote.widgets.firstOrNull()?.rectangle?.toRectangle()
             assertNotNull(emergRect, "Il rettangolo del widget emergNote non deve essere null")
             assertTrue(emergRect.height >= 10.0f, "L'altezza del campo note deve essere di almeno 10pt per essere compilabile, trovata: ${emergRect.height}")
-            assertNotNull(emergNote.widgets.firstOrNull()?.borderStyle, "Il campo note deve avere un borderStyle visibile per indicare che è un campo compilabile")
+            // Verifica che il campo si integri a tutta cella senza doppio bordo interno spiacevole (/BS rimosso da Pdf.kt)
+            kotlin.test.assertNull(emergNote.widgets.firstOrNull()?.borderStyle, "Il campo note non deve avere un borderStyle interno per fondersi con la cella")
 
             // Test compilazione del campo
             emergNote.setValue("Batteria sostituita il 15/03/2026")
