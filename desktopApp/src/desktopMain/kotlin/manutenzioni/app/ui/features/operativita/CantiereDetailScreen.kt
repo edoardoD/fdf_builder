@@ -1,9 +1,11 @@
 package manutenzioni.app.ui.features.operativita
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
@@ -20,6 +22,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -174,309 +178,72 @@ fun CantiereDetailScreen(
         )
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp)
-    ) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Torna indietro")
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Column {
-                    Text(
-                        text = state.selectedCantiere?.nome ?: "Dettaglio Cantiere",
-                        style = MaterialTheme.typography.h5,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = state.selectedCantiere?.indirizzo?.let { "📍 $it" } ?: "Gestione verifiche periodiche e generazione schede",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.colors.secondary
-                    )
-                }
-            }
-        }
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val availableHeight = maxHeight
+        val screenScrollState = rememberScrollState()
+        var topSectionHeightPx by remember { mutableStateOf(0) }
+        val density = LocalDensity.current
+        val topSectionHeightDp = with(density) { topSectionHeightPx.toDp() }
+        val effectiveTopSpace = if (topSectionHeightDp > 0.dp) topSectionHeightDp else 390.dp
+        val tabContentHeight = maxOf(580.dp, availableHeight - effectiveTopSpace - 48.dp)
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Banner / Card Dati Intervento e Manutentore
-        var dataInizioContratto by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataInizioContratto) {
-            mutableStateOf(state.selectedCantiere?.dataInizioContratto ?: "")
-        }
-        var dataInterventoPrecedente by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataInterventoPrecedente) {
-            mutableStateOf(state.selectedCantiere?.dataInterventoPrecedente ?: "")
-        }
-        var dataIntervento by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataIntervento, state.selectedCantiere?.dataInizioIntervento) {
-            mutableStateOf(state.selectedCantiere?.dataIntervento ?: state.selectedCantiere?.dataInizioIntervento ?: "")
-        }
-        var nomeManutentore by remember(state.selectedCantiere?.id, state.selectedCantiere?.nomeManutentore) {
-            mutableStateOf(state.selectedCantiere?.nomeManutentore ?: "")
-        }
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = 0.dp,
-            border = BorderStroke(1.dp, SlateBorder),
-            shape = RoundedCornerShape(8.dp),
-            backgroundColor = MaterialTheme.colors.surface
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Engineering,
-                            contentDescription = null,
-                            tint = MaterialTheme.colors.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Dati Sessione Intervento",
-                            style = MaterialTheme.typography.subtitle1,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    Text(
-                        text = "Storicizzazione automatica nel database",
-                        style = MaterialTheme.typography.caption,
-                        color = MaterialTheme.colors.secondary
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ItalianDateInputField(
-                        value = dataInizioContratto,
-                        onValueChange = {
-                            dataInizioContratto = it
-                            onUpdateDatiIntervento(it, dataIntervento, dataInterventoPrecedente, nomeManutentore)
-                        },
-                        label = "Data inizio contratto",
-                        placeholder = "GG/MM/AAAA",
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    ItalianDateInputField(
-                        value = dataInterventoPrecedente,
-                        onValueChange = {
-                            dataInterventoPrecedente = it
-                            onUpdateDatiIntervento(dataInizioContratto, dataIntervento, it, nomeManutentore)
-                        },
-                        label = "Data intervento precedente",
-                        placeholder = "GG/MM/AAAA",
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    ItalianDateInputField(
-                        value = dataIntervento,
-                        onValueChange = {
-                            dataIntervento = it
-                            onUpdateDatiIntervento(dataInizioContratto, it, dataInterventoPrecedente, nomeManutentore)
-                        },
-                        label = "Data intervento",
-                        placeholder = "GG/MM/AAAA",
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    OutlinedTextField(
-                        value = nomeManutentore,
-                        onValueChange = {
-                            nomeManutentore = it
-                            onUpdateDatiIntervento(dataInizioContratto, dataIntervento, dataInterventoPrecedente, it)
-                        },
-                        label = { Text("Nome Manutentore / Tecnico") },
-                        placeholder = { Text("Nome e Cognome (es. Mario Rossi)") },
-                        leadingIcon = {
-                            Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colors.primary)
-                        },
-                        singleLine = true,
-                        modifier = Modifier.weight(1.2f),
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = MaterialTheme.colors.primary,
-                            unfocusedBorderColor = SlateBorder
-                        )
-                    )
-
-                    val hasFirma = !state.selectedCantiere?.firmaManutentore.isNullOrBlank()
-                    Column(
-                        modifier = Modifier.weight(0.8f),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            OutlinedButton(
-                                onClick = onSelectFirmaManutentore,
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = if (hasFirma) Color(0xFF2E7D32) else MaterialTheme.colors.primary
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = if (hasFirma) Icons.Default.Check else Icons.Default.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = if (hasFirma) "Firma Caricata (Cambia)" else "Carica Firma Tecnico",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            }
-                            if (hasFirma) {
-                                TextButton(
-                                    onClick = onRemoveFirmaManutentore,
-                                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colors.error)
-                                ) {
-                                    Text("Rimuovi", fontSize = 11.sp)
-                                }
-                            }
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(screenScrollState)
+                    .padding(start = 24.dp, top = 24.dp, end = 32.dp, bottom = 24.dp)
+            ) {
+                // Sezione Superiore (Header, Card Dati Sessione, TabRow) misurata dinamicamente
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onGloballyPositioned { coordinates ->
+                            topSectionHeightPx = coordinates.size.height
                         }
-                        Text(
-                            text = if (hasFirma) "✓ Immagine firma pronta per il cartiglio PDF" else "Nessuna firma digitale associata (opzionale)",
-                            fontSize = 10.sp,
-                            color = if (hasFirma) Color(0xFF2E7D32) else MaterialTheme.colors.secondary
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // TabRow di Cantiere: 0 = "Generazione schede di Verifica", 1 = "Elenco interruttori", 2 = "Storico Verifiche" (R11, R12, R30)
-        val quadriDelCantiere = state.impiantiDelCantiere.filterIsInstance<manutenzioni.domain.model.QuadroBT>()
-        val totInterruttori = quadriDelCantiere.sumOf { q -> q.listaInterruttori.sumOf { it.quantita.coerceAtLeast(1) } }
-
-        TabRow(
-            selectedTabIndex = selectedCantiereTab,
-            backgroundColor = MaterialTheme.colors.surface,
-            contentColor = MaterialTheme.colors.primary,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Tab(
-                selected = selectedCantiereTab == 0,
-                onClick = { selectedCantiereTab = 0 },
-                text = {
-                    Text(
-                        "Generazione schede di Verifica",
-                        fontWeight = if (selectedCantiereTab == 0) FontWeight.Bold else FontWeight.Normal
-                    )
-                }
-            )
-            Tab(
-                selected = selectedCantiereTab == 1,
-                onClick = { selectedCantiereTab = 1 },
-                text = {
-                    Text(
-                        "Elenco interruttori ($totInterruttori)",
-                        fontWeight = if (selectedCantiereTab == 1) FontWeight.Bold else FontWeight.Normal
-                    )
-                }
-            )
-            Tab(
-                selected = selectedCantiereTab == 2,
-                onClick = { selectedCantiereTab = 2 },
-                text = {
-                    Text(
-                        "Storico Verifiche (${state.sessioniVerificaCantiere.size})",
-                        fontWeight = if (selectedCantiereTab == 2) FontWeight.Bold else FontWeight.Normal
-                    )
-                }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        when (selectedCantiereTab) {
-            1 -> {
-                CantiereElencoInterruttoriTab(
-                    quadri = quadriDelCantiere,
-                    isLoading = state.isLoading,
-                    onExportPdf = onExportCantiereInterruttoriPdf,
-                    onEditQuadro = { quadro ->
-                        impiantoInModifica = quadro
-                        onEditImpianto(quadro)
-                    },
-                    modifier = Modifier.weight(1f).fillMaxWidth()
-                )
-            }
-            2 -> {
-                StoricoVerificheTab(
-                    sessioni = state.sessioniVerificaCantiere,
-                    isAdmin = state.isAdmin,
-                    onOpenPdfFile = onOpenSessionePdfFile,
-                    onRestoreSessione = onRestoreSessioneVerifica,
-                    onDeleteSessione = onDeleteSessioneVerifica,
-                    modifier = Modifier.weight(1f).fillMaxWidth()
-                )
-            }
-            else -> {
-            Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                // Colonna 1: Impianti del cantiere
-                Column(modifier = Modifier.weight(2f).fillMaxHeight()) {
+                ) {
+                    // Header
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Attività di verifica in questo cantiere", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
-                        if (state.isAdmin) {
-                            Button(onClick = { showNuovoImpiantoDialog = true }) {
-                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Aggiungi Attività di Verifica")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = onBack) {
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Torna indietro")
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = state.selectedCantiere?.nome ?: "Dettaglio Cantiere",
+                                    style = MaterialTheme.typography.h5,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = state.selectedCantiere?.indirizzo?.let { "📍 $it" } ?: "Gestione verifiche periodiche e generazione schede",
+                                    style = MaterialTheme.typography.caption,
+                                    color = MaterialTheme.colors.secondary
+                                )
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    ImpiantoSelectionList(
-                        impianti = state.impiantiDelCantiere,
-                        selectionState = state.impiantiSelezionati,
-                        onSelectionChanged = onImpiantoSelectionChanged,
-                        onEditImpianto = { impianto -> 
-                            impiantoInModifica = impianto 
-                            onEditImpianto(impianto)
-                        },
-                        onDeleteImpianto = { impianto ->
-                            impiantoInEliminazione = impianto
-                            showDeleteImpiantoDialog = true
-                        },
-                        onBulkSelectionChanged = onImpiantiSelectionChanged,
-                        modifier = Modifier.weight(1f).fillMaxWidth()
-                    )
-                }
 
-                // Colonna 2: Frequenza e Generazione
-                Column(
-                    modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Banner / Card Dati Intervento e Manutentore
+                    var dataInizioContratto by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataInizioContratto) {
+                        mutableStateOf(state.selectedCantiere?.dataInizioContratto ?: "")
+                    }
+                    var dataInterventoPrecedente by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataInterventoPrecedente) {
+                        mutableStateOf(state.selectedCantiere?.dataInterventoPrecedente ?: "")
+                    }
+                    var dataIntervento by remember(state.selectedCantiere?.id, state.selectedCantiere?.dataIntervento, state.selectedCantiere?.dataInizioIntervento) {
+                        mutableStateOf(state.selectedCantiere?.dataIntervento ?: state.selectedCantiere?.dataInizioIntervento ?: "")
+                    }
+                    var nomeManutentore by remember(state.selectedCantiere?.id, state.selectedCantiere?.nomeManutentore) {
+                        mutableStateOf(state.selectedCantiere?.nomeManutentore ?: "")
+                    }
+
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         elevation = 0.dp,
@@ -484,322 +251,596 @@ fun CantiereDetailScreen(
                         shape = RoundedCornerShape(8.dp),
                         backgroundColor = MaterialTheme.colors.surface
                     ) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Text("1. Scegli Frequenze per Modulo", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
-                            Text(
-                                "Puoi spuntare più periodicità per lo stesso impianto (es. 6 Mesi + 1 Anno)",
-                                style = MaterialTheme.typography.caption,
-                                color = MaterialTheme.colors.secondary
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            
-                            val impiantiAttiviIds = state.impiantiSelezionati.filter { it.value }.keys
-                            val impiantiAttivi = state.impiantiDelCantiere.filter { it.id in impiantiAttiviIds }
-                            
-                            if (impiantiAttivi.isEmpty()) {
-                                Text("Seleziona almeno un impianto dalla lista a sinistra.", color = MaterialTheme.colors.error, style = MaterialTheme.typography.body2)
-                            } else {
-                                val quadriAttivi = impiantiAttivi.filterIsInstance<manutenzioni.domain.model.QuadroBT>()
-                                val altriImpiantiAttivi = impiantiAttivi.filter { it !is manutenzioni.domain.model.QuadroBT }
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.Engineering,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colors.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Dati Sessione Intervento",
+                                        style = MaterialTheme.typography.subtitle1,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                                Text(
+                                    text = "Storicizzazione automatica nel database",
+                                    style = MaterialTheme.typography.caption,
+                                    color = MaterialTheme.colors.secondary
+                                )
+                            }
 
-                                if (quadriAttivi.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                ItalianDateInputField(
+                                    value = dataInizioContratto,
+                                    onValueChange = {
+                                        dataInizioContratto = it
+                                        onUpdateDatiIntervento(it, dataIntervento, dataInterventoPrecedente, nomeManutentore)
+                                    },
+                                    label = "Data inizio contratto",
+                                    placeholder = "GG/MM/AAAA",
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                ItalianDateInputField(
+                                    value = dataInterventoPrecedente,
+                                    onValueChange = {
+                                        dataInterventoPrecedente = it
+                                        onUpdateDatiIntervento(dataInizioContratto, dataIntervento, it, nomeManutentore)
+                                    },
+                                    label = "Data intervento precedente",
+                                    placeholder = "GG/MM/AAAA",
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                ItalianDateInputField(
+                                    value = dataIntervento,
+                                    onValueChange = {
+                                        dataIntervento = it
+                                        onUpdateDatiIntervento(dataInizioContratto, it, dataInterventoPrecedente, nomeManutentore)
+                                    },
+                                    label = "Data intervento",
+                                    placeholder = "GG/MM/AAAA",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedTextField(
+                                    value = nomeManutentore,
+                                    onValueChange = {
+                                        nomeManutentore = it
+                                        onUpdateDatiIntervento(dataInizioContratto, dataIntervento, dataInterventoPrecedente, it)
+                                    },
+                                    label = { Text("Nome Manutentore / Tecnico") },
+                                    placeholder = { Text("Nome e Cognome (es. Mario Rossi)") },
+                                    leadingIcon = {
+                                        Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colors.primary)
+                                    },
+                                    singleLine = true,
+                                    modifier = Modifier.weight(1.2f),
+                                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                                        focusedBorderColor = MaterialTheme.colors.primary,
+                                        unfocusedBorderColor = SlateBorder
+                                    )
+                                )
+
+                                val hasFirma = !state.selectedCantiere?.firmaManutentore.isNullOrBlank()
+                                Column(
+                                    modifier = Modifier.weight(0.8f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        OutlinedButton(
+                                            onClick = onSelectFirmaManutentore,
+                                            modifier = Modifier.weight(1f),
+                                            colors = ButtonDefaults.outlinedButtonColors(
+                                                contentColor = if (hasFirma) Color(0xFF2E7D32) else MaterialTheme.colors.primary
+                                            )
+                                        ) {
+                                            Icon(
+                                                imageVector = if (hasFirma) Icons.Default.Check else Icons.Default.Add,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = if (hasFirma) "Firma Caricata (Cambia)" else "Carica Firma Tecnico",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                        if (hasFirma) {
+                                            TextButton(
+                                                onClick = onRemoveFirmaManutentore,
+                                                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colors.error)
+                                            ) {
+                                                Text("Rimuovi", fontSize = 11.sp)
+                                            }
+                                        }
+                                    }
+                                    Text(
+                                        text = if (hasFirma) "✓ Immagine firma pronta per il cartiglio PDF" else "Nessuna firma digitale associata (opzionale)",
+                                        fontSize = 10.sp,
+                                        color = if (hasFirma) Color(0xFF2E7D32) else MaterialTheme.colors.secondary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // TabRow di Cantiere: 0 = "Generazione schede di Verifica", 1 = "Elenco interruttori", 2 = "Storico Verifiche" (R11, R12, R30)
+                    val quadriDelCantiere = state.impiantiDelCantiere.filterIsInstance<manutenzioni.domain.model.QuadroBT>()
+                    val totInterruttori = quadriDelCantiere.sumOf { q -> q.listaInterruttori.sumOf { it.quantita.coerceAtLeast(1) } }
+
+                    TabRow(
+                        selectedTabIndex = selectedCantiereTab,
+                        backgroundColor = MaterialTheme.colors.surface,
+                        contentColor = MaterialTheme.colors.primary,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Tab(
+                            selected = selectedCantiereTab == 0,
+                            onClick = { selectedCantiereTab = 0 },
+                            text = {
+                                Text(
+                                    "Generazione schede di Verifica",
+                                    fontWeight = if (selectedCantiereTab == 0) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
+                        Tab(
+                            selected = selectedCantiereTab == 1,
+                            onClick = { selectedCantiereTab = 1 },
+                            text = {
+                                Text(
+                                    "Elenco interruttori ($totInterruttori)",
+                                    fontWeight = if (selectedCantiereTab == 1) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
+                        Tab(
+                            selected = selectedCantiereTab == 2,
+                            onClick = { selectedCantiereTab = 2 },
+                            text = {
+                                Text(
+                                    "Storico Verifiche (${state.sessioniVerificaCantiere.size})",
+                                    fontWeight = if (selectedCantiereTab == 2) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Contenitore Tab vincolato in altezza per garantire lo scroll interno e impedire crash di unbounded constraints
+                val quadriDelCantiere = state.impiantiDelCantiere.filterIsInstance<manutenzioni.domain.model.QuadroBT>()
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(tabContentHeight)
+                ) {
+                    when (selectedCantiereTab) {
+                        1 -> {
+                            CantiereElencoInterruttoriTab(
+                                quadri = quadriDelCantiere,
+                                isLoading = state.isLoading,
+                                onExportPdf = onExportCantiereInterruttoriPdf,
+                                onEditQuadro = { quadro ->
+                                    impiantoInModifica = quadro
+                                    onEditImpianto(quadro)
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        2 -> {
+                            StoricoVerificheTab(
+                                sessioni = state.sessioniVerificaCantiere,
+                                isAdmin = state.isAdmin,
+                                onOpenPdfFile = onOpenSessionePdfFile,
+                                onRestoreSessione = onRestoreSessioneVerifica,
+                                onDeleteSessione = onDeleteSessioneVerifica,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        else -> {
+                            Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                                // Colonna 1: Impianti del cantiere
+                                Column(modifier = Modifier.weight(2f).fillMaxHeight()) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("Attività di verifica in questo cantiere", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
+                                        if (state.isAdmin) {
+                                            Button(onClick = { showNuovoImpiantoDialog = true }) {
+                                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text("Aggiungi Attività di Verifica")
+                                            }
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    ImpiantoSelectionList(
+                                        impianti = state.impiantiDelCantiere,
+                                        selectionState = state.impiantiSelezionati,
+                                        onSelectionChanged = onImpiantoSelectionChanged,
+                                        onEditImpianto = { impianto -> 
+                                            impiantoInModifica = impianto 
+                                            onEditImpianto(impianto)
+                                        },
+                                        onDeleteImpianto = { impianto ->
+                                            impiantoInEliminazione = impianto
+                                            showDeleteImpiantoDialog = true
+                                        },
+                                        onBulkSelectionChanged = onImpiantiSelectionChanged,
+                                        modifier = Modifier.weight(1f).fillMaxWidth()
+                                    )
+                                }
+
+                                // Colonna 2: Frequenza e Generazione
+                                Column(
+                                    modifier = Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()),
+                                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                                ) {
                                     Card(
-                                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                                        modifier = Modifier.fillMaxWidth(),
                                         elevation = 0.dp,
                                         border = BorderStroke(1.dp, SlateBorder),
                                         shape = RoundedCornerShape(8.dp),
                                         backgroundColor = MaterialTheme.colors.surface
                                     ) {
-                                        Column(modifier = Modifier.padding(12.dp)) {
+                                        Column(modifier = Modifier.padding(24.dp)) {
+                                            Text("1. Scegli Frequenze per Modulo", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
                                             Text(
-                                                text = "Quadri Elettrici selezionati (${quadriAttivi.size})",
-                                                fontWeight = FontWeight.Bold,
-                                                style = MaterialTheme.typography.subtitle2,
-                                                color = MaterialTheme.colors.primary
-                                            )
-                                            Text(
-                                                text = "Imposta le periodicità per tutti i quadri attivi",
+                                                "Puoi spuntare più periodicità per lo stesso impianto (es. 6 Mesi + 1 Anno)",
                                                 style = MaterialTheme.typography.caption,
                                                 color = MaterialTheme.colors.secondary
                                             )
-                                            Spacer(modifier = Modifier.height(8.dp))
-
-                                            val frequenzeDisponibiliQuadri = quadriAttivi
-                                                .flatMap { manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(it, state.impiantiDelCantiere) }
-                                                .distinct()
-                                                .sortedBy { it.inMesi() }
-
-                                            if (frequenzeDisponibiliQuadri.isEmpty()) {
-                                                Text("Nessuna attività registrata per i quadri selezionati.", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.error)
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            
+                                            val impiantiAttiviIds = state.impiantiSelezionati.filter { it.value }.keys
+                                            val impiantiAttivi = state.impiantiDelCantiere.filter { it.id in impiantiAttiviIds }
+                                            
+                                            if (impiantiAttivi.isEmpty()) {
+                                                Text("Seleziona almeno un impianto dalla lista a sinistra.", color = MaterialTheme.colors.error, style = MaterialTheme.typography.body2)
                                             } else {
-                                                frequenzeDisponibiliQuadri.forEach { periodo ->
-                                                    val matchingCount = quadriAttivi.count { quadro ->
-                                                        val selectedFreqs = state.frequenzeSelezionatePerImpianto[quadro.id]
-                                                            ?: state.frequenzePerImpianto[quadro.id]?.let { setOf(it) }
-                                                            ?: emptySet()
-                                                        periodo in selectedFreqs
-                                                    }
-                                                    val triState = when {
-                                                        matchingCount == 0 -> ToggleableState.Off
-                                                        matchingCount == quadriAttivi.size -> ToggleableState.On
-                                                        else -> ToggleableState.Indeterminate
-                                                    }
+                                                val quadriAttivi = impiantiAttivi.filterIsInstance<manutenzioni.domain.model.QuadroBT>()
+                                                val altriImpiantiAttivi = impiantiAttivi.filter { it !is manutenzioni.domain.model.QuadroBT }
 
-                                                    val onToggleBulkFreq = {
-                                                        if (onFrequenzaForImpiantiToggled != null) {
-                                                            onFrequenzaForImpiantiToggled(quadriAttivi.map { it.id }, periodo)
-                                                        } else {
-                                                            quadriAttivi.forEach { onFrequenzaPerImpiantoToggled(it.id, periodo) }
-                                                        }
-                                                    }
-
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .clickable { onToggleBulkFreq() }
-                                                            .padding(vertical = 2.dp),
-                                                        verticalAlignment = Alignment.CenterVertically
+                                                if (quadriAttivi.isNotEmpty()) {
+                                                    Card(
+                                                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                                                        elevation = 0.dp,
+                                                        border = BorderStroke(1.dp, SlateBorder),
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        backgroundColor = MaterialTheme.colors.surface
                                                     ) {
-                                                        TriStateCheckbox(
-                                                            state = triState,
-                                                            onClick = onToggleBulkFreq,
-                                                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
-                                                        )
-                                                        Spacer(modifier = Modifier.width(8.dp))
-                                                        Text(
-                                                            text = periodo.label(),
-                                                            style = MaterialTheme.typography.body2
-                                                        )
-                                                        if (matchingCount > 0 && matchingCount < quadriAttivi.size) {
-                                                            Spacer(modifier = Modifier.width(6.dp))
+                                                        Column(modifier = Modifier.padding(12.dp)) {
                                                             Text(
-                                                                text = "($matchingCount/${quadriAttivi.size})",
+                                                                text = "Quadri Elettrici selezionati (${quadriAttivi.size})",
+                                                                fontWeight = FontWeight.Bold,
+                                                                style = MaterialTheme.typography.subtitle2,
+                                                                color = MaterialTheme.colors.primary
+                                                            )
+                                                            Text(
+                                                                text = "Imposta le periodicità per tutti i quadri attivi",
                                                                 style = MaterialTheme.typography.caption,
                                                                 color = MaterialTheme.colors.secondary
                                                             )
-                                                        }
-                                                    }
-                                                }
-                                            }
+                                                            Spacer(modifier = Modifier.height(8.dp))
 
-                                            Spacer(modifier = Modifier.height(8.dp))
-                                            Divider()
+                                                            val frequenzeDisponibiliQuadri = quadriAttivi
+                                                                .flatMap { manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(it, state.impiantiDelCantiere) }
+                                                                .distinct()
+                                                                .sortedBy { it.inMesi() }
 
-                                            var expandPersonalizzaQuadri by remember { mutableStateOf(false) }
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable { expandPersonalizzaQuadri = !expandPersonalizzaQuadri }
-                                                    .padding(top = 8.dp, bottom = 4.dp),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = "Personalizza singoli quadri (${quadriAttivi.size})",
-                                                    style = MaterialTheme.typography.caption,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    color = MaterialTheme.colors.primary
-                                                )
-                                                Icon(
-                                                    imageVector = if (expandPersonalizzaQuadri) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                                    contentDescription = null,
-                                                    tint = MaterialTheme.colors.primary,
-                                                    modifier = Modifier.size(18.dp)
-                                                )
-                                            }
+                                                            if (frequenzeDisponibiliQuadri.isEmpty()) {
+                                                                Text("Nessuna attività registrata per i quadri selezionati.", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.error)
+                                                            } else {
+                                                                frequenzeDisponibiliQuadri.forEach { periodo ->
+                                                                    val matchingCount = quadriAttivi.count { quadro ->
+                                                                        val selectedFreqs = state.frequenzeSelezionatePerImpianto[quadro.id]
+                                                                            ?: state.frequenzePerImpianto[quadro.id]?.let { setOf(it) }
+                                                                            ?: emptySet()
+                                                                        periodo in selectedFreqs
+                                                                    }
+                                                                    val triState = when {
+                                                                        matchingCount == 0 -> ToggleableState.Off
+                                                                        matchingCount == quadriAttivi.size -> ToggleableState.On
+                                                                        else -> ToggleableState.Indeterminate
+                                                                    }
 
-                                            if (expandPersonalizzaQuadri) {
-                                                Column(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(start = 12.dp, top = 4.dp),
-                                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                                ) {
-                                                    quadriAttivi.forEach { quadro ->
-                                                        val frequenzeDisp = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(quadro, state.impiantiDelCantiere)
-                                                        val selectedFreqs = state.frequenzeSelezionatePerImpianto[quadro.id]
-                                                            ?: state.frequenzePerImpianto[quadro.id]?.let { setOf(it) }
-                                                            ?: emptySet()
-                                                        val displayLabel = if (quadro.sigla.isNotBlank()) "${quadro.codIntervento} - ${quadro.sigla}" else quadro.nomeCompleto
-                                                        Text(text = displayLabel, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.caption, modifier = Modifier.padding(top = 4.dp))
-                                                        
-                                                        frequenzeDisp.forEach { periodo ->
-                                                            val isChecked = periodo in selectedFreqs
+                                                                    val onToggleBulkFreq = {
+                                                                        if (onFrequenzaForImpiantiToggled != null) {
+                                                                            onFrequenzaForImpiantiToggled(quadriAttivi.map { it.id }, periodo)
+                                                                        } else {
+                                                                            quadriAttivi.forEach { onFrequenzaPerImpiantoToggled(it.id, periodo) }
+                                                                        }
+                                                                    }
+
+                                                                    Row(
+                                                                        modifier = Modifier
+                                                                            .fillMaxWidth()
+                                                                            .clickable { onToggleBulkFreq() }
+                                                                            .padding(vertical = 2.dp),
+                                                                        verticalAlignment = Alignment.CenterVertically
+                                                                    ) {
+                                                                        TriStateCheckbox(
+                                                                            state = triState,
+                                                                            onClick = onToggleBulkFreq,
+                                                                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
+                                                                        )
+                                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                                        Text(
+                                                                            text = periodo.label(),
+                                                                            style = MaterialTheme.typography.body2
+                                                                        )
+                                                                        if (matchingCount > 0 && matchingCount < quadriAttivi.size) {
+                                                                            Spacer(modifier = Modifier.width(6.dp))
+                                                                            Text(
+                                                                                text = "($matchingCount/${quadriAttivi.size})",
+                                                                                style = MaterialTheme.typography.caption,
+                                                                                color = MaterialTheme.colors.secondary
+                                                                            )
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            Spacer(modifier = Modifier.height(8.dp))
+                                                            Divider()
+
+                                                            var expandPersonalizzaQuadri by remember { mutableStateOf(false) }
                                                             Row(
                                                                 modifier = Modifier
                                                                     .fillMaxWidth()
-                                                                    .clickable { onFrequenzaPerImpiantoToggled(quadro.id, periodo) }
-                                                                    .padding(vertical = 1.dp),
+                                                                    .clickable { expandPersonalizzaQuadri = !expandPersonalizzaQuadri }
+                                                                    .padding(top = 8.dp, bottom = 4.dp),
+                                                                horizontalArrangement = Arrangement.SpaceBetween,
                                                                 verticalAlignment = Alignment.CenterVertically
                                                             ) {
-                                                                Checkbox(
-                                                                    checked = isChecked,
-                                                                    onCheckedChange = { onFrequenzaPerImpiantoToggled(quadro.id, periodo) },
-                                                                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
-                                                                )
-                                                                Spacer(modifier = Modifier.width(6.dp))
                                                                 Text(
-                                                                    text = periodo.label(),
-                                                                    style = MaterialTheme.typography.caption
+                                                                    text = "Personalizza singoli quadri (${quadriAttivi.size})",
+                                                                    style = MaterialTheme.typography.caption,
+                                                                    fontWeight = FontWeight.SemiBold,
+                                                                    color = MaterialTheme.colors.primary
                                                                 )
+                                                                Icon(
+                                                                    imageVector = if (expandPersonalizzaQuadri) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                                                    contentDescription = null,
+                                                                    tint = MaterialTheme.colors.primary,
+                                                                    modifier = Modifier.size(18.dp)
+                                                                )
+                                                            }
+
+                                                            if (expandPersonalizzaQuadri) {
+                                                                Column(
+                                                                    modifier = Modifier
+                                                                        .fillMaxWidth()
+                                                                        .padding(start = 12.dp, top = 4.dp),
+                                                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                                                ) {
+                                                                    quadriAttivi.forEach { quadro ->
+                                                                        val frequenzeDisp = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(quadro, state.impiantiDelCantiere)
+                                                                        val selectedFreqs = state.frequenzeSelezionatePerImpianto[quadro.id]
+                                                                            ?: state.frequenzePerImpianto[quadro.id]?.let { setOf(it) }
+                                                                            ?: emptySet()
+                                                                        val displayLabel = if (quadro.sigla.isNotBlank()) "${quadro.codIntervento} - ${quadro.sigla}" else quadro.nomeCompleto
+                                                                        Text(text = displayLabel, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.caption, modifier = Modifier.padding(top = 4.dp))
+                                                                        
+                                                                        frequenzeDisp.forEach { periodo ->
+                                                                            val isChecked = periodo in selectedFreqs
+                                                                            Row(
+                                                                                modifier = Modifier
+                                                                                    .fillMaxWidth()
+                                                                                    .clickable { onFrequenzaPerImpiantoToggled(quadro.id, periodo) }
+                                                                                .padding(vertical = 1.dp),
+                                                                            verticalAlignment = Alignment.CenterVertically
+                                                                        ) {
+                                                                            Checkbox(
+                                                                                checked = isChecked,
+                                                                                onCheckedChange = { onFrequenzaPerImpiantoToggled(quadro.id, periodo) },
+                                                                                colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
+                                                                            )
+                                                                            Spacer(modifier = Modifier.width(6.dp))
+                                                                            Text(
+                                                                                text = periodo.label(),
+                                                                                style = MaterialTheme.typography.caption
+                                                                            )
+                                                                        }
+                                                                    }
+                                                                }
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
-                                        }
-                                    }
-                                }
 
-                                altriImpiantiAttivi.forEach { impianto ->
-                                    val frequenzeDisp = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(impianto, state.impiantiDelCantiere)
-                                    val selectedFreqs = state.frequenzeSelezionatePerImpianto[impianto.id]
-                                        ?: state.frequenzePerImpianto[impianto.id]?.let { setOf(it) }
-                                        ?: emptySet()
-                                    val displayLabel = if (impianto is manutenzioni.domain.model.QuadroBT && impianto.sigla.isNotBlank()) "${impianto.codIntervento} - ${impianto.sigla}" else impianto.codIntervento
-                                    Text(text = displayLabel, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.body2, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp))
-                                    
-                                    if (impianto is manutenzioni.domain.model.QuadroMQT) {
-                                        Text(
-                                            text = "Tecnologia Interruttore MT:",
-                                            style = MaterialTheme.typography.caption,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colors.primary,
-                                            modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
-                                        )
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            manutenzioni.domain.model.MqtSwitchType.values().forEach { st ->
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    modifier = Modifier.clickable {
-                                                        onUpdateMqtSwitchType?.invoke(impianto.id, st)
-                                                    }
-                                                ) {
-                                                    RadioButton(
-                                                        selected = (impianto.tipoInterruttore ?: manutenzioni.domain.model.MqtSwitchType.SF6) == st,
-                                                        onClick = { onUpdateMqtSwitchType?.invoke(impianto.id, st) },
-                                                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary),
-                                                        modifier = Modifier.size(24.dp)
+                                            altriImpiantiAttivi.forEach { impianto ->
+                                                val frequenzeDisp = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveFrequenze(impianto, state.impiantiDelCantiere)
+                                                val selectedFreqs = state.frequenzeSelezionatePerImpianto[impianto.id]
+                                                    ?: state.frequenzePerImpianto[impianto.id]?.let { setOf(it) }
+                                                    ?: emptySet()
+                                                val displayLabel = if (impianto is manutenzioni.domain.model.QuadroBT && impianto.sigla.isNotBlank()) "${impianto.codIntervento} - ${impianto.sigla}" else impianto.codIntervento
+                                                Text(text = displayLabel, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.body2, modifier = Modifier.padding(top = 12.dp, bottom = 4.dp))
+                                                
+                                                if (impianto is manutenzioni.domain.model.QuadroMQT) {
+                                                    Text(
+                                                        text = "Tecnologia Interruttore MT:",
+                                                        style = MaterialTheme.typography.caption,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = MaterialTheme.colors.primary,
+                                                        modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
                                                     )
-                                                    Spacer(Modifier.width(2.dp))
-                                                    Text(st.label, fontSize = 12.sp)
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        manutenzioni.domain.model.MqtSwitchType.values().forEach { st ->
+                                                            Row(
+                                                                verticalAlignment = Alignment.CenterVertically,
+                                                                modifier = Modifier.clickable {
+                                                                    onUpdateMqtSwitchType?.invoke(impianto.id, st)
+                                                                }
+                                                            ) {
+                                                                RadioButton(
+                                                                    selected = (impianto.tipoInterruttore ?: manutenzioni.domain.model.MqtSwitchType.SF6) == st,
+                                                                    onClick = { onUpdateMqtSwitchType?.invoke(impianto.id, st) },
+                                                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary),
+                                                                    modifier = Modifier.size(24.dp)
+                                                                )
+                                                                Spacer(Modifier.width(2.dp))
+                                                                Text(st.label, fontSize = 12.sp)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                if (impianto is manutenzioni.domain.model.ImpiantoEmergenza) {
+                                                    Text(
+                                                        text = "Sigla Documentale:",
+                                                        style = MaterialTheme.typography.caption,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        color = MaterialTheme.colors.primary,
+                                                        modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
+                                                    )
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        manutenzioni.domain.model.EmergenzaSiglaDoc.values().forEach { sigla ->
+                                                            Row(
+                                                                verticalAlignment = Alignment.CenterVertically,
+                                                                modifier = Modifier.clickable {
+                                                                    onUpdateEmergenzaSiglaDocumentale?.invoke(impianto.id, sigla)
+                                                                }
+                                                            ) {
+                                                                RadioButton(
+                                                                    selected = impianto.siglaDocumentale == sigla,
+                                                                    onClick = { onUpdateEmergenzaSiglaDocumentale?.invoke(impianto.id, sigla) },
+                                                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary),
+                                                                    modifier = Modifier.size(24.dp)
+                                                                )
+                                                                Spacer(Modifier.width(2.dp))
+                                                                Text(sigla.displayLabel, fontSize = 12.sp)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                if (frequenzeDisp.isEmpty()) {
+                                                    Text("Nessuna attività registrata per questo modulo.", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.error)
+                                                } else {
+                                                    frequenzeDisp.forEach { periodo ->
+                                                        val isChecked = periodo in selectedFreqs
+                                                        Row(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .clickable { onFrequenzaPerImpiantoToggled(impianto.id, periodo) }
+                                                                .padding(vertical = 2.dp),
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Checkbox(
+                                                                checked = isChecked,
+                                                                onCheckedChange = { onFrequenzaPerImpiantoToggled(impianto.id, periodo) },
+                                                                colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
+                                                            )
+                                                            Spacer(modifier = Modifier.width(8.dp))
+                                                            Text(
+                                                                text = periodo.label(),
+                                                                style = MaterialTheme.typography.body2
+                                                            )
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
                                     }
-
-                                    if (impianto is manutenzioni.domain.model.ImpiantoEmergenza) {
-                                        Text(
-                                            text = "Sigla Documentale:",
-                                            style = MaterialTheme.typography.caption,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colors.primary,
-                                            modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
-                                        )
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            manutenzioni.domain.model.EmergenzaSiglaDoc.values().forEach { sigla ->
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    modifier = Modifier.clickable {
-                                                        onUpdateEmergenzaSiglaDocumentale?.invoke(impianto.id, sigla)
-                                                    }
-                                                ) {
-                                                    RadioButton(
-                                                        selected = impianto.siglaDocumentale == sigla,
-                                                        onClick = { onUpdateEmergenzaSiglaDocumentale?.invoke(impianto.id, sigla) },
-                                                        colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary),
-                                                        modifier = Modifier.size(24.dp)
-                                                    )
-                                                    Spacer(Modifier.width(2.dp))
-                                                    Text(sigla.displayLabel, fontSize = 12.sp)
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    if (frequenzeDisp.isEmpty()) {
-                                        Text("Nessuna attività registrata per questo modulo.", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.error)
-                                    } else {
-                                        frequenzeDisp.forEach { periodo ->
-                                            val isChecked = periodo in selectedFreqs
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable { onFrequenzaPerImpiantoToggled(impianto.id, periodo) }
-                                                    .padding(vertical = 2.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Checkbox(
-                                                    checked = isChecked,
-                                                    onCheckedChange = { onFrequenzaPerImpiantoToggled(impianto.id, periodo) },
-                                                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary)
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text(
-                                                    text = periodo.label(),
-                                                    style = MaterialTheme.typography.body2
-                                                )
-                                            }
-                                        }
-                                    }
                                 }
-                            }
-                        }
-                    }
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = 0.dp,
-                        border = BorderStroke(1.dp, SlateBorder),
-                        shape = RoundedCornerShape(8.dp),
-                        backgroundColor = MaterialTheme.colors.surface
-                    ) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Text("2. Generazione Schede di Verifica", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            val impiantiAttiviIdsForGen = state.impiantiSelezionati.filter { it.value }.keys
-                            val isEnabled = impiantiAttiviIdsForGen.isNotEmpty() && impiantiAttiviIdsForGen.all { id ->
-                                !state.frequenzeSelezionatePerImpianto[id].isNullOrEmpty() || state.frequenzePerImpianto.containsKey(id)
-                            }
-                            Button(
-                                onClick = onGeneraPdf,
-                                enabled = isEnabled && !state.isLoading,
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary, contentColor = Color.White)
-                            ) {
-                                Text("Genera Schede di Verifica", fontWeight = FontWeight.Bold)
-                            }
-                            
-                            if (state.pdfFile != null) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                OutlinedButton(
-                                    onClick = onOpenPdf,
+                                Card(
                                     modifier = Modifier.fillMaxWidth(),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.primary)
+                                    elevation = 0.dp,
+                                    border = BorderStroke(1.dp, SlateBorder),
+                                    shape = RoundedCornerShape(8.dp),
+                                    backgroundColor = MaterialTheme.colors.surface
                                 ) {
-                                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Apri PDF Creato")
+                                    Column(modifier = Modifier.padding(24.dp)) {
+                                        Text("2. Generazione Schede di Verifica", style = MaterialTheme.typography.subtitle1, fontWeight = FontWeight.SemiBold)
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        
+                                        val impiantiAttiviIdsForGen = state.impiantiSelezionati.filter { it.value }.keys
+                                        val isEnabled = impiantiAttiviIdsForGen.isNotEmpty() && impiantiAttiviIdsForGen.all { id ->
+                                            !state.frequenzeSelezionatePerImpianto[id].isNullOrEmpty() || state.frequenzePerImpianto.containsKey(id)
+                                        }
+                                        Button(
+                                            onClick = onGeneraPdf,
+                                            enabled = isEnabled && !state.isLoading,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary, contentColor = Color.White)
+                                        ) {
+                                            Text("Genera Schede di Verifica", fontWeight = FontWeight.Bold)
+                                        }
+                                        
+                                        if (state.pdfFile != null) {
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            OutlinedButton(
+                                                onClick = onOpenPdf,
+                                                modifier = Modifier.fillMaxWidth(),
+                                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.primary)
+                                            ) {
+                                                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Apri PDF Creato")
+                                            }
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text("Percorso: ${state.pdfFile.name}", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.secondary)
+                                        }
+                                    }
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("Percorso: ${state.pdfFile.name}", style = MaterialTheme.typography.caption, color = MaterialTheme.colors.secondary)
                             }
                         }
                     }
                 }
             }
-            }
         }
+
+        VerticalScrollbar(
+            adapter = rememberScrollbarAdapter(screenScrollState),
+            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(vertical = 4.dp, horizontal = 2.dp)
+        )
     }
+}
 }
 
 /**
