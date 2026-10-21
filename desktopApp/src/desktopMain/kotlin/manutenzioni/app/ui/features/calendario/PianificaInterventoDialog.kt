@@ -33,6 +33,7 @@ import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.ImpiantoEmergenza
 import manutenzioni.domain.model.Periodo
 import manutenzioni.domain.model.QuadroBT
+import manutenzioni.app.ui.components.ItalianDateInputField
 import manutenzioni.domain.model.QuadroMQT
 import manutenzioni.domain.model.RilevazioneAntincendio
 import manutenzioni.domain.model.RilevazioneGas
@@ -197,13 +198,12 @@ fun PianificaInterventoDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        OutlinedTextField(
+                        ItalianDateInputField(
                             value = dataPianificata,
                             onValueChange = { dataPianificata = it },
-                            label = { Text("Data Pianificata (dd/MM/yyyy)", fontSize = 11.sp) },
-                            singleLine = true,
+                            label = "Data Pianificata",
                             modifier = Modifier.weight(1f),
-                            textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            isRequired = true
                         )
 
                         OutlinedTextField(
