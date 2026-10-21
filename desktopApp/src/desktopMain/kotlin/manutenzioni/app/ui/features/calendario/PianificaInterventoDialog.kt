@@ -1,14 +1,18 @@
 package manutenzioni.app.ui.features.calendario
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -191,11 +195,16 @@ fun PianificaInterventoDialog(
 
                 Divider(color = Color(0xFFE2E8F0))
 
-                // Form con scroll interno
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                // Form con scroll interno e scrollbar
+                val formScrollState = rememberScrollState()
+                Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(formScrollState)
+                            .padding(end = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
                     // 1. Data e Manutentore
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -264,83 +273,91 @@ fun PianificaInterventoDialog(
                         )
 
                         Surface(
-                            modifier = Modifier.fillMaxWidth().height(150.dp),
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp, max = 160.dp),
                             shape = RoundedCornerShape(6.dp),
                             border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
                             color = Color(0xFFF8FAFC)
                         ) {
                             if (cantieriFiltrati.isEmpty()) {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
                                     Text("Nessun cantiere trovato.", fontSize = 11.sp, color = Color(0xFF94A3B8))
                                 }
                             } else {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize().padding(4.dp),
-                                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                                ) {
-                                    items(cantieriFiltrati, key = { it.id }) { cantiere ->
-                                        val isSelected = cantiere.id in selectedCantieriIds
-                                        val clienteNome = clientiMap[cantiere.clienteId]?.nome ?: "Cliente"
-                                        val nImpianti = conteggioImpiantiPerCantiere[cantiere.id] ?: 0
+                                val cantieriListState = rememberLazyListState()
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    LazyColumn(
+                                        state = cantieriListState,
+                                        modifier = Modifier.fillMaxSize().padding(4.dp).padding(end = 8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        items(cantieriFiltrati, key = { it.id }) { cantiere ->
+                                            val isSelected = cantiere.id in selectedCantieriIds
+                                            val clienteNome = clientiMap[cantiere.clienteId]?.nome ?: "Cliente"
+                                            val nImpianti = conteggioImpiantiPerCantiere[cantiere.id] ?: 0
 
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .background(
-                                                    if (isSelected) Color(0xFFEFF6FF) else Color.Transparent,
-                                                    RoundedCornerShape(4.dp)
-                                                )
-                                                .clickable {
-                                                    selectedCantieriIds = if (isSelected) {
-                                                        selectedCantieriIds - cantiere.id
-                                                    } else {
-                                                        selectedCantieriIds + cantiere.id
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .background(
+                                                        if (isSelected) Color(0xFFEFF6FF) else Color.Transparent,
+                                                        RoundedCornerShape(4.dp)
+                                                    )
+                                                    .clickable {
+                                                        selectedCantieriIds = if (isSelected) {
+                                                            selectedCantieriIds - cantiere.id
+                                                        } else {
+                                                            selectedCantieriIds + cantiere.id
+                                                        }
                                                     }
-                                                }
-                                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Checkbox(
-                                                checked = isSelected,
-                                                onCheckedChange = { checked ->
-                                                    selectedCantieriIds = if (checked) {
-                                                        selectedCantieriIds + cantiere.id
-                                                    } else {
-                                                        selectedCantieriIds - cantiere.id
-                                                    }
-                                                },
-                                                colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary),
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(
-                                                    text = cantiere.nome,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                    color = Color(0xFF0F172A)
-                                                )
-                                                Text(
-                                                    text = clienteNome,
-                                                    fontSize = 10.sp,
-                                                    color = Color(0xFF64748B)
-                                                )
-                                            }
-
-                                            Surface(
-                                                color = if (isSelected) Color(0xFFDBEAFE) else Color(0xFFF1F5F9),
-                                                shape = RoundedCornerShape(4.dp)
+                                                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                                             ) {
-                                                Text(
-                                                    text = "$nImpianti impianti",
-                                                    fontSize = 9.sp,
-                                                    fontWeight = FontWeight.Medium,
-                                                    color = if (isSelected) Color(0xFF1E40AF) else Color(0xFF475569),
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                Checkbox(
+                                                    checked = isSelected,
+                                                    onCheckedChange = { checked ->
+                                                        selectedCantieriIds = if (checked) {
+                                                            selectedCantieriIds + cantiere.id
+                                                        } else {
+                                                            selectedCantieriIds - cantiere.id
+                                                        }
+                                                    },
+                                                    colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.primary),
+                                                    modifier = Modifier.size(20.dp)
                                                 )
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = cantiere.nome,
+                                                        fontSize = 12.sp,
+                                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                        color = Color(0xFF0F172A)
+                                                    )
+                                                    Text(
+                                                        text = clienteNome,
+                                                        fontSize = 10.sp,
+                                                        color = Color(0xFF64748B)
+                                                    )
+                                                }
+
+                                                Surface(
+                                                    color = if (isSelected) Color(0xFFDBEAFE) else Color(0xFFF1F5F9),
+                                                    shape = RoundedCornerShape(4.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "$nImpianti impianti",
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = if (isSelected) Color(0xFF1E40AF) else Color(0xFF475569),
+                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    )
+                                                }
                                             }
                                         }
                                     }
+                                    VerticalScrollbar(
+                                        modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                                        adapter = rememberScrollbarAdapter(cantieriListState)
+                                    )
                                 }
                             }
                         }
@@ -526,7 +543,13 @@ fun PianificaInterventoDialog(
                     )
                 }
 
-                Divider(color = Color(0xFFE2E8F0))
+                VerticalScrollbar(
+                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+                    adapter = rememberScrollbarAdapter(formScrollState)
+                )
+            }
+
+            Divider(color = Color(0xFFE2E8F0))
 
                 // Footer con Bottoni di Conferma / Annulla
                 Row(
