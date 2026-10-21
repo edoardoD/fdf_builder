@@ -120,6 +120,14 @@ data class ManutenzioniUiState(
             cantieriDisponibili.filter { it.id in utenteAttivo.cantieriAssegnatiIds }
         }
 
+    /** Cantieri globali di tutti i clienti visibili nel Calendario in base al ruolo RBAC (R31) */
+    val tuttiCantieriVisibili: List<Cantiere>
+        get() = if (isAdmin) {
+            tuttiCantieri
+        } else {
+            tuttiCantieri.filter { it.id in utenteAttivo.cantieriAssegnatiIds }
+        }
+
     /** Eventi del mese correntemente visualizzato nella griglia del calendario */
     val eventiMeseVisualizzato: List<manutenzioni.domain.model.EventoManutenzione>
         get() {

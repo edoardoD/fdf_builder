@@ -81,7 +81,7 @@ fun CalendarioGlobaleScreen(
     if (showPianificaDialog) {
         PianificaInterventoDialog(
             initialDate = state.dataCalendarioSelezionata,
-            cantieriDisponibili = state.cantieriVisibili,
+            cantieriDisponibili = state.tuttiCantieriVisibili,
             clienti = state.clienti,
             tuttiImpianti = state.impianti,
             onDismiss = { showPianificaDialog = false },
