@@ -65,17 +65,24 @@ object CalendarioScadenzeCalculator {
 
     /**
      * Calcola le scadenze mensili raggruppate per un singolo cantiere su un orizzonte di [mesiOrizzonte] mesi.
+     *
+     * La priorità della data di calcolo base è data tassativamente da [Cantiere.effectiveDataIntervento]
+     * (ovvero [Cantiere.dataIntervento]), con fallback su [Cantiere.dataInizioContratto] e poi su [fallbackDate].
+     *
+     * Se [frequenzeConfiguratePerImpianto] è specificato, la proiezione considera unicamente le frequenze
+     * concordate/selezionate per ciascun impianto in quel cantiere, evitando scadenze su frequenze teoriche non attive.
      */
     fun calcolaScadenze(
         cantiere: Cantiere,
         impianti: List<Impianto>,
         mesiOrizzonte: Int = 12,
-        fallbackDate: LocalDate = LocalDate.of(2026, 1, 1)
+        fallbackDate: LocalDate = LocalDate.of(2026, 1, 1),
+        frequenzeConfiguratePerImpianto: Map<String, Set<manutenzioni.domain.model.Periodo>>? = null
     ): List<MeseScadenzaGroup> {
         if (impianti.isEmpty() || mesiOrizzonte <= 0) return emptyList()
 
-        val rawBaseDate = cantiere.dataInizioContratto?.takeIf { it.isNotBlank() }
-            ?: cantiere.effectiveDataIntervento
+        val rawBaseDate = cantiere.effectiveDataIntervento?.takeIf { it.isNotBlank() }
+            ?: cantiere.dataInizioContratto?.takeIf { it.isNotBlank() }
         val baseDate = parseDataRiferimento(rawBaseDate, fallbackDate)
 
         val groups = mutableListOf<MeseScadenzaGroup>()
@@ -85,11 +92,15 @@ object CalendarioScadenzeCalculator {
             val scadenzeMese = mutableListOf<ScadenzaImpiantoItem>()
 
             for (impianto in impianti) {
-                val frequenzeImpianto = CrossPlantAttivitaResolver.resolveFrequenze(impianto, impianti)
-                if (frequenzeImpianto.isEmpty()) continue
+                val frequenzeDisponibili = CrossPlantAttivitaResolver.resolveFrequenze(impianto, impianti)
+                if (frequenzeDisponibili.isEmpty()) continue
+
+                // Se sono configurate frequenze specifiche per l'impianto nel cantiere, usiamo solo quelle
+                val frequenzeCandidate = frequenzeConfiguratePerImpianto?.get(impianto.id)?.takeIf { it.isNotEmpty() }
+                    ?: frequenzeDisponibili
 
                 // Tutte le frequenze dell'impianto che cadono nel mese corrente (meseOffset % F.inMesi() == 0)
-                val frequenzeInScadenza = frequenzeImpianto.filter { freq ->
+                val frequenzeInScadenza = frequenzeCandidate.filter { freq ->
                     val mesiFreq = freq.inMesi()
                     mesiFreq > 0 && meseOffset % mesiFreq == 0
                 }.sortedBy { it.inMesi() }
@@ -161,7 +172,8 @@ object CalendarioScadenzeCalculator {
         cantieri: List<Cantiere>,
         tuttiImpianti: List<Impianto>,
         mesiOrizzonte: Int = 12,
-        fallbackDate: LocalDate = LocalDate.of(2026, 1, 1)
+        fallbackDate: LocalDate = LocalDate.of(2026, 1, 1),
+        frequenzePerImpiantoByCantiere: Map<String, Map<String, Set<manutenzioni.domain.model.Periodo>>>? = null
     ): List<MeseScadenzaGlobaleGroup> {
         if (cantieri.isEmpty() || mesiOrizzonte <= 0) return emptyList()
 
@@ -178,11 +190,13 @@ object CalendarioScadenzeCalculator {
             if (impiantiCantiere.isEmpty()) continue
 
             val cliente = clientiById[cantiere.clienteId]
+            val frequenzeConfigurate = frequenzePerImpiantoByCantiere?.get(cantiere.id)
             val scadenzeCantiere = calcolaScadenze(
                 cantiere = cantiere,
                 impianti = impiantiCantiere,
                 mesiOrizzonte = mesiOrizzonte,
-                fallbackDate = fallbackDate
+                fallbackDate = fallbackDate,
+                frequenzeConfiguratePerImpianto = frequenzeConfigurate
             )
 
             for (meseGroup in scadenzeCantiere) {

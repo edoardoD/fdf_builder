@@ -723,10 +723,48 @@ private fun MeseAgendaSectionCard(
                                     color = Color(0xFF0F172A)
                                 )
                                 Text(
-                                    text = "${item.cliente?.nome ?: "Cliente"} • Data: ${item.dataPrevista}",
+                                    text = "${item.cliente?.nome ?: "Cliente"} • Data prevista: ${item.dataPrevista}",
                                     fontSize = 10.sp,
                                     color = Color(0xFF64748B)
                                 )
+                                val dataRif = item.cantiere.effectiveDataIntervento
+                                if (!dataRif.isNullOrBlank()) {
+                                    Text(
+                                        text = "Data intervento base: $dataRif",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF1E3A8A)
+                                    )
+                                }
+                                val dataContratto = item.cantiere.dataInizioContratto
+                                if (!dataContratto.isNullOrBlank()) {
+                                    Text(
+                                        text = "Inizio contratto: $dataContratto",
+                                        fontSize = 9.sp,
+                                        color = Color(0xFF94A3B8)
+                                    )
+                                }
+                                if (item.scadenzeImpianti.isNotEmpty()) {
+                                    Row(
+                                        modifier = Modifier.padding(top = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        item.scadenzeImpianti.forEach { imp ->
+                                            Surface(
+                                                color = Color(0xFFE2E8F0),
+                                                shape = RoundedCornerShape(4.dp)
+                                            ) {
+                                                Text(
+                                                    text = "${imp.codIntervento} (${imp.frequenzeIncluse.joinToString { it.label() }})",
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = Color(0xFF334155),
+                                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 OutlinedButton(
