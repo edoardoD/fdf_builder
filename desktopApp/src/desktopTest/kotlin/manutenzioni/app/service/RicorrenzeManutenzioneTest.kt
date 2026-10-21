@@ -278,4 +278,59 @@ class RicorrenzeManutenzioneTest {
         assertTrue(filtrati.any { it.impiantoId == "imp-em" })
         assertTrue(filtrati.none { it.impiantoId == "imp-q1" })
     }
+
+    @Test
+    fun `generaRicorrenzeFuture con frequenze differenziate include solo gli impianti a scadenza specifica`() {
+        val eventoBase = EventoManutenzione(
+            id = "evt-multi-freq",
+            cantiereId = "cant-001",
+            clienteId = "cli-001",
+            dataPianificata = "01/01/2026",
+            impiantiPianificati = listOf(
+                ImpiantoPianificatoSnapshot(
+                    impiantoId = "imp-em",
+                    codIntervento = "EM",
+                    descrizione = "Emergenza UNI 11222",
+                    periodicitaScelta = Periodo(TipoPeriodo.M, 6)
+                ),
+                ImpiantoPianificatoSnapshot(
+                    impiantoId = "imp-q",
+                    codIntervento = "Q",
+                    descrizione = "Quadro Generale BT",
+                    periodicitaScelta = Periodo(TipoPeriodo.A, 1)
+                )
+            )
+        )
+
+        val future = RicorrenzeManutenzioneEngine.generaRicorrenzeFuture(
+            eventoBase = eventoBase,
+            orizzonteMesi = 24
+        )
+
+        assertEquals(4, future.size)
+
+        // +6 Mesi (01/07/2026): solo EM (6 % 6 == 0, 6 % 12 != 0)
+        val occ1 = future[0]
+        assertEquals("01/07/2026", occ1.dataPianificata)
+        assertEquals(1, occ1.impiantiPianificati.size)
+        assertEquals("imp-em", occ1.impiantiPianificati[0].impiantoId)
+
+        // +12 Mesi (01/01/2027): sia EM che Quadro BT (12 % 6 == 0, 12 % 12 == 0)
+        val occ2 = future[1]
+        assertEquals("01/01/2027", occ2.dataPianificata)
+        assertEquals(2, occ2.impiantiPianificati.size)
+        assertTrue(occ2.impiantiPianificati.any { it.impiantoId == "imp-em" })
+        assertTrue(occ2.impiantiPianificati.any { it.impiantoId == "imp-q" })
+
+        // +18 Mesi (01/07/2027): solo EM
+        val occ3 = future[2]
+        assertEquals("01/07/2027", occ3.dataPianificata)
+        assertEquals(1, occ3.impiantiPianificati.size)
+        assertEquals("imp-em", occ3.impiantiPianificati[0].impiantoId)
+
+        // +24 Mesi (01/01/2028): sia EM che Quadro BT
+        val occ4 = future[3]
+        assertEquals("01/01/2028", occ4.dataPianificata)
+        assertEquals(2, occ4.impiantiPianificati.size)
+    }
 }

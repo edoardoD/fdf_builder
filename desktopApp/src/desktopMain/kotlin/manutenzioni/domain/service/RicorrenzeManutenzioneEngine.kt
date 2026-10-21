@@ -62,15 +62,26 @@ object RicorrenzeManutenzioneEngine {
             numeroOccorrenze = occorrenze
         )
 
-        return dateRicorrenti.map { dataRicorrente ->
-            eventoBase.copy(
-                id = UUID.randomUUID().toString(),
-                dataPianificata = dataRicorrente,
-                stato = StatoEventoManutenzione.PIANIFICATO,
-                serieRicorrenzaId = serieId,
-                dataCompletamentoEffettiva = null,
-                sessioneVerificaId = null
-            )
+        return dateRicorrenti.mapIndexedNotNull { index, dataRicorrente ->
+            val elapsedMonths = (index + 1) * mesiPasso
+            val activeSnapshots = eventoBase.impiantiPianificati.filter { snapshot ->
+                val freqSnapshotMesi = snapshot.periodicitaScelta.inMesi().coerceAtLeast(1)
+                elapsedMonths % freqSnapshotMesi == 0
+            }
+
+            if (activeSnapshots.isEmpty()) {
+                null
+            } else {
+                eventoBase.copy(
+                    id = UUID.randomUUID().toString(),
+                    dataPianificata = dataRicorrente,
+                    stato = StatoEventoManutenzione.PIANIFICATO,
+                    impiantiPianificati = activeSnapshots,
+                    serieRicorrenzaId = serieId,
+                    dataCompletamentoEffettiva = null,
+                    sessioneVerificaId = null
+                )
+            }
         }
     }
 }

@@ -2294,6 +2294,7 @@ class ManutenzioniViewModel(
         impiantiIds: List<String> = emptyList(),
         impiantiCodici: List<String> = emptyList(),
         frequenza: Periodo,
+        frequenzePerImpianto: Map<String, Periodo> = emptyMap(),
         manutentore: String? = null,
         note: String? = null,
         generaRicorrenze: Boolean = true,
@@ -2331,7 +2332,8 @@ class ManutenzioniViewModel(
                         if (targetImpianti.isEmpty()) continue
 
                         val snapshotList = targetImpianti.map { imp ->
-                            val attivita = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveAttivita(imp, impiantiCantiere, frequenza)
+                            val freqPerQuestoImpianto = frequenzePerImpianto[imp.id] ?: frequenza
+                            val attivita = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveAttivita(imp, impiantiCantiere, freqPerQuestoImpianto)
                             val attDesc = attivita.mapIndexed { idx, att ->
                                 val z = att.zona?.takeIf { it.isNotBlank() }?.let { " [$it]" } ?: ""
                                 "${idx + 1}. ${att.tipoAttivita}$z: ${att.descrizione} (${att.frequenza.label()})"
@@ -2344,7 +2346,7 @@ class ManutenzioniViewModel(
                                 impiantoId = imp.id,
                                 codIntervento = imp.codIntervento,
                                 descrizione = desc,
-                                periodicitaScelta = frequenza,
+                                periodicitaScelta = freqPerQuestoImpianto,
                                 numeroAttivitaPreviste = attivita.size,
                                 attivitaDescrizioni = attDesc
                             )
@@ -2376,11 +2378,27 @@ class ManutenzioniViewModel(
                     repository.salvaEventiManutenzioneBatch(tuttiEventiGenerati)
                 }
 
+                val freqMap: Map<String, Map<String, Set<Periodo>>>? = if (frequenzePerImpianto.isNotEmpty()) {
+                    cantieriIds.associateWith {
+                        frequenzePerImpianto.mapValues { setOf(it.value) }
+                    }
+                } else null
+
+                val globalCal = computeGlobalCalendar(
+                    clienti = state.clienti,
+                    tuttiCantieri = state.tuttiCantieri,
+                    impianti = state.impianti,
+                    orizzonteMesi = state.orizzonteScadenzeMesi,
+                    utenteAttivo = state.utenteAttivo,
+                    frequenzePerImpiantoByCantiere = freqMap
+                )
+
                 val eventiRicaricati = withContext(Dispatchers.IO) { repository.caricaEventiManutenzione() }
                 _uiState.update {
                     it.copy(
                         eventiManutenzione = eventiRicaricati,
                         dataCalendarioSelezionata = cleanDate,
+                        calendarioGlobale = globalCal,
                         isLoading = false,
                         statusMessage = "✓ Pianificati interventi per ${cantieriIds.size} cantieri al $cleanDate (${tuttiEventiGenerati.size} eventi totali generati con ricorrenze)",
                         errorMessage = null
