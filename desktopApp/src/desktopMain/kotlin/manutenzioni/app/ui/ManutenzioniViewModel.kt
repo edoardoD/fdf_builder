@@ -2350,6 +2350,7 @@ class ManutenzioniViewModel(
     fun pianificaInterventiBatch(
         dataPianificata: String,
         cantieriIds: List<String>,
+        impiantiIds: List<String> = emptyList(),
         impiantiCodici: List<String> = emptyList(),
         frequenza: Periodo,
         manutentore: String? = null,
@@ -2380,10 +2381,10 @@ class ManutenzioniViewModel(
                             ?: continue
 
                         val impiantiCantiere = repository.getImpiantiForCantiere(cantiereId)
-                        val targetImpianti = if (impiantiCodici.isNotEmpty()) {
-                            impiantiCantiere.filter { it.codIntervento.uppercase() in impiantiCodici.map { c -> c.uppercase() } }
-                        } else {
-                            impiantiCantiere
+                        val targetImpianti = when {
+                            impiantiIds.isNotEmpty() -> impiantiCantiere.filter { it.id in impiantiIds }
+                            impiantiCodici.isNotEmpty() -> impiantiCantiere.filter { it.codIntervento.uppercase() in impiantiCodici.map { c -> c.uppercase() } }
+                            else -> impiantiCantiere
                         }
 
                         if (targetImpianti.isEmpty()) continue

@@ -90,8 +90,8 @@ fun App(viewModel: ManutenzioniViewModel, onDisconnect: () -> Unit = {}) {
                             onPreviousMonth = { viewModel.cambiaMeseCalendario(-1) },
                             onNextMonth = { viewModel.cambiaMeseCalendario(1) },
                             onTodayClicked = viewModel::vaiAlMeseCorrente,
-                            onPianificaInterventiBatch = { data, cantieri, imp, freq, man, note, ric ->
-                                viewModel.pianificaInterventiBatch(data, cantieri, imp, freq, man, note, ric)
+                            onPianificaInterventiBatch = { data, cantieri, impIds, impCod, freq, man, note, ric ->
+                                viewModel.pianificaInterventiBatch(data, cantieri, impIds, impCod, freq, man, note, ric)
                             },
                             onAvviaInterventoDaCalendario = viewModel::avviaInterventoDaCalendario,
                             onCompletaEventoManutenzione = { viewModel.completaEventoManutenzione(it) },

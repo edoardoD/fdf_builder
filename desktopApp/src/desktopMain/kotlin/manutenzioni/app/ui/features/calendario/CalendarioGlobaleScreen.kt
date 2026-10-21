@@ -64,12 +64,13 @@ fun CalendarioGlobaleScreen(
     onPianificaInterventiBatch: (
         dataPianificata: String,
         cantieriIds: List<String>,
+        impiantiIds: List<String>,
         impiantiCodici: List<String>,
         frequenza: Periodo,
         manutentore: String?,
         note: String?,
         generaRicorrenze: Boolean
-    ) -> Unit = { _, _, _, _, _, _, _ -> },
+    ) -> Unit = { _, _, _, _, _, _, _, _ -> },
     onAvviaInterventoDaCalendario: (EventoManutenzione) -> Unit = {},
     onCompletaEventoManutenzione: (String) -> Unit = {},
     onEliminaEventoManutenzione: (String, Boolean) -> Unit = { _, _ -> }
@@ -85,8 +86,8 @@ fun CalendarioGlobaleScreen(
             clienti = state.clienti,
             tuttiImpianti = state.impianti,
             onDismiss = { showPianificaDialog = false },
-            onPianifica = { data, cantieri, impianti, freq, man, note, ricorrenze ->
-                onPianificaInterventiBatch(data, cantieri, impianti, freq, man, note, ricorrenze)
+            onPianifica = { data, cantieri, impIds, impCod, freq, man, note, ricorrenze ->
+                onPianificaInterventiBatch(data, cantieri, impIds, impCod, freq, man, note, ricorrenze)
                 showPianificaDialog = false
             }
         )
