@@ -91,11 +91,11 @@ class TechnicalSheetHtmlRenderer {
         sb.appendLine("""                    </td>""")
         sb.appendLine("""                    <td style="border: 0.0133cm solid #000; padding: 2px 4px; vertical-align: top;">""")
         sb.appendLine("""                        <p style="font-size: 5pt; margin: 0;">Data inizio contratto</p>""")
-        sb.appendLine("""                        <input type="text" name="${prefix}_data_inizio" id="${prefix}_data_inizio"$dataInizioAttr placeholder="gg/mm/aaaa" style="width: 100%; height: 0.44cm; font-size: 7.5pt; box-sizing: border-box;" />""")
+        sb.appendLine("""                        <input type="text" name="${prefix}_data_inizio" id="${prefix}_data_inizio"$dataInizioAttr placeholder="gg/mm/aaaa" style="width: 100%; height: 0.38cm; line-height: 0.38cm; border: none; outline: none; background: transparent; font-size: 7.5pt; margin: 0; padding: 0 2px; box-sizing: border-box;" />""")
         sb.appendLine("""                        <label for="${prefix}_data_inizio" class="visually-hidden">Data inizio contratto</label>""")
         sb.appendLine("""                    </td>""")
         sb.appendLine("""                </tr>""")
-
+        sb.appendLine()
         // Riga 3: Premessa/Normative, Verificatore
         sb.appendLine("""                <tr style="height: 0.75cm;">""")
         sb.appendLine("""                    <td colspan="4" style="border: 0.0133cm solid #000; padding: 2px 4px; vertical-align: top;">""")
@@ -104,7 +104,7 @@ class TechnicalSheetHtmlRenderer {
         sb.appendLine("""                    </td>""")
         sb.appendLine("""                    <td style="border: 0.0133cm solid #000; padding: 2px 4px; vertical-align: top;">""")
         sb.appendLine("""                        <p style="font-size: 5pt; margin: 0;">Verificatore / Manutentore</p>""")
-        sb.appendLine("""                        <input type="text" name="${prefix}_manutentore" id="${prefix}_manutentore"$manutentoreAttr placeholder="Nome verificatore" style="width: 100%; height: 0.44cm; font-size: 7.5pt; box-sizing: border-box;" />""")
+        sb.appendLine("""                        <input type="text" name="${prefix}_manutentore" id="${prefix}_manutentore"$manutentoreAttr placeholder="Nome verificatore" style="width: 100%; height: 0.38cm; line-height: 0.38cm; border: none; outline: none; background: transparent; font-size: 7.5pt; margin: 0; padding: 0 2px; box-sizing: border-box;" />""")
         sb.appendLine("""                        <label for="${prefix}_manutentore" class="visually-hidden">Verificatore / Manutentore</label>""")
         sb.appendLine("""                    </td>""")
         sb.appendLine("""                </tr>""")
@@ -209,8 +209,8 @@ class TechnicalSheetHtmlRenderer {
                     CellTextAlign.RIGHT -> "text-align: right;"
                 }
                 val fontPt = if (cell.fontSizePt < 7.0) 7.5 else cell.fontSizePt
-                sb.appendLine("""                        <td style="border: 0.0133cm solid #000; ${alignStr} vertical-align: middle; padding: 1px 2px;">""")
-                sb.appendLine("""                            <input type="text" name="${cell.fieldName}" id="${cell.fieldName}" placeholder="${escapeHtml(cell.placeholder)}" style="width: 100%; height: 0.44cm; font-size: ${fontPt}pt; box-sizing: border-box; ${alignStr}" />""")
+                sb.appendLine("""                        <td style="border: 0.0133cm solid #000; padding: 0; ${alignStr} vertical-align: middle;">""")
+                sb.appendLine("""                            <input type="text" name="${cell.fieldName}" id="${cell.fieldName}" placeholder="${escapeHtml(cell.placeholder)}" style="width: 100%; height: 100%; min-height: 0.44cm; line-height: 0.44cm; border: none; outline: none; background: transparent; margin: 0; padding: 0 3px; font-size: ${fontPt}pt; box-sizing: border-box; ${alignStr} vertical-align: middle;" />""")
                 sb.appendLine("""                            <label for="${cell.fieldName}" class="visually-hidden">${escapeHtml(cell.label)}</label>""")
                 sb.appendLine("""                        </td>""")
             }
@@ -252,6 +252,17 @@ class TechnicalSheetHtmlRenderer {
                     margin: 0;
                     padding: 0;
                     color: #000;
+                }
+                input[type="text"] {
+                    width: 100%;
+                    border: none;
+                    outline: none;
+                    background: transparent;
+                    margin: 0;
+                    padding: 0 2px;
+                    box-sizing: border-box;
+                    font-family: Arial, Helvetica, sans-serif;
+                    vertical-align: middle;
                 }
                 .visually-hidden {
                     position: absolute;
