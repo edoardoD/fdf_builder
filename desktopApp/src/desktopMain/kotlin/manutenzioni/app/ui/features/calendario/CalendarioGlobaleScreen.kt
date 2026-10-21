@@ -83,6 +83,7 @@ fun CalendarioGlobaleScreen(
             initialDate = state.dataCalendarioSelezionata,
             cantieriDisponibili = state.cantieriVisibili,
             clienti = state.clienti,
+            tuttiImpianti = state.impianti,
             onDismiss = { showPianificaDialog = false },
             onPianifica = { data, cantieri, impianti, freq, man, note, ricorrenze ->
                 onPianificaInterventiBatch(data, cantieri, impianti, freq, man, note, ricorrenze)
