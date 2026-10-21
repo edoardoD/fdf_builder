@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -253,274 +254,349 @@ fun ImpiantoEditor(
 
     LazyColumn(modifier = modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
-            // Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = if (isNew) "Nuovo Impianto" else "Editor Impianto",
-                    style = MaterialTheme.typography.h6,
-                    fontWeight = FontWeight.Bold
-                )
-                if (isNew) {
+            // Header Compatto Unificato con Titolo, Badge e Azioni
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
                     Text(
-                        text = "Compila i campi obbligatori e salva",
-                        fontSize = 11.sp,
-                        color = Color.Gray
+                        text = if (isNew) "Nuovo Impianto" else "Editor Impianto",
+                        style = MaterialTheme.typography.subtitle1,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0F172A)
                     )
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (onCancel != null) {
-                    OutlinedButton(
-                        onClick = onCancel,
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.error)
-                    ) {
-                        Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Annulla")
+                    if (codIntervento.isNotBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colors.primary.copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                text = codIntervento.trim().uppercase(),
+                                color = MaterialTheme.colors.primary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    if (isNew) {
+                        Text(
+                            text = "• Compila i campi obbligatori e salva",
+                            fontSize = 11.sp,
+                            color = Color.Gray
+                        )
                     }
                 }
-                Button(
-                    onClick = {
-                        // Validazione locale
-                        codInterventoError = codIntervento.isBlank()
-                        nomeCompletoError = nomeCompleto.isBlank()
-    
-                        if (!codInterventoError && !nomeCompletoError) {
-                            val savedCod = codIntervento.trim()
-                            val savedNome = nomeCompleto.trim()
-                            val savedPremessa = premessa.ifBlank { null }
-                            val savedNote = noteSpecifiche.ifBlank { null }
-
-                            val updated: Impianto = when {
-                                isQuadro -> {
-                                    QuadroBT(
-                                        id = impianto.id,
-                                        codIntervento = savedCod,
-                                        nomeCompleto = savedNome,
-                                        premessa = savedPremessa,
-                                        listaAttivita = attivitaList,
-                                        listaNormative = impianto.listaNormative,
-                                        cantiereId = impianto.cantiereId,
-                                        quantita = 1,
-                                        noteSpecifiche = savedNote,
-                                        sigla = siglaQuadro.trim(),
-                                        descrizioneQuadro = descrizioneQuadro.trim(),
-                                        listaInterruttori = interruttoriQuadro
-                                    )
-                                }
-                                isEmergenza -> {
-                                    ImpiantoEmergenza(
-                                        id = impianto.id,
-                                        codIntervento = savedCod,
-                                        nomeCompleto = savedNome,
-                                        premessa = savedPremessa,
-                                        listaAttivita = attivitaList,
-                                        listaNormative = impianto.listaNormative,
-                                        cantiereId = impianto.cantiereId,
-                                        quantita = 1,
-                                        noteSpecifiche = savedNote,
-                                        listaLampade = lampadeEmergenza
-                                    )
-                                }
-                                isQuadroMQT -> {
-                                    val baseMqt = (impianto as? QuadroMQT) ?: QuadroMQT(
-                                        id = impianto.id,
-                                        codIntervento = savedCod,
-                                        nomeCompleto = savedNome,
-                                        premessa = savedPremessa,
-                                        listaAttivita = attivitaList,
-                                        listaNormative = impianto.listaNormative,
-                                        cantiereId = impianto.cantiereId,
-                                        quantita = 1,
-                                        noteSpecifiche = savedNote
-                                    )
-                                    baseMqt.copy(
-                                        codIntervento = savedCod,
-                                        nomeCompleto = savedNome,
-                                        premessa = savedPremessa,
-                                        quantita = 1,
-                                        noteSpecifiche = savedNote,
-                                        listaAttivita = attivitaList
-                                    ).withTipoInterruttore(tipoInterruttoreMQT)
-                                }
-                                isAntincendio -> {
-                                    val baseRi = (impianto as? RilevazioneAntincendio) ?: RilevazioneAntincendio(
-                                        id = impianto.id,
-                                        codIntervento = savedCod,
-                                        nomeCompleto = savedNome,
-                                        premessa = savedPremessa,
-                                        listaAttivita = attivitaList,
-                                        listaNormative = impianto.listaNormative,
-                                        cantiereId = impianto.cantiereId,
-                                        quantita = 1,
-                                        noteSpecifiche = savedNote
-                                    )
-                                    baseRi.copy(
-                                        codIntervento = savedCod,
-                                        nomeCompleto = savedNome,
-                                        premessa = savedPremessa,
-                                        quantita = 1,
-                                        noteSpecifiche = savedNote,
-                                        listaAttivita = attivitaList,
-                                        categorieRivelatori = categorieRivelatoriState,
-                                        listaDispositivi = dispositiviAntincendio
-                                    )
-                                }
-                                else -> {
-                                    impianto.copyWithBasicParams(
-                                        codIntervento = savedCod,
-                                        nomeCompleto = savedNome,
-                                        premessa = savedPremessa,
-                                        quantita = 1,
-                                        noteSpecifiche = savedNote,
-                                        listaAttivita = attivitaList
-                                    )
-                                }
-                            }
-                            onSave(updated, propagaModifiche)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = Color(0xFF2E7D32),
-                        contentColor = Color.White
-                    )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(if (isNew) "Crea Impianto" else "Salva")
+                    if (onCancel != null) {
+                        OutlinedButton(
+                            onClick = onCancel,
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colors.error),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Annulla", fontSize = 13.sp)
+                        }
+                    }
+                    Button(
+                        onClick = {
+                            // Validazione locale
+                            codInterventoError = codIntervento.isBlank()
+                            nomeCompletoError = nomeCompleto.isBlank()
+
+                            if (!codInterventoError && !nomeCompletoError) {
+                                val savedCod = codIntervento.trim()
+                                val savedNome = nomeCompleto.trim()
+                                val savedPremessa = premessa.ifBlank { null }
+                                val savedNote = noteSpecifiche.ifBlank { null }
+
+                                val updated: Impianto = when {
+                                    isQuadro -> {
+                                        QuadroBT(
+                                            id = impianto.id,
+                                            codIntervento = savedCod,
+                                            nomeCompleto = savedNome,
+                                            premessa = savedPremessa,
+                                            listaAttivita = attivitaList,
+                                            listaNormative = impianto.listaNormative,
+                                            cantiereId = impianto.cantiereId,
+                                            quantita = 1,
+                                            noteSpecifiche = savedNote,
+                                            sigla = siglaQuadro.trim(),
+                                            descrizioneQuadro = descrizioneQuadro.trim(),
+                                            listaInterruttori = interruttoriQuadro
+                                        )
+                                    }
+                                    isEmergenza -> {
+                                        ImpiantoEmergenza(
+                                            id = impianto.id,
+                                            codIntervento = savedCod,
+                                            nomeCompleto = savedNome,
+                                            premessa = savedPremessa,
+                                            listaAttivita = attivitaList,
+                                            listaNormative = impianto.listaNormative,
+                                            cantiereId = impianto.cantiereId,
+                                            quantita = 1,
+                                            noteSpecifiche = savedNote,
+                                            listaLampade = lampadeEmergenza
+                                        )
+                                    }
+                                    isQuadroMQT -> {
+                                        val baseMqt = (impianto as? QuadroMQT) ?: QuadroMQT(
+                                            id = impianto.id,
+                                            codIntervento = savedCod,
+                                            nomeCompleto = savedNome,
+                                            premessa = savedPremessa,
+                                            listaAttivita = attivitaList,
+                                            listaNormative = impianto.listaNormative,
+                                            cantiereId = impianto.cantiereId,
+                                            quantita = 1,
+                                            noteSpecifiche = savedNote
+                                        )
+                                        baseMqt.copy(
+                                            codIntervento = savedCod,
+                                            nomeCompleto = savedNome,
+                                            premessa = savedPremessa,
+                                            quantita = 1,
+                                            noteSpecifiche = savedNote,
+                                            listaAttivita = attivitaList
+                                        ).withTipoInterruttore(tipoInterruttoreMQT)
+                                    }
+                                    isAntincendio -> {
+                                        val baseRi = (impianto as? RilevazioneAntincendio) ?: RilevazioneAntincendio(
+                                            id = impianto.id,
+                                            codIntervento = savedCod,
+                                            nomeCompleto = savedNome,
+                                            premessa = savedPremessa,
+                                            listaAttivita = attivitaList,
+                                            listaNormative = impianto.listaNormative,
+                                            cantiereId = impianto.cantiereId,
+                                            quantita = 1,
+                                            noteSpecifiche = savedNote
+                                        )
+                                        baseRi.copy(
+                                            codIntervento = savedCod,
+                                            nomeCompleto = savedNome,
+                                            premessa = savedPremessa,
+                                            quantita = 1,
+                                            noteSpecifiche = savedNote,
+                                            listaAttivita = attivitaList,
+                                            categorieRivelatori = categorieRivelatoriState,
+                                            listaDispositivi = dispositiviAntincendio
+                                        )
+                                    }
+                                    else -> {
+                                        impianto.copyWithBasicParams(
+                                            codIntervento = savedCod,
+                                            nomeCompleto = savedNome,
+                                            premessa = savedPremessa,
+                                            quantita = 1,
+                                            noteSpecifiche = savedNote,
+                                            listaAttivita = attivitaList
+                                        )
+                                    }
+                                }
+                                onSave(updated, propagaModifiche)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = Color(0xFF2E7D32),
+                            contentColor = Color.White
+                        ),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (isNew) "Crea Impianto" else "Salva", fontSize = 13.sp)
+                    }
                 }
             }
-        }
         }
 
         item {
-        // Campi principali
-        Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = codIntervento,
-                    onValueChange = {
-                        codIntervento = it
-                        codInterventoError = false
-                    },
-                    label = { Text("Codice Intervento *") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = codInterventoError,
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        errorBorderColor = Color(0xFFD32F2F)
-                    ),
-                    placeholder = { Text("es. GE, CAB, Q", fontSize = 12.sp) }
-                )
-                if (codInterventoError) {
-                    Text(
-                        text = "Il codice intervento è obbligatorio",
-                        color = Color(0xFFD32F2F),
-                        fontSize = 10.sp,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-                OutlinedTextField(
-                    value = nomeCompleto,
-                    onValueChange = {
-                        nomeCompleto = it
-                        nomeCompletoError = false
-                    },
-                    label = { Text("Nome Completo *") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    isError = nomeCompletoError,
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        errorBorderColor = Color(0xFFD32F2F)
-                    ),
-                    placeholder = { Text("es. Gruppo Elettrogeno", fontSize = 12.sp) }
-                )
-                if (nomeCompletoError) {
-                    Text(
-                        text = "Il nome completo è obbligatorio",
-                        color = Color(0xFFD32F2F),
-                        fontSize = 10.sp,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                }
-                OutlinedTextField(
-                    value = premessa,
-                    onValueChange = { premessa = it },
-                    label = { Text("Premessa") },
-                    modifier = Modifier.fillMaxWidth(),
-                    maxLines = 4
-                )
-                if (isQuadro) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        OutlinedTextField(
-                            value = siglaQuadro,
-                            onValueChange = { siglaQuadro = it },
-                            label = { Text("Sigla Quadro") },
-                            modifier = Modifier.weight(0.3f),
-                            singleLine = true,
-                            textStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
-                        )
-                        OutlinedTextField(
-                            value = descrizioneQuadro,
-                            onValueChange = { descrizioneQuadro = it },
-                            label = { Text("Descrizione / Ubicazione") },
-                            modifier = Modifier.weight(0.7f),
-                            singleLine = true,
-                            textStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
-                        )
-                    }
-                }
-                if (isEmergenza) {
-                    val currentSigla = EmergenzaSiglaDoc.fromCod(codIntervento)
+            // Campi principali compatti (2 righe a griglia)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = 1.dp,
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color(0xFFE2E8F0))
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Riga 1: Codice, Nome Completo, e Sigla/Tipologia specifica
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Sigla Documentale:", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                        EmergenzaSiglaDoc.values().forEach { sigla ->
+                        OutlinedTextField(
+                            value = codIntervento,
+                            onValueChange = {
+                                codIntervento = it
+                                codInterventoError = false
+                            },
+                            label = { Text("Codice *", fontSize = 11.sp) },
+                            modifier = Modifier.weight(0.20f),
+                            singleLine = true,
+                            isError = codInterventoError,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                errorBorderColor = Color(0xFFD32F2F)
+                            ),
+                            placeholder = { Text("es. Q, EM, RI", fontSize = 11.sp) },
+                            textStyle = LocalTextStyle.current.copy(fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        )
+
+                        OutlinedTextField(
+                            value = nomeCompleto,
+                            onValueChange = {
+                                nomeCompleto = it
+                                nomeCompletoError = false
+                            },
+                            label = { Text("Nome Completo *", fontSize = 11.sp) },
+                            modifier = Modifier.weight(if (isQuadro || isEmergenza) 0.50f else 0.80f),
+                            singleLine = true,
+                            isError = nomeCompletoError,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                errorBorderColor = Color(0xFFD32F2F)
+                            ),
+                            placeholder = { Text("es. Quadro Elettrico Principale", fontSize = 11.sp) },
+                            textStyle = LocalTextStyle.current.copy(fontSize = 12.sp)
+                        )
+
+                        if (isQuadro) {
+                            OutlinedTextField(
+                                value = siglaQuadro,
+                                onValueChange = { siglaQuadro = it },
+                                label = { Text("Sigla Quadro", fontSize = 11.sp) },
+                                modifier = Modifier.weight(0.30f),
+                                singleLine = true,
+                                placeholder = { Text("es. QG, Q1", fontSize = 11.sp) },
+                                textStyle = LocalTextStyle.current.copy(fontSize = 12.sp)
+                            )
+                        } else if (isEmergenza) {
+                            val currentSigla = EmergenzaSiglaDoc.fromCod(codIntervento)
                             Row(
+                                modifier = Modifier.weight(0.30f),
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.clickable {
-                                    codIntervento = sigla.codIntervento
-                                    if (nomeCompleto.isBlank() || EmergenzaSiglaDoc.values().any { it.nomeCompleto.equals(nomeCompleto.trim(), ignoreCase = true) }) {
-                                        nomeCompleto = sigla.nomeCompleto
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text("Doc:", fontWeight = FontWeight.SemiBold, fontSize = 11.sp, color = Color(0xFF475569))
+                                EmergenzaSiglaDoc.values().forEach { sigla ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.clickable {
+                                            codIntervento = sigla.codIntervento
+                                            if (nomeCompleto.isBlank() || EmergenzaSiglaDoc.values().any { it.nomeCompleto.equals(nomeCompleto.trim(), ignoreCase = true) }) {
+                                                nomeCompleto = sigla.nomeCompleto
+                                            }
+                                        }
+                                    ) {
+                                        RadioButton(
+                                            selected = currentSigla == sigla,
+                                            onClick = {
+                                                codIntervento = sigla.codIntervento
+                                                if (nomeCompleto.isBlank() || EmergenzaSiglaDoc.values().any { it.nomeCompleto.equals(nomeCompleto.trim(), ignoreCase = true) }) {
+                                                    nomeCompleto = sigla.nomeCompleto
+                                                }
+                                            },
+                                            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary),
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Text(sigla.name, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                                     }
                                 }
-                            ) {
-                                RadioButton(
-                                    selected = currentSigla == sigla,
-                                    onClick = {
-                                        codIntervento = sigla.codIntervento
-                                        if (nomeCompleto.isBlank() || EmergenzaSiglaDoc.values().any { it.nomeCompleto.equals(nomeCompleto.trim(), ignoreCase = true) }) {
-                                            nomeCompleto = sigla.nomeCompleto
-                                        }
-                                    },
-                                    colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colors.primary)
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(sigla.displayLabel, fontSize = 13.sp)
                             }
+                        }
+                    }
+
+                    if (codInterventoError || nomeCompletoError) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            if (codInterventoError) {
+                                Text(
+                                    text = "Il codice intervento è obbligatorio",
+                                    color = Color(0xFFD32F2F),
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
+                            }
+                            if (nomeCompletoError) {
+                                Text(
+                                    text = "Il nome completo è obbligatorio",
+                                    color = Color(0xFFD32F2F),
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Riga 2: Descrizione / Ubicazione (se quadro) e Premessa (compatta)
+                    if (isQuadro) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = descrizioneQuadro,
+                                onValueChange = { descrizioneQuadro = it },
+                                label = { Text("Descrizione / Ubicazione", fontSize = 11.sp) },
+                                modifier = Modifier.weight(0.50f),
+                                singleLine = true,
+                                placeholder = { Text("es. Piano Terra, Locale Tecnico", fontSize = 11.sp) },
+                                textStyle = LocalTextStyle.current.copy(fontSize = 12.sp)
+                            )
+                            OutlinedTextField(
+                                value = premessa,
+                                onValueChange = { premessa = it },
+                                label = { Text("Premessa", fontSize = 11.sp) },
+                                modifier = Modifier.weight(0.50f),
+                                singleLine = true,
+                                placeholder = { Text("Dicitura premessa nel verbale PDF", fontSize = 11.sp) },
+                                textStyle = LocalTextStyle.current.copy(fontSize = 12.sp)
+                            )
+                        }
+                    } else {
+                        OutlinedTextField(
+                            value = premessa,
+                            onValueChange = { premessa = it },
+                            label = { Text("Premessa", fontSize = 11.sp) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            placeholder = { Text("Dicitura premessa nel verbale PDF", fontSize = 11.sp) },
+                            textStyle = LocalTextStyle.current.copy(fontSize = 12.sp)
+                        )
+                    }
+
+                    // Checkbox propagazione globale modifiche (se applicabile)
+                    if (!isReadOnlyAdminFields && !isNew) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 2.dp)) {
+                            Checkbox(
+                                checked = propagaModifiche,
+                                onCheckedChange = { propagaModifiche = it },
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = "Propaga modifiche (attività e normative) a TUTTI i cantieri con codice $codIntervento",
+                                fontSize = 11.sp,
+                                color = Color(0xFF475569)
+                            )
                         }
                     }
                 }
             }
-
-            if (!isReadOnlyAdminFields && !isNew) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-                    Checkbox(
-                        checked = propagaModifiche,
-                        onCheckedChange = { propagaModifiche = it }
-                    )
-                    Text("Propaga modifiche (attività e normative) a TUTTI i cantieri con codice $codIntervento", fontSize = 12.sp)
-                }
-            }
-        }
         }
         if (isQuadroMQT) {
             item {

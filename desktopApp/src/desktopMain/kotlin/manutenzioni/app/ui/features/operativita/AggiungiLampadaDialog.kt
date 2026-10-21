@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import manutenzioni.domain.model.ImpiantoEmergenza
 import manutenzioni.domain.model.LampadaEmergenza
+import manutenzioni.domain.service.DateValidationUtils
+import manutenzioni.app.ui.components.ItalianDateInputField
 import java.util.UUID
 
 private val BRAND_SUGGESTIONS_EMERGENZA = listOf("Beghelli", "Schneider", "Lovato", "ABB", "Legrand", "CAME", "Linergy")
@@ -122,6 +124,7 @@ fun AggiungiLampadaDialog(
     var posizione by remember { mutableStateOf(lampadaDaModificare?.posizione ?: "") }
     var dataUltimaCambio by remember { mutableStateOf(lampadaDaModificare?.dataUltimoCambioBatteria ?: "") }
     var note by remember { mutableStateOf(lampadaDaModificare?.note ?: "") }
+    var dataError by remember { mutableStateOf(false) }
 
     // Suggerisci sigla automatica progressiva se creazione da zero
     val defaultPrefix = if (impianto.codIntervento.isNotBlank()) impianto.codIntervento else "EM"
@@ -140,6 +143,11 @@ fun AggiungiLampadaDialog(
     val scrollState = rememberScrollState()
 
     fun submit() {
+        if (dataUltimaCambio.isNotBlank() && !DateValidationUtils.isValidItalianDate(dataUltimaCambio)) {
+            dataError = true
+            return
+        }
+        dataError = false
         if (modello.isNotBlank() && sigla.isNotBlank()) {
             if (lampadaDaModificare != null) {
                 val modificata = lampadaDaModificare.copy(
@@ -443,14 +451,18 @@ fun AggiungiLampadaDialog(
                 )
 
                 // 6. Data ultimo cambio batteria
-                OutlinedTextField(
+                ItalianDateInputField(
                     value = dataUltimaCambio,
-                    onValueChange = { dataUltimaCambio = it },
-                    label = { Text("Data ultimo cambio batteria") },
-                    placeholder = { Text("es. 15/03/2024") },
+                    onValueChange = {
+                        dataUltimaCambio = it
+                        if (dataError) dataError = false
+                    },
+                    label = "Data ultimo cambio batteria",
+                    placeholder = "es. 15/03/2024",
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                    isRequired = false,
+                    isError = dataError,
+                    errorMessage = if (dataError) "Inserisci una data valida nel formato GG/MM/AAAA" else null
                 )
 
                 // 7. Note Aggiuntive

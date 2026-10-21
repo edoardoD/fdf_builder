@@ -29,6 +29,7 @@ import manutenzioni.domain.model.Periodo
 import manutenzioni.app.ui.ImpiantoEditor
 import manutenzioni.app.ui.ImpiantoSelectionList
 import manutenzioni.app.ui.ManutenzioniUiState
+import manutenzioni.app.ui.components.ItalianDateInputField
 import manutenzioni.app.ui.theme.SlateBorder
 
 @Composable
@@ -259,61 +260,37 @@ fun CantiereDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedTextField(
+                    ItalianDateInputField(
                         value = dataInizioContratto,
                         onValueChange = {
                             dataInizioContratto = it
                             onUpdateDatiIntervento(it, dataIntervento, dataInterventoPrecedente, nomeManutentore)
                         },
-                        label = { Text("Data inizio contratto") },
-                        placeholder = { Text("GG/MM/AAAA") },
-                        leadingIcon = {
-                            Icon(Icons.Default.DateRange, contentDescription = null, tint = MaterialTheme.colors.primary)
-                        },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = MaterialTheme.colors.primary,
-                            unfocusedBorderColor = SlateBorder
-                        )
+                        label = "Data inizio contratto",
+                        placeholder = "GG/MM/AAAA",
+                        modifier = Modifier.weight(1f)
                     )
 
-                    OutlinedTextField(
+                    ItalianDateInputField(
                         value = dataInterventoPrecedente,
                         onValueChange = {
                             dataInterventoPrecedente = it
                             onUpdateDatiIntervento(dataInizioContratto, dataIntervento, it, nomeManutentore)
                         },
-                        label = { Text("Data intervento precedente") },
-                        placeholder = { Text("GG/MM/AAAA") },
-                        leadingIcon = {
-                            Icon(Icons.Default.DateRange, contentDescription = null, tint = MaterialTheme.colors.primary)
-                        },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = MaterialTheme.colors.primary,
-                            unfocusedBorderColor = SlateBorder
-                        )
+                        label = "Data intervento precedente",
+                        placeholder = "GG/MM/AAAA",
+                        modifier = Modifier.weight(1f)
                     )
 
-                    OutlinedTextField(
+                    ItalianDateInputField(
                         value = dataIntervento,
                         onValueChange = {
                             dataIntervento = it
                             onUpdateDatiIntervento(dataInizioContratto, it, dataInterventoPrecedente, nomeManutentore)
                         },
-                        label = { Text("Data intervento") },
-                        placeholder = { Text("GG/MM/AAAA") },
-                        leadingIcon = {
-                            Icon(Icons.Default.DateRange, contentDescription = null, tint = MaterialTheme.colors.primary)
-                        },
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            focusedBorderColor = MaterialTheme.colors.primary,
-                            unfocusedBorderColor = SlateBorder
-                        )
+                        label = "Data intervento",
+                        placeholder = "GG/MM/AAAA",
+                        modifier = Modifier.weight(1f)
                     )
                 }
 

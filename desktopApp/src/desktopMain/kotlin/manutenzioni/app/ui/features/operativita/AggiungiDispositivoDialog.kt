@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import manutenzioni.domain.model.DispositivoRilevazione
+import manutenzioni.domain.service.DateValidationUtils
+import manutenzioni.app.ui.components.ItalianDateInputField
 import java.util.UUID
 
 private val TIPI_DISPOSITIVO_SUGGERITI = listOf(
@@ -236,13 +238,19 @@ fun AggiungiDispositivoDialog(
 
                 // 5. Data Installazione / Revisione & Note
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    OutlinedTextField(
+                    ItalianDateInputField(
                         value = dataInstallazione,
-                        onValueChange = { dataInstallazione = it },
-                        label = { Text("Data Inst. / Sostituzione") },
-                        placeholder = { Text("es. 10/2024") },
+                        onValueChange = {
+                            dataInstallazione = it
+                            if (validationError != null && validationError!!.contains("data", ignoreCase = true)) {
+                                validationError = null
+                            }
+                        },
+                        label = "Data Inst. / Sostituzione",
+                        placeholder = "es. 15/10/2024",
                         modifier = Modifier.weight(1f),
-                        singleLine = true
+                        isRequired = false,
+                        isError = validationError != null && dataInstallazione.isNotBlank() && !DateValidationUtils.isValidItalianDate(dataInstallazione)
                     )
 
                     OutlinedTextField(
@@ -293,6 +301,10 @@ fun AggiungiDispositivoDialog(
                             }
                             if (descrizione.isBlank()) {
                                 validationError = "La descrizione/ubicazione è obbligatoria (es. LOCALE QUADRO)"
+                                return@Button
+                            }
+                            if (dataInstallazione.isNotBlank() && !DateValidationUtils.isValidItalianDate(dataInstallazione)) {
+                                validationError = "Inserisci una data valida nel formato GG/MM/AAAA (es. 15/10/2024)"
                                 return@Button
                             }
 
