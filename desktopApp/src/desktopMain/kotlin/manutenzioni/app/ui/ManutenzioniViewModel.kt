@@ -81,8 +81,6 @@ data class ManutenzioniUiState(
     val isSearchingComponenti: Boolean = false,
     val candidateComponents: List<ComponentCandidate> = emptyList(),
     val catalogoApprovato: List<ComponenteApprovato> = emptyList(),
-    /** Scadenze future calcolate per il cantiere selezionato (R27) */
-    val scadenzeCantiere: List<manutenzioni.domain.model.MeseScadenzaGroup> = emptyList(),
     /** Lista completa di tutti i cantieri registrati nel database (per vista Calendario Globale e RBAC) */
     val tuttiCantieri: List<Cantiere> = emptyList(),
     /** Calendario Globale Multi-Cantiere raggruppato per mese (es. "Maggio 2026" -> tutti i cantieri con manutenzioni previste — R27) */
@@ -590,7 +588,6 @@ class ManutenzioniViewModel(
                     selectedCantiere = null,
                     impiantiDelCantiere = emptyList(),
                     impiantiSelezionati = emptyMap(),
-                    scadenzeCantiere = emptyList(),
                     sessioniVerificaCantiere = emptyList(),
                     statusMessage = "Seleziona un cantiere."
                 )
@@ -603,7 +600,6 @@ class ManutenzioniViewModel(
                 selectedImpianto = null, // Fix: Chiudi editor impianto precedente
                 impiantiDelCantiere = emptyList(),
                 impiantiSelezionati = emptyMap(),
-                scadenzeCantiere = emptyList(),
                 sessioniVerificaCantiere = emptyList(),
                 statusMessage = "Cantiere: ${cantiere.nome}. Seleziona gli impianti.",
                 errorMessage = null
@@ -630,12 +626,6 @@ class ManutenzioniViewModel(
             nomeManutentore = manutentore?.trim()?.ifBlank { null }
         )
         _uiState.update { state ->
-            val scadenze = manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
-                cantiere = updated,
-                impianti = state.impiantiDelCantiere,
-                mesiOrizzonte = state.orizzonteScadenzeMesi,
-                frequenzeConfiguratePerImpianto = state.frequenzeSelezionatePerImpianto
-            )
             val updatedTutti = state.tuttiCantieri.map { if (it.id == updated.id) updated else it }
             val freqMap = mapOf(updated.id to state.frequenzeSelezionatePerImpianto)
             val globalCal = computeGlobalCalendar(
@@ -650,7 +640,6 @@ class ManutenzioniViewModel(
                 selectedCantiere = updated,
                 cantieriDisponibili = state.cantieriDisponibili.map { if (it.id == updated.id) updated else it },
                 tuttiCantieri = updatedTutti,
-                scadenzeCantiere = scadenze,
                 calendarioGlobale = globalCal
             )
         }
@@ -737,18 +726,8 @@ class ManutenzioniViewModel(
                 val rawImpianti = repository.getImpiantiForCantiere(cantiereId)
                 val impianti = enrichImpiantiZonaIfNeeded(rawImpianti)
                 _uiState.update { state ->
-                    val cantiere = state.selectedCantiere
-                    val scadenze = if (cantiere != null && cantiere.id == cantiereId) {
-                        manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
-                            cantiere = cantiere,
-                            impianti = impianti,
-                            mesiOrizzonte = state.orizzonteScadenzeMesi,
-                            frequenzeConfiguratePerImpianto = state.frequenzeSelezionatePerImpianto
-                        )
-                    } else state.scadenzeCantiere
                     state.copy(
-                        impiantiDelCantiere = impianti,
-                        scadenzeCantiere = scadenze
+                        impiantiDelCantiere = impianti
                     )
                 }
             } catch (e: Exception) {
@@ -821,14 +800,6 @@ class ManutenzioniViewModel(
             if (updatedMulti[impiantoId].isNullOrEmpty()) {
                 updatedMulti[impiantoId] = setOf(frequenza)
             }
-            val scadenze = state.selectedCantiere?.let { cantiere ->
-                manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
-                    cantiere = cantiere,
-                    impianti = state.impiantiDelCantiere,
-                    mesiOrizzonte = state.orizzonteScadenzeMesi,
-                    frequenzeConfiguratePerImpianto = updatedMulti
-                )
-            } ?: state.scadenzeCantiere
             val freqMap = state.selectedCantiere?.let { mapOf(it.id to updatedMulti) }
             val globalCal = computeGlobalCalendar(
                 clienti = state.clienti,
@@ -841,7 +812,6 @@ class ManutenzioniViewModel(
             state.copy(
                 frequenzePerImpianto = updatedFrequenze,
                 frequenzeSelezionatePerImpianto = updatedMulti,
-                scadenzeCantiere = scadenze,
                 calendarioGlobale = globalCal
             )
         }
@@ -871,15 +841,6 @@ class ManutenzioniViewModel(
                 updatedSingle[impiantoId] = primary
             }
 
-            val scadenze = state.selectedCantiere?.let { cantiere ->
-                manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
-                    cantiere = cantiere,
-                    impianti = state.impiantiDelCantiere,
-                    mesiOrizzonte = state.orizzonteScadenzeMesi,
-                    frequenzeConfiguratePerImpianto = updatedMulti
-                )
-            } ?: state.scadenzeCantiere
-
             val freqMap = state.selectedCantiere?.let { mapOf(it.id to updatedMulti) }
             val globalCal = computeGlobalCalendar(
                 clienti = state.clienti,
@@ -893,7 +854,6 @@ class ManutenzioniViewModel(
             state.copy(
                 frequenzePerImpianto = updatedSingle,
                 frequenzeSelezionatePerImpianto = updatedMulti,
-                scadenzeCantiere = scadenze,
                 calendarioGlobale = globalCal
             )
         }
@@ -923,14 +883,6 @@ class ManutenzioniViewModel(
                 currentMulti[id] = nextSet
                 nextSet.minByOrNull { it.inMesi() }?.let { primary -> currentSingle[id] = primary }
             }
-            val scadenze = state.selectedCantiere?.let { cantiere ->
-                manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
-                    cantiere = cantiere,
-                    impianti = state.impiantiDelCantiere,
-                    mesiOrizzonte = state.orizzonteScadenzeMesi,
-                    frequenzeConfiguratePerImpianto = currentMulti
-                )
-            } ?: state.scadenzeCantiere
 
             val freqMap = state.selectedCantiere?.let { mapOf(it.id to currentMulti) }
             val globalCal = computeGlobalCalendar(
@@ -944,7 +896,6 @@ class ManutenzioniViewModel(
             state.copy(
                 frequenzePerImpianto = currentSingle,
                 frequenzeSelezionatePerImpianto = currentMulti,
-                scadenzeCantiere = scadenze,
                 calendarioGlobale = globalCal
             )
         }
@@ -1952,14 +1903,6 @@ class ManutenzioniViewModel(
     fun setOrizzonteScadenze(mesi: Int) {
         val validMesi = mesi.coerceIn(1, 120)
         _uiState.update { state ->
-            val scadenze = state.selectedCantiere?.let { cantiere ->
-                manutenzioni.domain.service.CalendarioScadenzeCalculator.calcolaScadenze(
-                    cantiere = cantiere,
-                    impianti = state.impiantiDelCantiere,
-                    mesiOrizzonte = validMesi,
-                    frequenzeConfiguratePerImpianto = state.frequenzeSelezionatePerImpianto
-                )
-            } ?: emptyList()
             val freqMap = state.selectedCantiere?.let { mapOf(it.id to state.frequenzeSelezionatePerImpianto) }
             val globalCal = computeGlobalCalendar(
                 clienti = state.clienti,
@@ -1971,7 +1914,6 @@ class ManutenzioniViewModel(
             )
             state.copy(
                 orizzonteScadenzeMesi = validMesi,
-                scadenzeCantiere = scadenze,
                 calendarioGlobale = globalCal
             )
         }
@@ -2140,7 +2082,6 @@ class ManutenzioniViewModel(
                 _uiState.update {
                     it.copy(
                         pdfFile = targetPdf,
-                        scadenzeCantiere = scadenze,
                         statusMessage = "✓ Foglio di Riepilogo Generale generato: ${targetPdf.name}",
                         errorMessage = null
                     )

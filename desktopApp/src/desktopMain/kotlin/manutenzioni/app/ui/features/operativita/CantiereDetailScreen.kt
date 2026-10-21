@@ -62,8 +62,6 @@ fun CantiereDetailScreen(
     onUpdateMqtSwitchType: ((String, manutenzioni.domain.model.MqtSwitchType) -> Unit)? = null,
     onUpdateEmergenzaSiglaDocumentale: ((String, manutenzioni.domain.model.EmergenzaSiglaDoc) -> Unit)? = null,
     onAddImpiantiFromTemplates: (List<Impianto>) -> Unit = { templates -> templates.forEach { onCreateNewImpianto(it) } },
-    onOrizzonteScadenzeChanged: (Int) -> Unit = {},
-    onExportRiepilogoGeneralePdf: () -> Unit = {},
     onOpenSessionePdfFile: (String) -> Unit = {},
     onRestoreSessioneVerifica: (manutenzioni.domain.model.SessioneVerifica) -> Unit = {},
     onDeleteSessioneVerifica: (String) -> Unit = {}
@@ -394,7 +392,7 @@ fun CantiereDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // TabRow di Cantiere: 0 = "Generazione schede di Verifica", 1 = "Elenco interruttori", 2 = "Calendario Scadenze", 3 = "Storico Verifiche" (R11, R12, R27, R28, R30)
+        // TabRow di Cantiere: 0 = "Generazione schede di Verifica", 1 = "Elenco interruttori", 2 = "Storico Verifiche" (R11, R12, R30)
         val quadriDelCantiere = state.impiantiDelCantiere.filterIsInstance<manutenzioni.domain.model.QuadroBT>()
         val totInterruttori = quadriDelCantiere.sumOf { q -> q.listaInterruttori.sumOf { it.quantita.coerceAtLeast(1) } }
 
@@ -429,18 +427,8 @@ fun CantiereDetailScreen(
                 onClick = { selectedCantiereTab = 2 },
                 text = {
                     Text(
-                        "Calendario Scadenze (${state.scadenzeCantiere.size})",
-                        fontWeight = if (selectedCantiereTab == 2) FontWeight.Bold else FontWeight.Normal
-                    )
-                }
-            )
-            Tab(
-                selected = selectedCantiereTab == 3,
-                onClick = { selectedCantiereTab = 3 },
-                text = {
-                    Text(
                         "Storico Verifiche (${state.sessioniVerificaCantiere.size})",
-                        fontWeight = if (selectedCantiereTab == 3) FontWeight.Bold else FontWeight.Normal
+                        fontWeight = if (selectedCantiereTab == 2) FontWeight.Bold else FontWeight.Normal
                     )
                 }
             )
@@ -462,18 +450,6 @@ fun CantiereDetailScreen(
                 )
             }
             2 -> {
-                CalendarioScadenzeTab(
-                    scadenze = state.scadenzeCantiere,
-                    orizzonteMesi = state.orizzonteScadenzeMesi,
-                    dataInizioRiferimento = state.selectedCantiere?.dataInizioContratto?.takeIf { it.isNotBlank() }
-                        ?: state.selectedCantiere?.effectiveDataIntervento,
-                    isLoading = state.isLoading,
-                    onOrizzonteMesiChanged = onOrizzonteScadenzeChanged,
-                    onExportRiepilogoPdf = onExportRiepilogoGeneralePdf,
-                    modifier = Modifier.weight(1f).fillMaxWidth()
-                )
-            }
-            3 -> {
                 StoricoVerificheTab(
                     sessioni = state.sessioniVerificaCantiere,
                     isAdmin = state.isAdmin,
