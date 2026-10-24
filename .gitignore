@@ -161,3 +161,10 @@ gradle-app.setting
 
 /mongo_data
 prova.html
+
+# Native installer packages and release dumps
+*.msi
+*.exe
+*.dmg
+*.pkg
+wave2Release/
