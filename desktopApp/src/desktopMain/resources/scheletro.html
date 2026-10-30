@@ -12,6 +12,11 @@
 
     <style>
         /* ============ Reset e Base ============ */
+        @page {
+            size: A4;
+            margin: 0.45cm 0.6cm;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -61,10 +66,8 @@
             border: 0.0133cm solid #000000;
             font-family: Calibri;
             overflow-wrap: break-word;
-            /* Permette a testi lunghi di andare a capo */
-            word-break: break-all;
-            /* Forza il wrap su parole lunghe */
-            max-width: 1px;
+            /* Permette a testi lunghi di andare a capo senza spezzare le parole a metà */
+            word-break: normal;
             /* Con table-layout: fixed, limita la larghezza effettiva */
         }
 
@@ -161,6 +164,22 @@
             font-size: 5pt;
             vertical-align: top;
             text-align: left;
+            padding: 0.02cm 0.04cm;
+        }
+
+        .cell--form-input input[type="text"] {
+            width: 100%;
+            height: 0.32cm;
+            line-height: 0.32cm;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: Calibri, Arial, sans-serif;
+            font-size: 7pt;
+            font-weight: bold;
+            padding: 0 0.02cm;
+            margin: 0;
+            box-sizing: border-box;
         }
 
         /* Celle per note con stilizzazione */
@@ -216,42 +235,46 @@
         }
 
         .col--w3 {
-            width: 1.09cm;
+            width: 1.090cm;
         }
 
         .col--w4 {
-            width: 7.999cm;
+            width: 1.100cm;
         }
 
         .col--w5 {
-            width: 0.605cm;
+            width: 6.899cm;
         }
 
         .col--w6 {
-            width: 0.554cm;
+            width: 0.605cm;
         }
 
         .col--w7 {
-            width: 0.54cm;
+            width: 0.554cm;
         }
 
         .col--w8 {
-            width: 0.529cm;
+            width: 0.540cm;
         }
 
         .col--w9 {
-            width: 0.547cm;
+            width: 0.529cm;
         }
 
         .col--w10 {
-            width: 0.4cm;
+            width: 0.547cm;
         }
 
         .col--w11 {
-            width: 4.307cm;
+            width: 0.400cm;
         }
 
         .col--w12 {
+            width: 4.307cm;
+        }
+
+        .col--w13 {
             width: 1.413cm;
         }
 
@@ -265,15 +288,21 @@
         }
 
         .row--data {
-            height: 0.487cm;
+            height: 0.35cm;
+        }
+
+        .row--data td {
+            padding: 0.02cm 0.04cm;
+        }
+
+        .row--data input[type="radio"] {
+            width: 0.26cm;
+            height: 0.26cm;
+            margin: 0;
         }
 
         .row--section {
-            height: 0.501cm;
-        }
-
-        .row--legend {
-            height: 0.76cm;
+            height: 0.46cm;
         }
 
         /* ============ Stili testo ============ */
@@ -290,10 +319,44 @@
         input[type="text"],
         textarea {
             width: 100%;
+            height: 100%;
             max-width: 100%;
+            font-size: 7.5pt;
+            font-family: Calibri, Arial, sans-serif;
+            border: none;
+            outline: none;
+            background: transparent;
+            margin: 0;
+            padding: 0 0.04cm;
             box-sizing: border-box;
+            vertical-align: middle;
             overflow-wrap: break-word;
             word-break: break-all;
+        }
+
+        .cell--data-input {
+            padding: 0 !important;
+            margin: 0;
+            vertical-align: middle;
+        }
+
+        .row--data td.cell--data-standard {
+            padding: 0;
+        }
+
+        .row--data input[type="text"] {
+            width: 100%;
+            height: 100%;
+            min-height: 0.35cm;
+            line-height: 0.35cm;
+            border: none;
+            outline: none;
+            background: transparent;
+            margin: 0;
+            padding: 0 0.04cm;
+            font-size: 6.5pt;
+            box-sizing: border-box;
+            vertical-align: middle;
         }
 
         .table--main {
@@ -321,12 +384,13 @@
                 <col class="col--w10" />
                 <col class="col--w11" />
                 <col class="col--w12" />
+                <col class="col--w13" />
             </colgroup>
 
             <thead>
                 <!-- ========== SEZIONE 1: INTESTAZIONE ========== -->
                 <tr class="row--title">
-                    <td colspan="11" class="cell--title">
+                    <td colspan="12" class="cell--title">
                         <p>SCHEDA DI VERIFICA E MANUTENZIONE PERIODICA PROGRAMMATA</p>
                         <p>IMPIANTI ELETTRICI/ELETTRONICI</p>
                     </td>
@@ -340,7 +404,7 @@
                         <p><!-- COD_SCHEDA --></p>
                     </td>
                     <td class="cell--spacer"></td>
-                    <td colspan="7" class="cell--header-section">
+                    <td colspan="8" class="cell--header-section">
                         <p>Oggetto</p>
                         <p><!-- OGGETTO --></p>
                     </td>
@@ -353,56 +417,58 @@
 
                 <!-- Riga per compilazione periodicità -->
                 <tr class="row--standard">
-                    <td colspan="10" class="cell--data-standard"></td>
+                    <td colspan="11" class="cell--data-standard"></td>
                     <td class="cell--data-standard"></td>
                     <td class="cell--spacer"></td>
                 </tr>
 
                 <!-- ========== SEZIONE 3: DATI AZIENDA ========== -->
                 <tr class="row--section">
-                    <td colspan="2" class="cell--header-form">
+                    <td colspan="3" class="cell--header-form">
                         <p>Azienda Appaltatrice</p>
                     </td>
-                    <td class="cell--header-form">
-                        <p>Sito</p>
+                    <td colspan="2" class="cell--header-form">
+                        <p>Sito: <!-- SITO --></p>
                     </td>
-                    <td colspan="7" class="cell--header-form">
+                    <td colspan="6" class="cell--header-form">
                         <p>Cliente</p>
                     </td>
                     <td class="cell--form-input">
-                        <p>Data inizio periodo Attività:</p>
-                        <input type="text" name="starting_date" id="starting-date" placeholder="gg/mm/aaaa" />
-                        <label for="starting-date" class="visually-hidden">Data inizio periodo Attività</label>
+                        <p>Data inizio contratto:</p>
+                        <input type="text" name="starting_date" id="starting-date" value="<!-- DATA_INIZIO_CONTRATTO -->" placeholder="gg/mm/aaaa" />
+                        <label for="starting-date" class="visually-hidden">Data inizio contratto</label>
                     </td>
                     <td class="cell--spacer"></td>
                 </tr>
 
                 <!-- Riga premessa -->
                 <tr class="row--standard">
-                    <td colspan="10" class="cell--label">
+                    <td colspan="11" class="cell--label">
                         <p>Premessa e/o informazioni:</p>
                         <p style="font-weight: normal; font-size: 5pt;"><!-- PREMESSA --></p>
                     </td>
                     <td class="cell--form-input">
-                        <p>Data precedente</p>
+                        <p>Data intervento precedente:</p>
+                        <input type="text" name="previous_date" id="previous-date" value="<!-- DATA_PRECEDENTE -->" placeholder="gg/mm/aaaa" />
+                        <label for="previous-date" class="visually-hidden">Data intervento precedente</label>
                     </td>
                     <td class="cell--spacer"></td>
                 </tr>
 
                 <!-- ========== SEZIONE 4: FORM PRINCIPALE ========== -->
                 <tr class="row--standard">
-                    <td colspan="10" rowspan="4" class="cell--data-empty"></td>
+                    <td colspan="11" rowspan="4" class="cell--data-empty"></td>
                     <td class="cell--form-input">
-                        <p>Attività V&amp;M</p>
-                        <input type="text" name="actual_date" id="today-date" placeholder="gg/mm/aaaa" />
-                        <label for="today-date" class="visually-hidden">Data attuale Attività V&amp;M</label>
+                        <p>Data intervento:</p>
+                        <input type="text" name="actual_date" id="today-date" value="<!-- DATA_INTERVENTO -->" placeholder="gg/mm/aaaa" />
+                        <label for="today-date" class="visually-hidden">Data intervento</label>
                     </td>
                     <td class="cell--spacer"></td>
                 </tr>
 
                 <tr class="row--standard">
                     <td class="cell--form-input">
-                        <p>Data attuale Attività V&amp;M</p>
+                        <p>Data intervento</p>
                     </td>
                     <td class="cell--spacer"></td>
                 </tr>
@@ -410,6 +476,7 @@
                 <tr class="row--standard">
                     <td class="cell--form-input">
                         <p>Verificatore/Manutentore</p>
+                        <p style="font-weight: bold; font-size: 6.5pt;"><!-- MANUTENTORE --></p>
                     </td>
                     <td class="cell--spacer"></td>
                 </tr>
@@ -417,6 +484,7 @@
                 <tr class="row--standard">
                     <td class="cell--form-input">
                         <p>Firma</p>
+                        <!-- FIRMA -->
                     </td>
                     <td class="cell--spacer"></td>
                 </tr>
@@ -424,13 +492,16 @@
                 <!-- ========== SEZIONE 5: INTESTAZIONE TABELLA RISULTATI ========== -->
                 <tr class="row--standard">
                     <td rowspan="2" class="cell--header-column">
-                        <p>Codice Attività</p>
+                        <p>N. Attività</p>
                     </td>
                     <td rowspan="2" class="cell--header-column">
-                        <p>Tipo Attività</p>
+                        <p>Tipo di Attività</p>
                     </td>
                     <td rowspan="2" class="cell--header-column">
-                        <p>Impianto</p>
+                        <p>Zona</p>
+                    </td>
+                    <td rowspan="2" class="cell--header-column">
+                        <p>Periodicità</p>
                     </td>
                     <td rowspan="2" class="cell--header-column">
                         <p>Attività</p>
@@ -464,7 +535,9 @@
                     <td class="cell--header-outcome">
                         <p>B</p>
                     </td>
-                    <td class="cell--data-standard"></td>
+                    <td class="cell--legend" style="font-size: 4.5pt; line-height: 1.05; vertical-align: middle; padding: 1px 2px;">
+                        <p><strong>Legenda:</strong> <strong>P</strong>=Positivo | <strong>PI</strong>=Pos. prev. int. | <strong>NA</strong>=Rimandato | <strong>NP</strong>=Non pres. | <strong>VN</strong>=Vedere nota | <strong>B</strong>=Costr./Assist.</p>
+                    </td>
                     <td class="cell--spacer"></td>
                 </tr>
             </thead>
@@ -474,30 +547,11 @@
             </tbody>
             
             <tfoot>
-                <!-- ========== SEZIONE 7: LEGENDA ========== -->
-                <tr class="row--legend">
-                    <td colspan="11" class="cell--legend">
-                        <p><span class="text--bold">Legenda:</span><span class="text--normal"> Nella colonna esito
-                                spuntare:</span></p>
-                        <p><span class="text--bold">P</span><span class="text--normal"> = Positivo | </span>
-                            <span class="text--bold">PI</span><span class="text--normal"> = Positivo previo intervento |
-                            </span>
-                            <span class="text--bold">NA</span><span class="text--normal"> = Intervento rimandato a sessione
-                                successiva | </span>
-                            <span class="text--bold">NP</span><span class="text--normal"> = Componente non presente |
-                            </span>
-                            <span class="text--bold">VN</span><span class="text--normal"> = Vedere nota</span>
-                        </p>
-                        <p><span class="text--bold">B</span><span class="text--normal"> = Gli interventi saranno eseguiti
-                                dal costruttore e/o dal centro assistenza | Numerare le Note e descriverle nell'apposito
-                                riquadro</span></p>
-                    </td>
-                    <td class="cell--spacer"></td>
-                </tr>
-
                 <!-- ========== SEZIONE 8: SPAZIO NOTE ========== -->
                 <tr class="row--standard">
-                    <td colspan="11" rowspan="3" class="cell--data-standard"></td>
+                    <td colspan="12" rowspan="3" class="cell--data-standard">
+                        <textarea name="note_generali_<!-- COD_IMPIANTO -->" id="note_generali_<!-- COD_IMPIANTO -->" style="width: 100%; height: 100%; min-height: 1.0cm; font-size: 7.5pt; font-family: Calibri; border: none; resize: none; box-sizing: border-box;"></textarea>
+                    </td>
                     <td class="cell--spacer"></td>
                 </tr>
 

@@ -21,6 +21,7 @@ kotlin {
             dependencies {
                 implementation(project(":common"))
                 implementation(compose.desktop.currentOs)
+                implementation(compose.materialIconsExtended)
 
                 // iText7 Core + html2pdf
                 implementation(libs.itext.kernel)
@@ -77,7 +78,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "ManutenzioniMaker"
-            packageVersion = "3.1.0"
+            packageVersion = "4.0.0"
             description = "Generatore schede di manutenzione periodica con PDF AcroForm"
             vendor = "Manutenzioni Maker"
 
@@ -107,4 +108,13 @@ tasks.register("createDmg") {
 
 tasks.register("createMsi") {
     dependsOn("packageMsi")
+}
+
+tasks.register<JavaExec>("runHtmlCli") {
+    group = "application"
+    description = "Genera e stampa il codice HTML compilato della scheda PDF tramite CLI o menu interattivo"
+    mainClass.set("manutenzioni.app.cli.GenerateHtmlCliKt")
+    val desktopMainCompilation = kotlin.targets.getByName("desktop").compilations.getByName("main")
+    classpath = files(desktopMainCompilation.output.allOutputs, desktopMainCompilation.runtimeDependencyFiles)
+    standardInput = System.`in`
 }

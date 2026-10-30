@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,42 +27,94 @@ import manutenzioni.domain.model.QuadroBT
 private val BRAND_SUGGESTIONS = listOf("BTicino", "ABB", "Schneider", "Siemens", "Gewiss", "Hager", "Finder")
 
 @Composable
-fun AggiungiComponenteDialog(
+fun ModificaComponenteDialog(
     quadro: QuadroBT,
+    interruttore: InterruttoreBT,
     onDismiss: () -> Unit,
     onConferma: (InterruttoreBT) -> Unit
 ) {
-    var nome by remember { mutableStateOf("") }
-    var produttore by remember { mutableStateOf("") }
-    var codiceArticolo by remember { mutableStateOf("") }
-    var serie by remember { mutableStateOf("") }
-    var quantita by remember { mutableStateOf(1) }
-    var siglaCircuito by remember { mutableStateOf("") }
+    AggiungiComponenteDialog(
+        quadro = quadro,
+        interruttoreDaModificare = interruttore,
+        onDismiss = onDismiss,
+        onConferma = onConferma
+    )
+}
+
+/**
+ * Dialog di creazione / modifica interruttore differenziale o componente per Quadro BT.
+ *
+ * Rispetta l'ordinamento campi richiesto (R10):
+ * 1. Sigla Circuito / Interruttore (+ quantità)
+ * 2. Produttore / Marca
+ * 3. Codice Articolo & Taratura differenziale
+ * 4. Descrizione / Nome Componente (opzionale, non vincolante alla validazione)
+ * 5. Note / Serie (opzionale)
+ */
+@Composable
+fun AggiungiComponenteDialog(
+    quadro: QuadroBT,
+    interruttoreDaModificare: InterruttoreBT? = null,
+    onDismiss: () -> Unit,
+    onConferma: (InterruttoreBT) -> Unit
+) {
+    val isEditMode = interruttoreDaModificare != null
+
+    var siglaCircuito by remember { mutableStateOf(interruttoreDaModificare?.siglaCircuito ?: "") }
+    var quantita by remember { mutableStateOf(interruttoreDaModificare?.quantita ?: 1) }
+    var produttore by remember { mutableStateOf(interruttoreDaModificare?.produttore ?: "") }
+    var codiceArticolo by remember { mutableStateOf(interruttoreDaModificare?.codiceArticolo ?: "") }
+    var taratura by remember {
+        mutableStateOf(
+            interruttoreDaModificare?.caratteristicheTecniche?.get("taratura")
+                ?: interruttoreDaModificare?.caratteristicheTecniche?.get("Idn")
+                ?: interruttoreDaModificare?.caratteristicheTecniche?.get("IΔn")
+                ?: ""
+        )
+    }
+    var nome by remember { mutableStateOf(interruttoreDaModificare?.nome ?: "") }
+    var serie by remember { mutableStateOf(interruttoreDaModificare?.note ?: "") }
 
     val scrollState = rememberScrollState()
 
     fun submit() {
-        if (nome.isNotBlank()) {
-            onConferma(
-                InterruttoreBT(
-                    nome = nome.trim(),
-                    quantita = quantita.coerceAtLeast(1),
-                    siglaCircuito = siglaCircuito.trim().ifBlank { null },
-                    produttore = produttore.trim().ifBlank { null },
-                    codiceArticolo = codiceArticolo.trim().ifBlank { null },
-                    note = serie.trim().ifBlank { null }
-                )
-            )
-            onDismiss()
+        // Calcola nome effettivo: se lasciato vuoto, costruisce da produttore + codice o sigla (R10)
+        val nomeRisolto = when {
+            nome.isNotBlank() -> nome.trim()
+            codiceArticolo.isNotBlank() && produttore.isNotBlank() -> "${produttore.trim()} ${codiceArticolo.trim()}"
+            codiceArticolo.isNotBlank() -> codiceArticolo.trim()
+            siglaCircuito.isNotBlank() -> "Interruttore ${siglaCircuito.trim()}"
+            else -> "Interruttore"
         }
+
+        val caratteristicheAggiornate = (interruttoreDaModificare?.caratteristicheTecniche ?: emptyMap()).toMutableMap()
+        if (taratura.isNotBlank()) {
+            caratteristicheAggiornate["taratura"] = taratura.trim()
+        } else {
+            caratteristicheAggiornate.remove("taratura")
+        }
+
+        val risultato = (interruttoreDaModificare ?: InterruttoreBT(nome = nomeRisolto)).copy(
+            nome = nomeRisolto,
+            quantita = quantita.coerceAtLeast(1),
+            siglaCircuito = siglaCircuito.trim().ifBlank { null },
+            produttore = produttore.trim().ifBlank { null },
+            codiceArticolo = codiceArticolo.trim().ifBlank { null },
+            note = serie.trim().ifBlank { null },
+            caratteristicheTecniche = caratteristicheAggiornate
+        )
+        onConferma(risultato)
+        onDismiss()
     }
+
+    val isValid = siglaCircuito.isNotBlank() || codiceArticolo.isNotBlank() || nome.isNotBlank() || produttore.isNotBlank()
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Column {
                 Text(
-                    text = "Aggiungi Componente al Quadro",
+                    text = if (isEditMode) "Modifica Componente Quadro" else "Aggiungi Componente al Quadro",
                     style = MaterialTheme.typography.h6,
                     fontWeight = FontWeight.Bold
                 )
@@ -80,30 +133,62 @@ fun AggiungiComponenteDialog(
                     .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // 1. Descrizione / Nome Componente (Obbligatorio)
-                OutlinedTextField(
-                    value = nome,
-                    onValueChange = { nome = it },
-                    label = { Text("Descrizione / Nome Componente *") },
-                    placeholder = { Text("es. Magnetotermico 1P+N C16 4.5kA, Differenziale puro 25A 30mA...") },
+                // 1. Campo 1: Sigla Circuito & Quantità (R10)
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    trailingIcon = {
-                        if (nome.isNotEmpty()) {
-                            IconButton(onClick = { nome = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Cancella")
+                    backgroundColor = Color(0xFFF8FAFC),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = siglaCircuito,
+                            onValueChange = { siglaCircuito = it },
+                            label = { Text("1. Sigla Circuito (es. QA1, QF1)") },
+                            placeholder = { Text("QA1") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                        )
+
+                        // Stepper Quantità
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Q.tà:", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            OutlinedButton(
+                                onClick = { if (quantita > 1) quantita-- },
+                                modifier = Modifier.size(32.dp),
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text("-", fontWeight = FontWeight.Bold)
+                            }
+                            Text(
+                                text = "$quantita",
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                            OutlinedButton(
+                                onClick = { quantita++ },
+                                modifier = Modifier.size(32.dp),
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text("+", fontWeight = FontWeight.Bold)
                             }
                         }
-                    },
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
-                )
+                    }
+                }
 
-                // 2. Produttore con suggerimenti rapidi (Chip)
+                // 2. Campo 2: Produttore / Marca con suggerimenti rapidi (R10)
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     OutlinedTextField(
                         value = produttore,
                         onValueChange = { produttore = it },
-                        label = { Text("Produttore / Marca") },
+                        label = { Text("2. Produttore / Marca") },
                         placeholder = { Text("es. BTicino, ABB, Schneider...") },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
@@ -115,7 +200,7 @@ fun AggiungiComponenteDialog(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Marchi frequenti:", fontSize = 11.sp, color = Color.Gray)
+                        Text("Marchi:", fontSize = 11.sp, color = Color.Gray)
                         BRAND_SUGGESTIONS.forEach { brand ->
                             val isSelected = produttore.equals(brand, ignoreCase = true)
                             Surface(
@@ -138,7 +223,7 @@ fun AggiungiComponenteDialog(
                     }
                 }
 
-                // 3. Codice Articolo & Serie / Note
+                // 3. Campi 3 e 4: Codice Articolo & Taratura differenziale (R10)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -146,88 +231,72 @@ fun AggiungiComponenteDialog(
                     OutlinedTextField(
                         value = codiceArticolo,
                         onValueChange = { codiceArticolo = it },
-                        label = { Text("Codice Articolo") },
+                        label = { Text("3. Codice Articolo") },
                         placeholder = { Text("es. GC8813AC16, S201-C16") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
+
                     OutlinedTextField(
-                        value = serie,
-                        onValueChange = { serie = it },
-                        label = { Text("Serie / Note Aggiuntive") },
-                        placeholder = { Text("es. Btdin45, Curva C") },
+                        value = taratura,
+                        onValueChange = { taratura = it },
+                        label = { Text("4. Taratura diff. (IΔn)") },
+                        placeholder = { Text("es. 0,03A-A, 0,3A-AS, 30mA") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
                     )
                 }
 
-                // 4. Quantità e Sigla Circuito
-                Card(
+                // 4. Campo 5: Descrizione / Nome Componente (Opzionale) (R10)
+                OutlinedTextField(
+                    value = nome,
+                    onValueChange = { nome = it },
+                    label = { Text("5. Descrizione / Nome Componente (Opzionale)") },
+                    placeholder = { Text("es. Magnetotermico Differenziale 1P+N C16") },
                     modifier = Modifier.fillMaxWidth(),
-                    backgroundColor = Color(0xFFF8FAFC),
-                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Stepper Quantità
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Q.tà:", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            OutlinedButton(
-                                onClick = { if (quantita > 1) quantita-- },
-                                modifier = Modifier.size(32.dp),
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text("-", fontWeight = FontWeight.Bold)
-                            }
-                            Text(
-                                text = "$quantita",
-                                modifier = Modifier.padding(horizontal = 10.dp),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                            OutlinedButton(
-                                onClick = { quantita++ },
-                                modifier = Modifier.size(32.dp),
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text("+", fontWeight = FontWeight.Bold)
+                    singleLine = true,
+                    trailingIcon = {
+                        if (nome.isNotEmpty()) {
+                            IconButton(onClick = { nome = "" }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Cancella")
                             }
                         }
+                    },
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                )
 
-                        // Sigla Circuito
-                        OutlinedTextField(
-                            value = siglaCircuito,
-                            onValueChange = { siglaCircuito = it },
-                            label = { Text("Sigla Circuito (es. Q1, F1 - Prese)") },
-                            modifier = Modifier.weight(1f),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                            keyboardActions = KeyboardActions(onDone = { submit() })
-                        )
-                    }
-                }
+                // 5. Note / Serie Aggiuntive (Opzionale)
+                OutlinedTextField(
+                    value = serie,
+                    onValueChange = { serie = it },
+                    label = { Text("Note / Serie Aggiuntive (Opzionale)") },
+                    placeholder = { Text("es. Curva C, Btdin45, quadro pompe") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { if (isValid) submit() })
+                )
             }
         },
         confirmButton = {
             Button(
                 onClick = { submit() },
-                enabled = nome.isNotBlank(),
+                enabled = isValid,
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = MaterialTheme.colors.primary,
                     contentColor = Color.White
                 )
             ) {
-                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(
+                    imageVector = if (isEditMode) Icons.Default.Check else Icons.Default.Add,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Aggiungi al Quadro",
+                    text = if (isEditMode) "Salva Modifiche" else "Aggiungi al Quadro",
                     fontWeight = FontWeight.Bold
                 )
             }

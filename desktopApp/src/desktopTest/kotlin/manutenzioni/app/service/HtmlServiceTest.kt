@@ -5,6 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertContains
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 
 /**
  * Test per HtmlService — il template engine che genera l'HTML
@@ -51,6 +52,23 @@ class HtmlServiceTest {
             clienteNome = null
         )
         assertContains(html, "Gruppo Elettrogeno")
+    }
+
+    @Test
+    fun `buildHtml per QuadroBT inietta descrizioneQuadro specifica nel cartiglio`() {
+        val quadro = QuadroBT(
+            codIntervento = "Q",
+            nomeCompleto = "Quadro elettrico",
+            sigla = "QG",
+            descrizioneQuadro = "Quadro Generale Reparto Presse"
+        )
+        val html = htmlService.buildHtml(
+            impianto = quadro,
+            attivitaFiltrate = emptyList(),
+            frequenza = Periodo(TipoPeriodo.A, 1),
+            clienteNome = null
+        )
+        assertContains(html, "Quadro Generale Reparto Presse - QG")
     }
 
     @Test
@@ -160,15 +178,18 @@ class HtmlServiceTest {
     }
 
     @Test
-    fun `buildHtml con lista vuota di attivita non genera righe`() {
+    fun `buildHtml con lista vuota di attivita genera 30 righe di riempimento compilabili`() {
         val html = htmlService.buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = emptyList(),
             frequenza = Periodo(TipoPeriodo.A, 1),
             clienteNome = null
         )
-        // Nessun campo esito generato
-        assertFalse(html.contains("esito_GE_"))
+        // Con R2, tutte le 30 righe di riempimento hanno campi form compilabili
+        assertContains(html, "name=\"esito_GE_1\"")
+        assertContains(html, "name=\"tipo_GE_1\"")
+        assertContains(html, "name=\"esito_GE_30\"")
+        assertContains(html, "name=\"tipo_GE_30\"")
     }
 
     @Test
@@ -455,6 +476,277 @@ class HtmlServiceTest {
         } finally {
             tempHtml.delete()
             tempPdf.delete()
+        }
+    }
+
+    @Test
+    fun `buildHtml verifica ordine intestazione colonne tabella attivita`() {
+        val html = htmlService.buildHtml(
+            impianto = impiantoGE,
+            attivitaFiltrate = impiantoGE.listaAttivita,
+            frequenza = Periodo(TipoPeriodo.A, 1),
+            clienteNome = "Cliente Test"
+        )
+
+        // Sezione 5: verifica che le colonne dell'intestazione compaiano nell'ordine esatto:
+        // N. Attività, Tipo di Attività, Zona, Periodicità, Attività, Esito, Nota
+        val pattern = Regex(
+            """N\.\s*Attività[\s\S]*?Tipo di Attività[\s\S]*?Zona[\s\S]*?Periodicità[\s\S]*?Attività[\s\S]*?Esito[\s\S]*?Nota"""
+        )
+        assertTrue(pattern.containsMatchIn(html), "L'ordine delle intestazioni di colonna deve essere: N. Attività, Tipo di Attività, Zona, Periodicità, Attività, Esito, Nota")
+    }
+
+    @Test
+    fun `buildHtml con nAttivita non contigui formatta progressivo da 1 a N e periodicita 0n e n`() {
+        // Attività con nAttivita non contigui (1, 4, 9, 25) e frequenze miste mesi/anni
+        val attivitaNonContigue = listOf(
+            Attivita(1, "Controllo", "Controllo visivo mensile", Periodo(TipoPeriodo.M, 1), zona = "Zona 1"),
+            Attivita(4, "Controllo", "Controllo semestrale", Periodo(TipoPeriodo.M, 6), zona = "Zona 2"),
+            Attivita(9, "Verifica", "Verifica annuale", Periodo(TipoPeriodo.A, 1), zona = "Zona 3"),
+            Attivita(25, "Revisione", "Revisione biennale", Periodo(TipoPeriodo.A, 2), zona = "Zona 4")
+        )
+
+        val html = htmlService.buildHtml(
+            impianto = impiantoGE,
+            attivitaFiltrate = attivitaNonContigue,
+            frequenza = Periodo(TipoPeriodo.A, 2),
+            clienteNome = "Collaudo Periodicità"
+        )
+
+        // 1. Verifica che la prima colonna mostri i numeri progressivi 1, 2, 3, 4 associati alle rispettive attività
+        val row3Regex = Regex("""<td class="cell--data-empty"><p>3</p></td>\s*<td class="cell--data-empty"><p>Verifica</p></td>""")
+        val row4Regex = Regex("""<td class="cell--data-empty"><p>4</p></td>\s*<td class="cell--data-empty"><p>Revisione</p></td>""")
+        assertTrue(row3Regex.containsMatchIn(html), "L'attività 3 deve avere progressivo 1..N pari a 3")
+        assertTrue(row4Regex.containsMatchIn(html), "L'attività 4 deve avere progressivo 1..N pari a 4")
+
+        // Verifica che i numeri statici 9 e 25 del DB NON siano associati come numero di riga alle attività
+        val static9Regex = Regex("""<td class="cell--data-empty"><p>9</p></td>\s*<td class="cell--data-empty"><p>Verifica</p></td>""")
+        val static25Regex = Regex("""<td class="cell--data-empty"><p>25</p></td>\s*<td class="cell--data-empty"><p>Revisione</p></td>""")
+        assertFalse(static9Regex.containsMatchIn(html), "Non deve comparire il numero statico 9 del DB per l'attività Verifica")
+        assertFalse(static25Regex.containsMatchIn(html), "Non deve comparire il numero statico 25 del DB per l'attività Revisione")
+
+        // 2. Verifica che la quarta colonna mostri il codice periodicità nel formato rigoroso:
+        // '0n' per mesi (01, 06) e 'n' per anni (1, 2)
+        assertContains(html, """<td class="cell--data-empty"><p>01</p></td>""")
+        assertContains(html, """<td class="cell--data-empty"><p>06</p></td>""")
+        assertContains(html, """<td class="cell--data-empty"><p>1</p></td>""")
+        assertContains(html, """<td class="cell--data-empty"><p>2</p></td>""")
+    }
+
+    @Test
+    fun `generazione end-to-end PDF verifica compilabilita AcroForm su tutte le 30 righe e riquadro note`() {
+        val dueAttivita = listOf(
+            Attivita(1, "Ispezione", "Prima attività", Periodo(TipoPeriodo.M, 6), zona = "Z1"),
+            Attivita(2, "Test", "Seconda attività", Periodo(TipoPeriodo.M, 6), zona = "Z2")
+        )
+
+        val html = htmlService.buildHtml(
+            impianto = impiantoGE,
+            attivitaFiltrate = dueAttivita,
+            frequenza = Periodo(TipoPeriodo.M, 6),
+            clienteNome = "Ospedale San Raffaele",
+            cantiereNome = "Centrale Termica",
+            dataInizioContratto = "01/01/2026",
+            dataIntervento = "17/10/2026",
+            dataInterventoPrecedente = "15/04/2026",
+            nomeManutentore = "Ing. Desiderio"
+        )
+
+        // Generazione fisica del PDF e analisi delle annotazioni AcroForm con iText7
+        val tempHtml = java.io.File.createTempFile("test_acroform_30_", ".html")
+        val tempPdf = java.io.File.createTempFile("test_acroform_30_", ".pdf")
+        tempHtml.writeText(html)
+
+        try {
+            Pdf().buildPdf(tempHtml.absolutePath, tempPdf.absolutePath)
+            com.itextpdf.kernel.pdf.PdfReader(tempPdf).use { reader ->
+                com.itextpdf.kernel.pdf.PdfDocument(reader).use { pdfDoc ->
+                    val acroForm = com.itextpdf.forms.PdfAcroForm.getAcroForm(pdfDoc, false)
+                    assertNotNull(acroForm, "L'AcroForm deve essere presente nel PDF generato")
+                    val fields = acroForm.allFormFields
+
+                    // 1. Verifica campi form su riga 1 (attività compilata)
+                    assertTrue(fields.containsKey("esito_GE_1"), "Deve contenere esito_GE_1")
+                    assertTrue(fields.containsKey("esito_vn_GE_1"), "Deve contenere esito_vn_GE_1")
+                    assertTrue(fields.containsKey("note_GE_1"), "Deve contenere note_GE_1")
+
+                    // 2. Verifica campi form su riga 30 (riga di riempimento)
+                    assertTrue(fields.containsKey("tipo_GE_30"), "Deve contenere tipo_GE_30")
+                    assertTrue(fields.containsKey("zona_GE_30"), "Deve contenere zona_GE_30")
+                    assertTrue(fields.containsKey("periodicita_GE_30"), "Deve contenere periodicita_GE_30")
+                    assertTrue(fields.containsKey("attivita_GE_30"), "Deve contenere attivita_GE_30")
+                    assertTrue(fields.containsKey("esito_GE_30"), "Deve contenere esito_GE_30")
+                    assertTrue(fields.containsKey("esito_vn_GE_30"), "Deve contenere esito_vn_GE_30")
+                    assertTrue(fields.containsKey("note_GE_30"), "Deve contenere note_GE_30")
+
+                    // 3. Verifica campo note generali nel footer (SEZIONE 8)
+                    assertTrue(fields.containsKey("note_generali_GE"), "Deve contenere note_generali_GE in Sezione 8")
+
+                    // 4. Verifica geometrica: ogni widget AcroForm deve avere larghezza e altezza > 0
+                    for ((name, field) in fields) {
+                        for (widget in field.widgets) {
+                            val rect = widget.rectangle?.toRectangle()
+                            assertNotNull(rect, "Il widget per $name deve avere un bounding box definito")
+                            assertTrue(
+                                rect.width > 0f && rect.height > 0f,
+                                "Il campo $name ha bounding box non valido: ${rect.width}x${rect.height}"
+                            )
+                        }
+                    }
+                }
+            }
+        } finally {
+            tempHtml.delete()
+            tempPdf.delete()
+        }
+    }
+
+    @Test
+    fun `buildHtml inietta le tre date distinte nei rispettivi campi AcroForm`() {
+        val html = htmlService.buildHtml(
+            impianto = impiantoGE,
+            attivitaFiltrate = impiantoGE.listaAttivita,
+            frequenza = Periodo(TipoPeriodo.A, 1),
+            clienteNome = "Committente S.p.A.",
+            cantiereNome = "Stabilimento Nord",
+            dataInizioContratto = "01/01/2026",
+            dataInterventoPrecedente = "15/04/2026",
+            dataIntervento = "17/10/2026",
+            nomeManutentore = "Ing. Edoardo Desiderio"
+        )
+
+        // 1. Data inizio contratto nel campo starting_date
+        assertContains(html, """name="starting_date" id="starting-date" value="01/01/2026"""")
+
+        // 2. Data intervento precedente nel campo previous_date
+        assertContains(html, """name="previous_date" id="previous-date" value="15/04/2026"""")
+
+        // 3. Data intervento nel campo actual_date
+        assertContains(html, """name="actual_date" id="today-date" value="17/10/2026"""")
+    }
+
+    @Test
+    fun `buildHtml popola zona mancante o vuota con fallback attivita`() {
+        val attivitaSenzaZona = listOf(
+            Attivita(nAttivita = 1, tipoAttivita = "Controllo", descrizione = "Zona null", frequenza = Periodo(TipoPeriodo.M, 1), zona = null),
+            Attivita(nAttivita = 2, tipoAttivita = "Verifica", descrizione = "Zona blank", frequenza = Periodo(TipoPeriodo.M, 3), zona = "   "),
+            Attivita(nAttivita = 3, tipoAttivita = "Misura", descrizione = "Zona esplicita", frequenza = Periodo(TipoPeriodo.M, 6), zona = "Locale Quadri")
+        )
+        val html = htmlService.buildHtml(
+            impianto = impiantoGE,
+            attivitaFiltrate = attivitaSenzaZona,
+            frequenza = Periodo(TipoPeriodo.M, 6),
+            clienteNome = "Test Zona Fallback"
+        )
+
+        val row1ZonaDefault = Regex("""<td class="cell--data-empty"><p>1</p></td>\s*<td class="cell--data-empty"><p>Controllo</p></td>\s*<td class="cell--data-empty"><p>attività</p></td>""")
+        val row2ZonaDefault = Regex("""<td class="cell--data-empty"><p>2</p></td>\s*<td class="cell--data-empty"><p>Verifica</p></td>\s*<td class="cell--data-empty"><p>attività</p></td>""")
+        val row3ZonaEsplicita = Regex("""<td class="cell--data-empty"><p>3</p></td>\s*<td class="cell--data-empty"><p>Misura</p></td>\s*<td class="cell--data-empty"><p>Locale Quadri</p></td>""")
+
+        assertTrue(row1ZonaDefault.containsMatchIn(html), "Riga con zona null deve mostrare 'attività'")
+        assertTrue(row2ZonaDefault.containsMatchIn(html), "Riga con zona vuota deve mostrare 'attività'")
+        assertTrue(row3ZonaEsplicita.containsMatchIn(html), "Riga con zona valorizzata deve preservare 'Locale Quadri'")
+    }
+
+    @Test
+    fun `buildHtml ordina righe attivita da 01-06 a 1-n anche se passate non ordinate`() {
+        val attivitaDisordinate = listOf(
+            Attivita(nAttivita = 10, tipoAttivita = "A2", descrizione = "Attività 2 anni", frequenza = Periodo(TipoPeriodo.A, 2), zona = "Z-A2"),
+            Attivita(nAttivita = 20, tipoAttivita = "M6", descrizione = "Attività 6 mesi", frequenza = Periodo(TipoPeriodo.M, 6), zona = "Z-M6"),
+            Attivita(nAttivita = 30, tipoAttivita = "A1", descrizione = "Attività 1 anno", frequenza = Periodo(TipoPeriodo.A, 1), zona = "Z-A1"),
+            Attivita(nAttivita = 40, tipoAttivita = "M1", descrizione = "Attività 1 mese", frequenza = Periodo(TipoPeriodo.M, 1), zona = "Z-M1"),
+            Attivita(nAttivita = 50, tipoAttivita = "M3", descrizione = "Attività 3 mesi", frequenza = Periodo(TipoPeriodo.M, 3), zona = "Z-M3")
+        )
+        val html = htmlService.buildHtml(
+            impianto = impiantoGE,
+            attivitaFiltrate = attivitaDisordinate,
+            frequenza = Periodo(TipoPeriodo.A, 2),
+            clienteNome = "Test Ordine"
+        )
+
+        val pattern = Regex(
+            """<td class="cell--data-empty"><p>1</p></td>[\s\S]*?<p>01</p>[\s\S]*?""" +
+            """<td class="cell--data-empty"><p>2</p></td>[\s\S]*?<p>03</p>[\s\S]*?""" +
+            """<td class="cell--data-empty"><p>3</p></td>[\s\S]*?<p>06</p>[\s\S]*?""" +
+            """<td class="cell--data-empty"><p>4</p></td>[\s\S]*?<p>1</p>[\s\S]*?""" +
+            """<td class="cell--data-empty"><p>5</p></td>[\s\S]*?<p>2</p>"""
+        )
+        assertTrue(pattern.containsMatchIn(html), "Le righe devono essere ordinate da 01-06 a 1-n con progressivo 1..5")
+    }
+
+    @Test
+    fun `buildHtml sposta legenda nella colonna Nota di thead e 30 righe stanno in 1 sola pagina PDF`() {
+        val trentaAttivita = (1..30).map { idx ->
+            Attivita(
+                nAttivita = idx,
+                tipoAttivita = "Controllo",
+                descrizione = "Verifica strumentale e funzionale componente #$idx",
+                frequenza = if (idx <= 15) Periodo(TipoPeriodo.M, 6) else Periodo(TipoPeriodo.A, 1),
+                zona = if (idx % 2 == 0) null else "Zona $idx"
+            )
+        }
+        val html = htmlService.buildHtml(
+            impianto = impiantoGE,
+            attivitaFiltrate = trentaAttivita,
+            frequenza = Periodo(TipoPeriodo.A, 1),
+            clienteNome = "Test 1 Pagina 30 Righe"
+        )
+
+        // 1. Nessuna riga row--legend nel tfoot
+        assertFalse(html.contains("row--legend"), "La riga <tr class=\"row--legend\"> nel tfoot deve essere rimossa")
+        // 2. La legenda è presente nella sotto-intestazione della colonna Nota (thead)
+        assertContains(html, "cell--legend")
+        assertContains(html, "<strong>Legenda:</strong> <strong>P</strong>=Positivo")
+
+        // 3. Verifica che il PDF generato con 30 righe + Note Generali stia in esattamente 1 pagina A4
+        val tempHtml = java.io.File.createTempFile("test_30rows_1page_", ".html")
+        val tempPdf = java.io.File.createTempFile("test_30rows_1page_", ".pdf")
+        tempHtml.writeText(html)
+        try {
+            Pdf().buildPdf(tempHtml.absolutePath, tempPdf.absolutePath)
+            com.itextpdf.kernel.pdf.PdfReader(tempPdf).use { reader ->
+                com.itextpdf.kernel.pdf.PdfDocument(reader).use { pdfDoc ->
+                    kotlin.test.assertEquals(
+                        1,
+                        pdfDoc.numberOfPages,
+                        "Una scheda standard con 30 righe e legenda spostata in colonna Nota deve occupare esattamente 1 pagina A4"
+                    )
+                }
+            }
+        } finally {
+            tempHtml.delete()
+            tempPdf.delete()
+        }
+    }
+
+    @Test
+    fun `manutenzioni_db json non contiene nAttivita o n_attivita e carica numeri dinamici`() {
+        val resourceStream = this::class.java.classLoader.getResourceAsStream("manutenzioni_db.json")
+        assertNotNull(resourceStream, "manutenzioni_db.json deve essere presente nelle risorse")
+        val rawJson = resourceStream.bufferedReader().readText()
+        assertFalse(rawJson.contains("\"nAttivita\""), "manutenzioni_db.json non deve contenere il campo statico nAttivita")
+        assertFalse(rawJson.contains("\"n_attivita\""), "manutenzioni_db.json non deve contenere il campo statico n_attivita")
+    }
+
+    @Test
+    fun `GenerateHtmlCli genera file HTML valido da linea di comando non interattiva`() {
+        val tempOut = java.io.File.createTempFile("cli_preview_", ".html")
+        try {
+            val html = manutenzioni.app.cli.GenerateHtmlCli.execute(
+                arrayOf(
+                    "--impianto", "GE",
+                    "--frequenza", "06",
+                    "--cliente", "Cliente CLI Test",
+                    "--cantiere", "Cantiere CLI Test",
+                    "--output", tempOut.absolutePath
+                )
+            )
+            assertTrue(tempOut.exists() && tempOut.length() > 0, "Il file HTML di output deve essere creato")
+            assertContains(html, "Cliente: Cliente CLI Test")
+            assertContains(html.uppercase(), "GRUPP")
+            assertContains(html, "<td class=\"cell--data-empty\"><p>attività</p></td>")
+        } finally {
+            tempOut.delete()
         }
     }
 }

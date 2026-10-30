@@ -93,14 +93,14 @@ fun OperativitaScreen(
                 clienti = state.clienti,
                 selectedCliente = state.selectedCliente,
                 onClienteSelected = onClienteSelected,
-                onNewClienteClick = { showNuovoClienteDialog = true }
+                onNewClienteClick = if (state.isAdmin) ({ showNuovoClienteDialog = true }) else null
             )
         }
 
         Divider(color = SlateBorder, thickness = 1.dp)
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Cantieri Grid
+        // Cantieri Grid (filtrata da RBAC tramite state.cantieriVisibili — R31)
         if (state.selectedCliente != null) {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 300.dp),
@@ -108,10 +108,12 @@ fun OperativitaScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                item {
-                    AddCantiereCard(onClick = { showNuovoCantiereDialog = true })
+                if (state.isAdmin) {
+                    item {
+                        AddCantiereCard(onClick = { showNuovoCantiereDialog = true })
+                    }
                 }
-                items(state.cantieriDisponibili) { cantiere ->
+                items(state.cantieriVisibili) { cantiere ->
                     CantiereCard(
                         cantiere = cantiere,
                         onClick = { onCantiereSelected(cantiere) }
@@ -221,6 +223,23 @@ fun CantiereCard(
                 style = MaterialTheme.typography.h6,
                 color = MaterialTheme.colors.onSurface
             )
+            cantiere.indirizzo?.let { indirizzo ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "📍 $indirizzo",
+                    style = MaterialTheme.typography.body2,
+                    color = MaterialTheme.colors.secondary
+                )
+            }
+            cantiere.dataInizioContratto?.let { dataContratto ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "📅 Inizio contratto: $dataContratto",
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.primary,
+                    fontWeight = FontWeight.Medium
+                )
+            }
             Spacer(modifier = Modifier.height(24.dp))
             
             Button(
@@ -233,7 +252,7 @@ fun CantiereCard(
                 ),
                 elevation = ButtonDefaults.elevation(0.dp, 0.dp)
             ) {
-                Text("Gestisci Impianti", fontWeight = FontWeight.SemiBold)
+                Text("Gestione Verifiche Periodiche", fontWeight = FontWeight.SemiBold)
             }
         }
     }

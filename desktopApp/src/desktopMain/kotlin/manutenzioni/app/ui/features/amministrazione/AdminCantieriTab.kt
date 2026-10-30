@@ -12,7 +12,9 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import java.util.UUID
 import manutenzioni.domain.model.Cantiere
 import manutenzioni.domain.model.Cliente
@@ -26,12 +28,10 @@ fun AdminCantieriTab(
     cantieri: List<Cantiere>,
     onClienteSelected: (Cliente) -> Unit,
     onAddCantiere: (Cantiere) -> Unit,
-    onRenameCantiere: (String, String) -> Unit
+    onUpdateCantiere: (Cantiere) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var cantiereInModifica by remember { mutableStateOf<Cantiere?>(null) }
-    var renameText by remember { mutableStateOf("") }
-    var showRenameDialog by remember { mutableStateOf(false) }
 
     if (showDialog && selectedCliente != null) {
         NuovoCantiereDialog(
@@ -44,35 +44,18 @@ fun AdminCantieriTab(
         )
     }
 
-    if (showRenameDialog && cantiereInModifica != null) {
-        AlertDialog(
-            onDismissRequest = { showRenameDialog = false },
-            title = { Text("Rinomina Cantiere") },
-            text = {
-                OutlinedTextField(
-                    value = renameText,
-                    onValueChange = { renameText = it },
-                    label = { Text("Nome Cantiere") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    if (renameText.isNotBlank()) {
-                        onRenameCantiere(cantiereInModifica!!.id, renameText)
-                        showRenameDialog = false
-                    }
-                }) {
-                    Text("Salva")
+    cantiereInModifica?.let { cantiere ->
+        key(cantiere.id) {
+            NuovoCantiereDialog(
+                clienteId = cantiere.clienteId,
+                initialCantiere = cantiere,
+                onDismiss = { cantiereInModifica = null },
+                onConfirm = { aggiornato ->
+                    onUpdateCantiere(aggiornato)
+                    cantiereInModifica = null
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }) {
-                    Text("Annulla")
-                }
-            }
-        )
+            )
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -130,11 +113,19 @@ fun AdminCantieriTab(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(cantiere.nome, style = MaterialTheme.typography.body1)
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(cantiere.nome, style = MaterialTheme.typography.body1, fontWeight = FontWeight.SemiBold)
+                                    cantiere.indirizzo?.let { indirizzo ->
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text("📍 $indirizzo", fontSize = 12.sp, color = MaterialTheme.colors.secondary)
+                                    }
+                                    cantiere.dataInizioContratto?.let { dataContratto ->
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text("📅 Inizio contratto: $dataContratto", fontSize = 12.sp, color = MaterialTheme.colors.primary)
+                                    }
+                                }
                                 IconButton(onClick = {
                                     cantiereInModifica = cantiere
-                                    renameText = cantiere.nome
-                                    showRenameDialog = true
                                 }) {
                                     Icon(Icons.Default.Edit, contentDescription = "Modifica", tint = MaterialTheme.colors.primary)
                                 }
@@ -147,18 +138,26 @@ fun AdminCantieriTab(
     }
 }
 
+/**
+ * Dialog unico per creazione e modifica di un cantiere (R3, R4).
+ * In modifica (`initialCantiere != null`) aggiorna nome, indirizzo e data inizio contratto via `copy()`,
+ * preservando i metadati di intervento (data intervento, data intervento precedente, manutentore).
+ */
 @Composable
 fun NuovoCantiereDialog(
     clienteId: String,
+    initialCantiere: Cantiere? = null,
     onDismiss: () -> Unit,
     onConfirm: (Cantiere) -> Unit
 ) {
-    var nome by remember { mutableStateOf("") }
+    var nome by remember { mutableStateOf(initialCantiere?.nome ?: "") }
+    var indirizzo by remember { mutableStateOf(initialCantiere?.indirizzo ?: "") }
+    var dataInizioContratto by remember { mutableStateOf(initialCantiere?.dataInizioContratto ?: "") }
     var nomeError by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nuovo Cantiere") },
+        title = { Text(if (initialCantiere == null) "Nuovo Cantiere" else "Modifica Cantiere") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
@@ -172,6 +171,22 @@ fun NuovoCantiereDialog(
                 if (nomeError) {
                     Text("Il nome è obbligatorio", color = MaterialTheme.colors.error, style = MaterialTheme.typography.caption)
                 }
+                OutlinedTextField(
+                    value = indirizzo,
+                    onValueChange = { indirizzo = it },
+                    label = { Text("Indirizzo cantiere") },
+                    placeholder = { Text("Via, numero civico, CAP, città") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = dataInizioContratto,
+                    onValueChange = { dataInizioContratto = it },
+                    label = { Text("Data inizio contratto") },
+                    placeholder = { Text("GG/MM/AAAA (es. 01/01/2026)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
             }
         },
         confirmButton = {
@@ -179,10 +194,23 @@ fun NuovoCantiereDialog(
                 if (nome.isBlank()) {
                     nomeError = true
                 } else {
-                    onConfirm(Cantiere(id = UUID.randomUUID().toString(), nome = nome, clienteId = clienteId))
+                    val indirizzoPulito = indirizzo.trim().ifBlank { null }
+                    val dataInizioContrattoPulita = dataInizioContratto.trim().ifBlank { null }
+                    val cantiere = initialCantiere?.copy(
+                        nome = nome.trim(),
+                        indirizzo = indirizzoPulito,
+                        dataInizioContratto = dataInizioContrattoPulita
+                    ) ?: Cantiere(
+                        id = UUID.randomUUID().toString(),
+                        nome = nome.trim(),
+                        clienteId = clienteId,
+                        indirizzo = indirizzoPulito,
+                        dataInizioContratto = dataInizioContrattoPulita
+                    )
+                    onConfirm(cantiere)
                 }
             }) {
-                Text("Crea")
+                Text(if (initialCantiere == null) "Crea" else "Salva")
             }
         },
         dismissButton = {

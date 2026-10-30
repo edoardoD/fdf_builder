@@ -13,7 +13,9 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import java.util.UUID
 import manutenzioni.domain.model.Cliente
 import manutenzioni.app.ui.theme.SlateBorder
@@ -22,13 +24,11 @@ import manutenzioni.app.ui.theme.SlateBorder
 fun AdminClientiTab(
     clienti: List<Cliente>,
     onAddCliente: (Cliente) -> Unit,
-    onRenameCliente: (String, String) -> Unit,
+    onUpdateCliente: (Cliente) -> Unit,
     onDeleteCliente: (String) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var clienteInModifica by remember { mutableStateOf<Cliente?>(null) }
-    var renameText by remember { mutableStateOf("") }
-    var showRenameDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var clienteInEliminazione by remember { mutableStateOf<Cliente?>(null) }
 
@@ -43,35 +43,18 @@ fun AdminClientiTab(
         )
     }
 
-    if (showRenameDialog && clienteInModifica != null) {
-        AlertDialog(
-            onDismissRequest = { showRenameDialog = false },
-            title = { Text("Rinomina Cliente") },
-            text = {
-                OutlinedTextField(
-                    value = renameText,
-                    onValueChange = { renameText = it },
-                    label = { Text("Nome Cliente") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    if (renameText.isNotBlank()) {
-                        onRenameCliente(clienteInModifica!!.id, renameText)
-                        showRenameDialog = false
-                    }
-                }) {
-                    Text("Salva")
+    clienteInModifica?.let { cliente ->
+        // key(id): forza la reinizializzazione dello stato del dialog quando cambia il cliente
+        key(cliente.id) {
+            ClienteDialog(
+                initialCliente = cliente,
+                onDismiss = { clienteInModifica = null },
+                onConfirm = { aggiornato ->
+                    onUpdateCliente(aggiornato)
+                    clienteInModifica = null
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }) {
-                    Text("Annulla")
-                }
-            }
-        )
+            )
+        }
     }
 
     if (showDeleteConfirmDialog && clienteInEliminazione != null) {
@@ -135,12 +118,24 @@ fun AdminClientiTab(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(cliente.nome, style = MaterialTheme.typography.body1)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(cliente.nome, style = MaterialTheme.typography.body1, fontWeight = FontWeight.SemiBold)
+                                val dettagli = listOfNotNull(
+                                    cliente.indirizzo?.let { "📍 $it" },
+                                    cliente.partitaIva?.let { "P.IVA $it" }
+                                )
+                                if (dettagli.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        dettagli.joinToString("   ·   "),
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colors.secondary
+                                    )
+                                }
+                            }
                             Row {
                                 IconButton(onClick = {
                                     clienteInModifica = cliente
-                                    renameText = cliente.nome
-                                    showRenameDialog = true
                                 }) {
                                     Icon(Icons.Default.Edit, contentDescription = "Modifica", tint = MaterialTheme.colors.primary)
                                 }
@@ -189,14 +184,14 @@ fun ClienteDialog(
                 OutlinedTextField(
                     value = indirizzo,
                     onValueChange = { indirizzo = it },
-                    label = { Text("Indirizzo (Opzionale)") },
+                    label = { Text("Indirizzo") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
                 OutlinedTextField(
                     value = partitaIva,
                     onValueChange = { partitaIva = it },
-                    label = { Text("Partita IVA (Opzionale)") },
+                    label = { Text("Partita I.V.A.") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )

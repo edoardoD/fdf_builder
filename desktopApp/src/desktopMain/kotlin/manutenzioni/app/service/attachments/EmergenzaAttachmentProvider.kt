@@ -15,21 +15,7 @@ class EmergenzaAttachmentProvider : TechnicalAttachmentProvider {
         return impianto is ImpiantoEmergenza && impianto.listaLampade.isNotEmpty()
     }
 
-    override fun buildPremessaSummary(impianto: Impianto): String? {
-        val emerg = impianto as? ImpiantoEmergenza ?: return null
-        if (emerg.listaLampade.isEmpty()) return null
-
-        val totale = emerg.listaLampade.size
-        return buildString {
-            append("Lampade di emergenza presenti ($totale):\n")
-            append(emerg.listaLampade.joinToString("\n") {
-                val sigla = if (it.sigla.isNotBlank()) "[${it.sigla}] " else ""
-                val prod = if (!it.produttore.isNullOrBlank()) " — ${it.produttore}" else ""
-                val pos = if (!it.posizione.isNullOrBlank()) " | ${it.posizione}" else ""
-                "• $sigla${it.modello}$prod (Autonomia: ${it.autonomia})$pos"
-            })
-        }
-    }
+    override fun buildPremessaSummary(impianto: Impianto): String? = null
 
     override fun buildSheetData(
         impianto: Impianto,
@@ -88,18 +74,26 @@ class EmergenzaAttachmentProvider : TechnicalAttachmentProvider {
             TechnicalRow(heightCm = 0.5, cells = cells)
         }
 
+        val isSicurezza = emerg.codIntervento.equals("IS", ignoreCase = true)
+        val banner = if (isSicurezza) "ILLUMINAZIONE DI SICUREZZA" else "LAMPADE DI EMERGENZA"
+        val subtitolo = if (isSicurezza) {
+            "Registro verifiche periodiche illuminazione di sicurezza (UNI 11222)"
+        } else {
+            "Elenco e verifiche periodiche illuminazione di emergenza (UNI 11222)"
+        }
+
         return TechnicalSheetData(
             codScheda = emerg.codIntervento,
-            oggetto = "EMERG",
-            titoloBanner = "LAMPADE DI EMERGENZA",
-            sottotitoloBanner = "Elenco e verifiche periodiche illuminazione di emergenza",
+            oggetto = if (isSicurezza) "IS" else "EM",
+            titoloBanner = banner,
+            sottotitoloBanner = subtitolo,
             impiantoLabel = emerg.nomeCompleto,
             sitoLabel = null,
             normative = "NORME CEI 64-8:2012, CEI EN 60598-2-22:2015, CEI EN 1838:2014, UNI 11222:2013",
             campoAcroFormPrefix = "emerg",
             columns = columns,
             rows = rows,
-            footerDocTitle = "LAMPADE DI EMERGENZA"
+            footerDocTitle = banner
         )
     }
 }

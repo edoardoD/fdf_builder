@@ -37,6 +37,13 @@ interface PdfBatchGenerator {
         copies: Int,
         clienteNome: String? = null,
         contextImpianti: List<Impianto> = emptyList(), // Impianti di contesto (tutti quelli del cantiere) per filtraggio avanzato
-        onProgress: (current: Int, total: Int) -> Unit = { _, _ -> }
+        cantiereNome: String? = null,
+        dataInizioIntervento: String? = null,
+        nomeManutentore: String? = null,
+        firmaManutentore: String? = null,
+        onProgress: (current: Int, total: Int) -> Unit = { _, _ -> },
+        dataInizioContratto: String? = null,
+        dataIntervento: String? = null,
+        dataInterventoPrecedente: String? = null
     ): BatchResult
 }

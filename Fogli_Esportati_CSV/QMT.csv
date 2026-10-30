@@ -1,50 +1,27 @@
-Quadro Media Tensione;;;;;;;
-Periodicità;Progressivo;Attività;Zona;Attività;SF6;ISV;IVOR
-1;1;Controlo;Q.M.T.;Controllo generale, installazione, integrità parti isolanti per lesioni e tracce di scarica, verifica presenza di corpi estranei all'interno del quadro e pulizia generale;Controllo generale, installazione, integrità parti isolanti per lesioni e tracce di scarica, verifica presenza di corpi estranei all'interno del quadro e pulizia generale;;
-1;2;Controllo;Q.M.T.;Controllo ed esame a vista delle parti attive e puliza contatti principali di innesto e connessione, controllo serraggio della bulloneria, pulizia e serraggio morsettiere, pulizia e lubrificazione cinematismi;Controllo ed esame a vista delle parti attive e puliza contatti principali di innesto e connessione, controllo serraggio della bulloneria, pulizia e serraggio morsettiere, pulizia e lubrificazione cinematismi;;
-1;3;Controllo;Q.M.T.;Verifica funzionamento elettrico, e tensione circuiti ausiliari;Verifica funzionamento elettrico, e tensione circuiti ausiliari;;
-1;4;Controllo;Q.M.T.;Verifica intellegibilità e completezza targhe per sequenza manovre;Verifica intellegibilità e completezza targhe per sequenza manovre;;
-1;5;Controllo;Q.M.T.;Verifica dello stato di integrità elettrico e meccanico (scariche superficiali, fessurazioni, ossidazione, surriscaldamento, ecc.) di sbarre MT, connettori, cavi, e terminali cavi;Verifica dello stato di integrità elettrico e meccanico (scariche superficiali, fessurazioni, ossidazione, surriscaldamento, ecc.) di sbarre MT, connettori, cavi, e terminali cavi;;
-1;6;Verifica;TA-TO-TV;Controllo integrità calotta di protezione, sigillatura morsetti, collegamenti primari e secondari come da schema per TA, TV e TO di protezione e misura;Controllo integrità calotta di protezione, sigillatura morsetti, collegamenti primari e secondari come da schema per TA, TV e TO di protezione e misura;;
-1;7;Controllo;TV;Controllo integrità e collegamenti resistenza antiferrorisonanza dei TV, e integrità fusibile di protezione primario e secondario TV;Controllo integrità e collegamenti resistenza antiferrorisonanza dei TV, e integrità fusibile di protezione primario e secondario TV;;
-1;8;Verifica;Q.M.T.;Verifica dello stato dei relè di protezione, presenza messaggi di errore e/o guasto, versione ed eventuale aggiornamento software/firmware, corretta impostazione soglie di intervento;Verifica dello stato dei relè di protezione, presenza messaggi di errore e/o guasto, versione ed eventuale aggiornamento software/firmware, corretta impostazione soglie di intervento;;
-1;9;Verifica;Q.M.T.;Verifica funzionalità relè di protezione integrato, controllo integrità/efficienza delle lampade di segnalazione presenza tensione;Verifica funzionalità relè di protezione integrato, controllo integrità/efficienza delle lampade di segnalazione presenza tensione;;
-1;10;Controllo;SEZ.;Esame a vista delle parti attive, pulizia e lubrificazione di tutti i meccanismi, controllo distanze e stato di usura dei contatti;Esame a vista delle parti attive, pulizia e lubrificazione di tutti i meccanismi, controllo distanze e stato di usura dei contatti;;
-1;11;Controllo;ISF6;Controllo generale e installazione, controllo e pulizia parti isolanti e parti attive.;Controllo generale e installazione, controllo e pulizia parti isolanti e parti attive.;;
-1;12;Controllo;ISF6;Verifica funzionamento elettrico e tensioni ausiliarie;Verifica funzionamento elettrico e tensioni ausiliarie;;
-2;13;Verifica;Q.M.T.;Controllo blocchi e interblocchi;Controllo blocchi e interblocchi;;
-2;14;Controllo;ISF6;Pulizia e lubrificazione meccanismi di comando ed eventuale regolazione del meccanismo di comando, se necessario;Pulizia e lubrificazione meccanismi di comando ed eventuale regolazione del meccanismo di comando, se necessario;;
-5;15;Controllo;Q.M.T.;Controllo aperture per passaggio cavi e tamponature;Controllo aperture per passaggio cavi e tamponature;;
-5;16;Controllo;Q.M.T.;Controllo dei collegamenti di terra struttura metallica, dei morsetti di messa a terra, dei collegamenti a terra circuiti secondari di TA/TO/TV, e strumenti;Controllo dei collegamenti di terra struttura metallica, dei morsetti di messa a terra, dei collegamenti a terra circuiti secondari di TA/TO/TV, e strumenti;;
-5;17;Controllo;SEZ.;Verifica funzionalità dei blocchi e interblocchi elettrici e meccanici, della efficacia delle manovre, chiarezza delle relative procedure operative, inserzione delle lame di contatto e serraggio delle connessioni;Verifica funzionalità dei blocchi e interblocchi elettrici e meccanici, della efficacia delle manovre, chiarezza delle relative procedure operative, inserzione delle lame di contatto e serraggio delle connessioni;;
-5;18;Verifica;ISF6;Verifica funzionalità relè diretto da TA integrati, funzionalità relè indiretto, verifica impostazioni e regolazioni;Verifica funzionalità relè diretto da TA integrati, funzionalità relè indiretto, verifica impostazioni e regolazioni;;
-5;19;Verifica;ISF6;Rilievo tempi di apertura e chiusura, e confronto con dati nominaliN.B. ATTIVITA' DA SVOLGERE TRAMITE PROVA CASSETTA RELE' DA TECNICO ABILITATO ESCLUSA DA VERIFICHE PERIODICHE PROGRAMMATE;Rilievo tempi di apertura e chiusura, e confronto con dati nominaliN.B. ATTIVITA' DA SVOLGERE TRAMITA PROVA CASSETTA RELE' DA TECNICO ABILITATO ESCLUSA DA VERIFICHE PERIODICHE PROGRAMMATE;;
-5;20;Controllo;ISF6;Esecuzione di intervento di manutenzione straordinaria da parte del costruttore secondo quanto indicato su manuale d'uso e manutenzione, con verifica generale dell'interruttore e eventuale sostituzione ;Esecuzione di intervento di manutenzione straordinaria da parte del costruttore secondo quato indicato su manuale d'uso e manutenzione, con verifica generale dell'interruttore e eventuale sostituzione componenti di N.B. ATTIVITA' ESEGUITA DAL COSTRUTTORE DISPOSITIVO ESCLUSA DAVERIFICHE PERIODICHE PROGRAMMATE;;
-5;;Controllo;ISF6;dei componenti di usura del comando meccanico N.B. ATTIVITA' ESEGUITA DAL COSTRUTTORE DISPOSITIVO ESCLUSA DAVERIFICHE PERIODICHE PROGRAMMATE;;;
-NP;22;Manut.;;;;;
-NP;23;Manut.;;;;;
-NP;;;;;;;
-NP;;;;;;;
-NP;;;;;;;
-NP;;;;;;;
-NP;;;;;;;
-NP;;;;;;;
-NP;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-Premessa Quadro Media Tensione;;;;;;;
-Le attività sul quadro elettrico di media tensione devono essere svolte da personale addestrato ai lavori elettrici con qualifca PES come da Norma CEI 11-27, ed eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione all'interno del quadro è fondamentale sezionare la e le alimentazioni al quadro, e collegare le 3 fasi in franco cortocircuito fra loro e collegate anche verso terra. Nel caso l'alimentazione al quadro provenga dall'ente distributore, occorre preventivamente concordare il fuori tensione. Eseguire la procedura di fuori tensione svolgendo tutte le manovre necessarie per la messa in sicurezza del quadro, fra cui l'interblocco meccanico (es. tramite chiavi anellate) o elettrico, e completare con l'affissione della segnaletica di sicurezza ed avvertimento, e la modulistica per il passaggio delle consegne e delle responsabilità.;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
-;;;;;;;
+Quadro Media Tensione;;;;
+Periodicit√†;Progressivo;Attivit√†;Zona;Attivit√†
+1;1;Controllo;Q.M.T.;Controllo generale, installazione, integrit√† parti isolanti per lesioni e tracce di scarica, verifica presenza di corpi estranei all'interno del quadro e pulizia generale
+1;2;Controllo;Q.M.T.;Controllo ed esame a vista delle parti attive e pulizia contatti principali di innesto e connessione, controllo serraggio della bulloneria, pulizia e serraggio morsettiere, pulizia e lubrificazione cinematismi
+1;3;Controllo;Q.M.T.;Verifica funzionamento elettrico e tensione circuiti ausiliari
+1;4;Controllo;Q.M.T.;Verifica intellegibilit√† e completezza targhe per sequenza manovre
+1;5;Controllo;Q.M.T.;Verifica dello stato di integrit√† elettrico e meccanico (scariche superficiali, fessurazioni, ossidazione, surriscaldamento, ecc.) di sbarre MT, connettori, cavi e terminali cavi
+1;6;Verifica;TA-TO-TV;Controllo integrit√† calotta di protezione, sigillatura morsetti, collegamenti primari e secondari come da schema per TA, TV e TO di protezione e misura
+1;7;Controllo;TV;Controllo integrit√† e collegamenti resistenza antiferrorisonanza dei TV, e integrit√† fusibile di protezione primario e secondario TV
+1;8;Verifica;Q.M.T.;Verifica dello stato dei rel√® di protezione, presenza messaggi di errore e/o guasto, versione ed eventuale aggiornamento software/firmware, corretta impostazione soglie di intervento
+1;9;Verifica;Q.M.T.;Verifica funzionalit√† rel√® di protezione integrato, controllo integrit√† ed efficienza delle lampade di segnalazione presenza tensione
+1;10;Controllo;SEZ.;Esame a vista delle parti attive, pulizia e lubrificazione di tutti i meccanismi, controllo distanze e stato di usura dei contatti
+1;11;Controllo;Interruttore;Controllo generale e installazione, controllo e pulizia parti isolanti e parti attive
+1;12;Controllo;Interruttore;Verifica funzionamento elettrico e tensioni ausiliarie
+2;13;Verifica;Q.M.T.;Controllo blocchi e interblocchi
+2;14;Controllo;Interruttore;Pulizia e lubrificazione meccanismi di comando ed eventuale regolazione del meccanismo di comando, se necessario
+5;15;Controllo;Q.M.T.;Controllo aperture per passaggio cavi e tamponature
+5;16;Controllo;Q.M.T.;Controllo dei collegamenti di terra struttura metallica, dei morsetti di messa a terra, dei collegamenti a terra circuiti secondari di TA/TO/TV, e strumenti
+5;17;Controllo;SEZ.;Verifica funzionalit√† dei blocchi e interblocchi elettrici e meccanici, della efficacia delle manovre, chiarezza delle relative procedure operative, inserzione delle lame di contatto e serraggio delle connessioni
+5;18;Verifica;Interruttore;Verifica funzionalit√† rel√® diretto da TA integrati, funzionalit√† rel√® indiretto, verifica impostazioni e regolazioni
+5;19;Verifica;Interruttore;Rilievo tempi di apertura e chiusura, e confronto con dati nominali (N.B. Prova cassetta rel√® da tecnico abilitato - Esclusa da verifiche periodiche programmate)
+5;20;Controllo;Interruttore;Esecuzione intervento di manutenzione straordinaria secondo manuale con verifica generale interruttore ed eventuale sostituzione (N.B. Eseguita dal costruttore dispositivo)
+5;21;Controllo;Interruttore;Verifica ed eventuale sostituzione dei componenti di usura del comando meccanico (N.B. Eseguita dal costruttore dispositivo)
+;;;;
+;;;;
+Premessa Quadro Media Tensione;;;;
+Le attivit√† sul quadro elettrico di media tensione devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES come da Norma CEI 11-27, ed eseguiti in totale sicurezza. Prima di accedere alle parti elettriche in tensione all'interno del quadro √® fondamentale sezionare la e le alimentazioni al quadro, e collegare le 3 fasi in franco cortocircuito fra loro e collegate anche verso terra. Nel caso l'alimentazione al quadro provenga dall'ente distributore, occorre preventivamente concordare il fuori tensione. Eseguire la procedura di fuori tensione svolgendo tutte le manovre necessarie per la messa in sicurezza del quadro, fra cui l'interblocco meccanico (es. tramite chiavi anellate) o elettrico, e completare con l'affissione della segnaletica di sicurezza ed avvertimento, e la modulistica per il passaggio delle consegne e delle responsabilit√†.;;;;

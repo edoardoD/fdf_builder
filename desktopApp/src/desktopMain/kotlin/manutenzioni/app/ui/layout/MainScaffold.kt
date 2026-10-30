@@ -11,6 +11,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,6 +23,7 @@ import manutenzioni.app.ui.AppSection
 fun MainScaffold(
     currentSection: AppSection,
     onSectionSelected: (AppSection) -> Unit,
+    isAdmin: Boolean = true,
     content: @Composable () -> Unit
 ) {
     Surface(
@@ -37,18 +39,28 @@ fun MainScaffold(
                     selected = currentSection == AppSection.OPERATIVITA,
                     onClick = { onSectionSelected(AppSection.OPERATIVITA) },
                     icon = { Icon(Icons.Default.Build, contentDescription = "Operatività") },
-                    label = { Text("Operatività") },
+                    label = { Text("Operatività", fontSize = 10.sp) },
                     selectedContentColor = MaterialTheme.colors.primary,
                     unselectedContentColor = MaterialTheme.colors.secondary
                 )
                 NavigationRailItem(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Database") },
-                    label = { Text("Database", fontSize = 10.sp) },
-                    selected = currentSection == AppSection.DATABASE,
-                    onClick = { onSectionSelected(AppSection.DATABASE) },
+                    selected = currentSection == AppSection.CALENDARIO,
+                    onClick = { onSectionSelected(AppSection.CALENDARIO) },
+                    icon = { Icon(Icons.Default.DateRange, contentDescription = "Calendario") },
+                    label = { Text("Calendario", fontSize = 10.sp) },
                     selectedContentColor = MaterialTheme.colors.primary,
-                    unselectedContentColor = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                    unselectedContentColor = MaterialTheme.colors.secondary
                 )
+                if (isAdmin) {
+                    NavigationRailItem(
+                        icon = { Icon(Icons.Default.Settings, contentDescription = "Database") },
+                        label = { Text("Database", fontSize = 10.sp) },
+                        selected = currentSection == AppSection.DATABASE,
+                        onClick = { onSectionSelected(AppSection.DATABASE) },
+                        selectedContentColor = MaterialTheme.colors.primary,
+                        unselectedContentColor = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                    )
+                }
             }
             
             Box(modifier = Modifier.weight(1f).fillMaxSize()) {

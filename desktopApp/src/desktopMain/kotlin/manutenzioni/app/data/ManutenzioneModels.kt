@@ -12,5 +12,8 @@ data class ManutenzioniDatabase(
     val clienti: List<Cliente> = emptyList(),
     val cantieri: List<Cantiere> = emptyList(),
     val componenti: List<manutenzioni.domain.model.ComponenteStandard> = emptyList(),
-    val catalogoApprovato: List<manutenzioni.domain.model.ComponenteApprovato> = emptyList()
+    val catalogoApprovato: List<manutenzioni.domain.model.ComponenteApprovato> = emptyList(),
+    val sessioniVerifica: List<manutenzioni.domain.model.SessioneVerifica> = emptyList(),
+    val utenti: List<manutenzioni.domain.model.Utente> = emptyList(),
+    val eventiManutenzione: List<manutenzioni.domain.model.EventoManutenzione> = emptyList()
 )

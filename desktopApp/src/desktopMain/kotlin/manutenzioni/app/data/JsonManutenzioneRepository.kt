@@ -8,6 +8,7 @@ import manutenzioni.domain.model.Cantiere
 import manutenzioni.domain.model.Cliente
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.normalizeType
+import manutenzioni.domain.model.normalizeDates
 import java.io.File
 
 /**
@@ -35,6 +36,9 @@ class JsonManutenzioneRepository(
     private var cacheCantieri: MutableList<Cantiere>? = null
     private var cacheComponenti: MutableList<manutenzioni.domain.model.ComponenteStandard>? = null
     private var cacheCatalogoApprovato: MutableList<manutenzioni.domain.model.ComponenteApprovato>? = null
+    private var cacheSessioniVerifica: MutableList<manutenzioni.domain.model.SessioneVerifica>? = null
+    private var cacheUtenti: MutableList<manutenzioni.domain.model.Utente>? = null
+    private var cacheEventiManutenzione: MutableList<manutenzioni.domain.model.EventoManutenzione>? = null
 
     init {
         println("📂 Database log: ${dbFile.absolutePath}")
@@ -91,10 +95,48 @@ class JsonManutenzioneRepository(
         clienti: List<Cliente> = getClientiCache(), 
         cantieri: List<Cantiere> = getCantieriCache(),
         componenti: List<manutenzioni.domain.model.ComponenteStandard> = getComponentiCache(),
-        catalogoApprovato: List<manutenzioni.domain.model.ComponenteApprovato> = getCatalogoApprovatoCache()
+        catalogoApprovato: List<manutenzioni.domain.model.ComponenteApprovato> = getCatalogoApprovatoCache(),
+        sessioniVerifica: List<manutenzioni.domain.model.SessioneVerifica> = getSessioniVerificaCache(),
+        utenti: List<manutenzioni.domain.model.Utente> = getUtentiCache(),
+        eventiManutenzione: List<manutenzioni.domain.model.EventoManutenzione> = getEventiManutenzioneCache()
     ) {
-        val db = ManutenzioniDatabase(impianti, clienti, cantieri, componenti, catalogoApprovato)
+        val db = ManutenzioniDatabase(impianti, clienti, cantieri, componenti, catalogoApprovato, sessioniVerifica, utenti, eventiManutenzione)
         dbFile.writeText(json.encodeToString(ManutenzioniDatabase.serializer(), db))
+    }
+
+    private fun getEventiManutenzioneCache(): MutableList<manutenzioni.domain.model.EventoManutenzione> {
+        if (cacheEventiManutenzione == null) {
+            val db = loadFromDisk()
+            cacheEventiManutenzione = db.eventiManutenzione.toMutableList()
+        }
+        return cacheEventiManutenzione!!
+    }
+
+    private fun getSessioniVerificaCache(): MutableList<manutenzioni.domain.model.SessioneVerifica> {
+        if (cacheSessioniVerifica == null) {
+            val db = loadFromDisk()
+            cacheSessioniVerifica = db.sessioniVerifica.toMutableList()
+        }
+        return cacheSessioniVerifica!!
+    }
+
+    private fun getUtentiCache(): MutableList<manutenzioni.domain.model.Utente> {
+        if (cacheUtenti == null) {
+            val db = loadFromDisk()
+            val loaded = db.utenti.toMutableList()
+            if (loaded.isEmpty()) {
+                loaded.add(
+                    manutenzioni.domain.model.Utente(
+                        id = "usr-admin-default",
+                        username = "admin",
+                        nomeCompleto = "Amministratore di Sistema",
+                        ruolo = manutenzioni.domain.model.RuoloUtente.ADMIN
+                    )
+                )
+            }
+            cacheUtenti = loaded
+        }
+        return cacheUtenti!!
     }
 
     private fun getImpiantiCache(): MutableList<Impianto> {
@@ -105,7 +147,7 @@ class JsonManutenzioneRepository(
                 cacheClienti = db.clienti.toMutableList()
             }
             if (cacheCantieri == null) {
-                cacheCantieri = db.cantieri.toMutableList()
+                cacheCantieri = db.cantieri.map { it.normalizeDates() }.toMutableList()
             }
             if (cacheComponenti == null) {
                 cacheComponenti = db.componenti.toMutableList()
@@ -125,7 +167,7 @@ class JsonManutenzioneRepository(
                 cache = db.impianti.map { it.normalizeType() }.toMutableList()
             }
             if (cacheCantieri == null) {
-                cacheCantieri = db.cantieri.toMutableList()
+                cacheCantieri = db.cantieri.map { it.normalizeDates() }.toMutableList()
             }
             if (cacheComponenti == null) {
                 cacheComponenti = db.componenti.toMutableList()
@@ -140,7 +182,7 @@ class JsonManutenzioneRepository(
     private fun getCantieriCache(): MutableList<Cantiere> {
         if (cacheCantieri == null) {
             val db = loadFromDisk()
-            cacheCantieri = db.cantieri.toMutableList()
+            cacheCantieri = db.cantieri.map { it.normalizeDates() }.toMutableList()
             // Assicura che anche le altre cache siano popolate
             getImpiantiCache()
             getClientiCache()
@@ -211,13 +253,18 @@ class JsonManutenzioneRepository(
                 if (list[i].cantiereId == null) {
                     hasGlobal = true
                 }
-                list[i] = list[i].copyWithBasicParams(
+                val baseUpdated = list[i].copyWithBasicParams(
                     nomeCompleto = impiantoTemplate.nomeCompleto,
                     premessa = impiantoTemplate.premessa,
                     listaAttivita = impiantoTemplate.listaAttivita,
                     listaNormative = impiantoTemplate.listaNormative
                     // id, cantiereId, quantita e noteSpecifiche rimangono inalterati
                 )
+                list[i] = if (baseUpdated is manutenzioni.domain.model.QuadroMQT && baseUpdated.tipoInterruttore != null) {
+                    baseUpdated.withTipoInterruttore(baseUpdated.tipoInterruttore)
+                } else {
+                    baseUpdated
+                }
             }
         }
         if (!hasGlobal) {
@@ -271,7 +318,7 @@ class JsonManutenzioneRepository(
     // === Getters for new workflow ===
 
     override suspend fun getCantieriForCliente(clienteId: String): List<Cantiere> = mutex.withLock {
-        return getCantieriCache().filter { it.clienteId == clienteId }
+        return getCantieriCache().filter { it.clienteId == clienteId }.map { it.normalizeDates() }
     }
 
     override suspend fun getImpiantiForCantiere(cantiereId: String): List<Impianto> = mutex.withLock {
@@ -281,12 +328,13 @@ class JsonManutenzioneRepository(
     // === Cantieri CRUD ===
 
     override suspend fun salvaCantiere(cantiere: Cantiere) = mutex.withLock {
+        val normalized = cantiere.normalizeDates()
         val list = getCantieriCache()
-        val index = list.indexOfFirst { it.id == cantiere.id }
+        val index = list.indexOfFirst { it.id == normalized.id }
         if (index >= 0) {
-            list[index] = cantiere
+            list[index] = normalized
         } else {
-            list.add(cantiere)
+            list.add(normalized)
         }
         saveToDisk()
     }
@@ -296,7 +344,7 @@ class JsonManutenzioneRepository(
         val index = list.indexOfFirst { it.id == id }
         if (index >= 0) {
             val cantiere = list[index]
-            list[index] = cantiere.copy(nome = newName)
+            list[index] = cantiere.copy(nome = newName).normalizeDates()
             saveToDisk()
         }
     }
@@ -347,5 +395,136 @@ class JsonManutenzioneRepository(
 
     override suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato> = mutex.withLock {
         return getCatalogoApprovatoCache().filter { it.etimClassId == etimClassId }
+    }
+
+    // === Storicizzazione Sessioni di Verifica (Wave 4: R25, R30) ===
+    override suspend fun salvaSessioneVerifica(sessione: manutenzioni.domain.model.SessioneVerifica) = mutex.withLock {
+        val list = getSessioniVerificaCache()
+        val index = list.indexOfFirst { it.id == sessione.id }
+        if (index >= 0) {
+            list[index] = sessione
+        } else {
+            list.add(0, sessione)
+        }
+        saveToDisk()
+    }
+
+    override suspend fun getSessioniPerCantiere(cantiereId: String): List<manutenzioni.domain.model.SessioneVerifica> = mutex.withLock {
+        return getSessioniVerificaCache().filter { it.cantiereId == cantiereId }
+    }
+
+    override suspend fun eliminaSessioneVerifica(id: String) = mutex.withLock {
+        val list = getSessioniVerificaCache()
+        list.removeAll { it.id == id }
+        saveToDisk()
+    }
+
+    // === Gestione Utenti & RBAC (Wave 4: R31) ===
+    override suspend fun caricaUtenti(): List<manutenzioni.domain.model.Utente> = mutex.withLock {
+        return getUtentiCache().toList()
+    }
+
+    override suspend fun salvaUtente(utente: manutenzioni.domain.model.Utente) = mutex.withLock {
+        val list = getUtentiCache()
+        val index = list.indexOfFirst { it.id == utente.id }
+        if (index >= 0) {
+            list[index] = utente
+        } else {
+            list.add(utente)
+        }
+        saveToDisk()
+    }
+
+    override suspend fun eliminaUtente(id: String) = mutex.withLock {
+        val list = getUtentiCache()
+        if (list.count { it.ruolo == manutenzioni.domain.model.RuoloUtente.ADMIN && it.id != id } > 0 ||
+            list.firstOrNull { it.id == id }?.ruolo != manutenzioni.domain.model.RuoloUtente.ADMIN
+        ) {
+            list.removeAll { it.id == id }
+            saveToDisk()
+        }
+    }
+
+    // === Eventi di Manutenzione & Scheduler Ricorrenze ===
+
+    override suspend fun salvaEventoManutenzione(evento: manutenzioni.domain.model.EventoManutenzione) = mutex.withLock {
+        val list = getEventiManutenzioneCache()
+        val index = list.indexOfFirst { it.id == evento.id }
+        if (index >= 0) {
+            list[index] = evento
+        } else {
+            list.add(evento)
+        }
+        saveToDisk()
+    }
+
+    override suspend fun salvaEventiManutenzioneBatch(eventi: List<manutenzioni.domain.model.EventoManutenzione>) = mutex.withLock {
+        val list = getEventiManutenzioneCache()
+        eventi.forEach { evento ->
+            val index = list.indexOfFirst { it.id == evento.id }
+            if (index >= 0) {
+                list[index] = evento
+            } else {
+                list.add(evento)
+            }
+        }
+        saveToDisk()
+    }
+
+    override suspend fun caricaEventiManutenzione(): List<manutenzioni.domain.model.EventoManutenzione> = mutex.withLock {
+        return getEventiManutenzioneCache().toList()
+    }
+
+    override suspend fun caricaEventiPerMese(annoMese: String): List<manutenzioni.domain.model.EventoManutenzione> = mutex.withLock {
+        // annoMese nel formato "yyyy-MM" (es. "2026-10") o "yyyy_MM"
+        val normalized = annoMese.replace("_", "-")
+        return getEventiManutenzioneCache().filter { ev ->
+            val d = ev.dataPianificata.trim()
+            val parts = d.split("/", "-", ".")
+            if (parts.size == 3) {
+                val y = if (parts[0].length == 4) parts[0] else parts[2]
+                val m = (if (parts[0].length == 4) parts[1] else parts[1]).padStart(2, '0')
+                "$y-$m" == normalized
+            } else false
+        }
+    }
+
+    override suspend fun caricaEventiPerCantiere(cantiereId: String): List<manutenzioni.domain.model.EventoManutenzione> = mutex.withLock {
+        return getEventiManutenzioneCache().filter { it.cantiereId == cantiereId }
+    }
+
+    override suspend fun eliminaEventoManutenzione(id: String, eliminaSerieFutura: Boolean) = mutex.withLock {
+        val list = getEventiManutenzioneCache()
+        val target = list.find { it.id == id }
+        if (target != null && eliminaSerieFutura && !target.serieRicorrenzaId.isNullOrBlank()) {
+            val serieId = target.serieRicorrenzaId
+            val baseDate = manutenzioni.domain.service.CalendarioScadenzeCalculator.parseDataRiferimento(target.dataPianificata)
+            list.removeAll { ev ->
+                ev.serieRicorrenzaId == serieId &&
+                    manutenzioni.domain.service.CalendarioScadenzeCalculator.parseDataRiferimento(ev.dataPianificata) >= baseDate
+            }
+        } else {
+            list.removeAll { it.id == id }
+        }
+        saveToDisk()
+    }
+
+    override suspend fun aggiornaStatoEvento(
+        id: String,
+        nuovoStato: manutenzioni.domain.model.StatoEventoManutenzione,
+        dataCompletamento: String?
+    ) = mutex.withLock {
+        val list = getEventiManutenzioneCache()
+        val index = list.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            val corrente = list[index]
+            list[index] = corrente.copy(
+                stato = nuovoStato,
+                dataCompletamentoEffettiva = if (nuovoStato == manutenzioni.domain.model.StatoEventoManutenzione.COMPLETATO) {
+                    dataCompletamento ?: corrente.dataPianificata
+                } else corrente.dataCompletamentoEffettiva
+            )
+            saveToDisk()
+        }
     }
 }

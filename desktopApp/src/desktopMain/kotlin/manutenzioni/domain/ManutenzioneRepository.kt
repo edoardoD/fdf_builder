@@ -34,4 +34,23 @@ interface ManutenzioneRepository {
     suspend fun caricaCatalogoApprovato(): List<manutenzioni.domain.model.ComponenteApprovato>
     suspend fun salvaOAggiornaComponenteApprovato(approvato: manutenzioni.domain.model.ComponenteApprovato)
     suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato>
+
+    // --- Storicizzazione Sessioni di Verifica (Wave 4: R25, R30) ---
+    suspend fun salvaSessioneVerifica(sessione: manutenzioni.domain.model.SessioneVerifica) {}
+    suspend fun getSessioniPerCantiere(cantiereId: String): List<manutenzioni.domain.model.SessioneVerifica> = emptyList()
+    suspend fun eliminaSessioneVerifica(id: String) {}
+
+    // --- Gestione Utenti & RBAC (Wave 4: R31) ---
+    suspend fun caricaUtenti(): List<manutenzioni.domain.model.Utente> = emptyList()
+    suspend fun salvaUtente(utente: manutenzioni.domain.model.Utente) {}
+    suspend fun eliminaUtente(id: String) {}
+
+    // --- Eventi di Manutenzione & Scheduler Ricorrenze ---
+    suspend fun salvaEventoManutenzione(evento: manutenzioni.domain.model.EventoManutenzione) {}
+    suspend fun salvaEventiManutenzioneBatch(eventi: List<manutenzioni.domain.model.EventoManutenzione>) {}
+    suspend fun caricaEventiManutenzione(): List<manutenzioni.domain.model.EventoManutenzione> = emptyList()
+    suspend fun caricaEventiPerMese(annoMese: String): List<manutenzioni.domain.model.EventoManutenzione> = emptyList()
+    suspend fun caricaEventiPerCantiere(cantiereId: String): List<manutenzioni.domain.model.EventoManutenzione> = emptyList()
+    suspend fun eliminaEventoManutenzione(id: String, eliminaSerieFutura: Boolean = false) {}
+    suspend fun aggiornaStatoEvento(id: String, nuovoStato: manutenzioni.domain.model.StatoEventoManutenzione, dataCompletamento: String? = null) {}
 }

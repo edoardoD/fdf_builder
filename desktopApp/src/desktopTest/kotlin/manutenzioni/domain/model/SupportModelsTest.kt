@@ -83,8 +83,8 @@ class SupportModelsTest {
     @Test
     fun `MqtSwitchType ha label corrette`() {
         assertEquals("SF6", MqtSwitchType.SF6.label)
-        assertEquals("Vuoto", MqtSwitchType.VUOTO.label)
-        assertEquals("Aria", MqtSwitchType.ARIA.label)
+        assertEquals("ISV", MqtSwitchType.ISV.label)
+        assertEquals("IVOR", MqtSwitchType.IVOR.label)
     }
 
     // =========== LAMPADA EMERGENZA ===========

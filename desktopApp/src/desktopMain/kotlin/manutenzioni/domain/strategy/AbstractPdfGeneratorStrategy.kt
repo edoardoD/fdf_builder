@@ -2,6 +2,7 @@ package manutenzioni.domain.strategy
 
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.Periodo
+import manutenzioni.domain.model.QuadroBT
 import manutenzioni.domain.model.BatchResult
 import java.io.File
 
@@ -40,14 +41,21 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
         frequenza: Periodo,
         outputPath: String,
         clienteNome: String? = null,
-        contextImpianti: List<Impianto> = emptyList()
+        contextImpianti: List<Impianto> = emptyList(),
+        cantiereNome: String? = null,
+        dataInizioIntervento: String? = null,
+        nomeManutentore: String? = null,
+        firmaManutentore: String? = null,
+        dataInizioContratto: String? = null,
+        dataIntervento: String? = null,
+        dataInterventoPrecedente: String? = null
     ): File
 
     /**
      * Implementazione batch: itera su `generate()` N volte, gestendo
      * naming progressivo, callback di progresso ed errori parziali.
      *
-     * Se `copies == 1`, il file ha il nome base (retrocompatibilità UX).
+     * Naming standard (R22): `{SIGLA_O_COD}_{PERIODICITA}.pdf` (es. `QG_06.pdf`, `Q1_06.pdf`, `QG_1.pdf`, `GE_06.pdf`).
      * Se `copies > 1`, ogni file ha il suffisso `_copia_{i}`.
      */
     override fun generateBatch(
@@ -57,11 +65,23 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
         copies: Int,
         clienteNome: String?,
         contextImpianti: List<Impianto>,
-        onProgress: (current: Int, total: Int) -> Unit
+        cantiereNome: String?,
+        dataInizioIntervento: String?,
+        nomeManutentore: String?,
+        firmaManutentore: String?,
+        onProgress: (current: Int, total: Int) -> Unit,
+        dataInizioContratto: String?,
+        dataIntervento: String?,
+        dataInterventoPrecedente: String?
     ): BatchResult {
         require(copies >= 1) { "Il numero di copie deve essere >= 1" }
 
-        val baseName = "${impianto.codIntervento}_${frequenza.label().replace(" ", "_")}"
+        val prefix = if (impianto is QuadroBT && impianto.sigla.isNotBlank()) {
+            impianto.sigla.trim().replace(" ", "_").replace("/", "-").replace("\\", "-")
+        } else {
+            impianto.codIntervento.trim().replace(" ", "_")
+        }
+        val baseName = "${prefix}_${frequenza.codiceCartiglio()}"
         val generatedFiles = mutableListOf<File>()
         val errors = mutableMapOf<Int, String>()
 
@@ -73,7 +93,20 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
                     "${baseName}_copia_$i.pdf"
                 }
                 val outputPath = File(outputDir, fileName).absolutePath
-                val file = generate(impianto, frequenza, outputPath, clienteNome, contextImpianti)
+                val file = generate(
+                    impianto = impianto,
+                    frequenza = frequenza,
+                    outputPath = outputPath,
+                    clienteNome = clienteNome,
+                    contextImpianti = contextImpianti,
+                    cantiereNome = cantiereNome,
+                    dataInizioIntervento = dataInizioIntervento,
+                    nomeManutentore = nomeManutentore,
+                    firmaManutentore = firmaManutentore,
+                    dataInizioContratto = dataInizioContratto,
+                    dataIntervento = dataIntervento,
+                    dataInterventoPrecedente = dataInterventoPrecedente
+                )
                 generatedFiles.add(file)
             } catch (e: Exception) {
                 errors[i] = e.message ?: "Errore sconosciuto"
