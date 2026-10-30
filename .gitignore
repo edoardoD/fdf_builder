@@ -168,3 +168,5 @@ prova.html
 *.dmg
 *.pkg
 wave2Release/
+*.code-workspace
+

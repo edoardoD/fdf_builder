@@ -78,7 +78,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "ManutenzioniMaker"
-            packageVersion = "3.1.0"
+            packageVersion = "4.0.0"
             description = "Generatore schede di manutenzione periodica con PDF AcroForm"
             vendor = "Manutenzioni Maker"
 

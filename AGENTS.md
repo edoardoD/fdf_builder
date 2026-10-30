@@ -1,6 +1,6 @@
 # 🤖 AGENTS.md — Memoria Operativa & Manuale di Ingaggio
 
-> **Versione:** 3.1 — **Data:** 2026-10-08
+> **Versione:** 4.0 — **Data:** 2026-10-30
 > **Stato:** Documento vivente. Aggiorna dopo ogni milestone architetturale.
 
 ---
@@ -31,7 +31,7 @@
 | Visual Component Support | OpenJFX (JavaFX) | `21.0.2` | `javafx-base`, `controls`, `graphics` |
 | Concorrenza | `kotlinx-coroutines` | `1.9.0` | `core`, `swing`, `test` |
 | Build System | Gradle KTS + Version Catalog | — | `gradle/libs.versions.toml` |
-| Application Version | SemVer Desktop | **3.1.0** | `packageVersion = "3.1.0"` |
+| Application Version | SemVer Desktop | **4.0.0** | `packageVersion = "4.0.0"` |
 
 ---
 
