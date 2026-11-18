@@ -19,7 +19,6 @@ kotlin {
         val desktopMain by getting {
 
             dependencies {
-                implementation(project(":common"))
                 implementation(compose.desktop.currentOs)
                 implementation(compose.materialIconsExtended)
 
@@ -39,26 +38,6 @@ kotlin {
                 // Coroutines
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.swing)
-
-                // Ktor HTTP Client
-                implementation(libs.ktor.client.core)
-                implementation(libs.ktor.client.cio)
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.ktor.client.auth)
-
-                // JavaFX
-                val osName = System.getProperty("os.name")
-                val javafxPlatform = when {
-                    osName.startsWith("Mac", ignoreCase = true) -> "mac"
-                    osName.startsWith("Win", ignoreCase = true) -> "win"
-                    osName.startsWith("Linux", ignoreCase = true) -> "linux"
-                    else -> throw GradleException("Unsupported OS for JavaFX: $osName")
-                }
-
-                implementation("org.openjfx:javafx-base:21.0.2:$javafxPlatform")
-                implementation("org.openjfx:javafx-controls:21.0.2:$javafxPlatform")
-                implementation("org.openjfx:javafx-graphics:21.0.2:$javafxPlatform")
             }
         }
 

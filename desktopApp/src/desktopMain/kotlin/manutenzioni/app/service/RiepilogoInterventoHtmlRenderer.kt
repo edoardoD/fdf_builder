@@ -36,7 +36,7 @@ class RiepilogoInterventoHtmlRenderer {
         val cantiereIndirizzo = escapeHtml(cantiere.indirizzo ?: "-")
         val dataContratto = escapeHtml(cantiere.dataInizioContratto ?: "")
         val dataPrecedente = escapeHtml(cantiere.dataInterventoPrecedente ?: "")
-        val dataIntervento = escapeHtml(cantiere.effectiveDataIntervento ?: "")
+        val dataIntervento = escapeHtml(cantiere.dataIntervento ?: "")
         val manutentore = escapeHtml(cantiere.nomeManutentore ?: "")
         val firmaHtml = if (!cantiere.firmaManutentore.isNullOrBlank()) {
             """<img src="${cantiere.firmaManutentore.trim()}" alt="Firma" style="max-height: 0.9cm; max-width: 3.5cm; object-fit: contain;" />"""

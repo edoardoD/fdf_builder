@@ -1,10 +1,17 @@
 package manutenzioni.app.strategy
 
 import kotlinx.coroutines.runBlocking
+import manutenzioni.app.data.JsonManutenzioneRepository
 import manutenzioni.app.data.MongoManutenzioneRepository
+import manutenzioni.domain.ManutenzioneRepository
+import manutenzioni.domain.model.Cantiere
+import manutenzioni.domain.model.Cliente
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.Periodo
 import manutenzioni.domain.service.FrequencyFilter
+import java.io.File
+import java.net.InetSocketAddress
+import java.net.Socket
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -24,7 +31,8 @@ import kotlin.test.assertTrue
  * la `quantita` dell'impianto nel DB: se è > 1, quella è la causa
  * (il ViewModel passa `copies = impianto.quantita` → batch indesiderato).
  *
- * Prerequisito: MongoDB in ascolto su localhost:27017 con DB manutenzioni_db.
+ * Prerequisito: MongoDB in ascolto su localhost:27017 con DB manutenzioni_db
+ * (oppure fallback ermetico su JsonManutenzioneRepository temporaneo se MongoDB è offline).
  */
 class PdfGenerationVillaIgeaTest {
 
@@ -33,10 +41,64 @@ class PdfGenerationVillaIgeaTest {
         private const val DB_NAME      = "manutenzioni_db"
         private const val CLIENTE_NOME = "Ospedali Privati"
         private const val CANTIERE_NOME = "Villa Igea"
+
+        private fun isMongoAvailable(): Boolean = try {
+            Socket().use { socket ->
+                socket.connect(InetSocketAddress("localhost", 27017), 200)
+                true
+            }
+        } catch (_: Exception) {
+            false
+        }
     }
 
-    private val repo     = MongoManutenzioneRepository(MONGO_URI, DB_NAME)
+    private val repo: ManutenzioneRepository by lazy {
+        if (isMongoAvailable()) {
+            val mongoRepo = MongoManutenzioneRepository(MONGO_URI, DB_NAME)
+            val hasVillaIgea = runBlocking {
+                val cli = mongoRepo.caricaClienti().firstOrNull { it.nome.equals(CLIENTE_NOME, ignoreCase = true) }
+                val cant = cli?.let { c ->
+                    mongoRepo.getCantieriForCliente(c.id).firstOrNull { it.nome.equals(CANTIERE_NOME, ignoreCase = true) }
+                }
+                cant != null
+            }
+            if (hasVillaIgea) mongoRepo else createFallbackJsonRepository()
+        } else {
+            createFallbackJsonRepository()
+        }
+    }
     private val strategy = HtmlToPdfStrategy()
+
+    private fun createFallbackJsonRepository(): ManutenzioneRepository {
+        val tempFile = Files.createTempFile("villa_igea_test_", ".json").toFile().apply { deleteOnExit() }
+        val resourceText = javaClass.classLoader.getResourceAsStream("manutenzioni_db.json")
+            ?.bufferedReader()?.use { it.readText() }
+            ?: File("desktopApp/src/desktopMain/resources/manutenzioni_db.json").takeIf { it.exists() }?.readText()
+        if (resourceText != null) {
+            tempFile.writeText(resourceText)
+        }
+        val jsonRepo = JsonManutenzioneRepository(tempFile)
+        runBlocking {
+            val cliente = Cliente(id = "cli-ospedali-privati", nome = CLIENTE_NOME)
+            val cantiere = Cantiere(id = "cant-villa-igea", clienteId = cliente.id, nome = CANTIERE_NOME)
+            jsonRepo.salvaCliente(cliente)
+            jsonRepo.salvaCantiere(cantiere)
+            val templates = jsonRepo.caricaImpianti().filter { it.cantiereId == null }
+            for (cod in listOf("AMB", "PEM")) {
+                val tpl = templates.firstOrNull { it.codIntervento.equals(cod, ignoreCase = true) }
+                if (tpl != null) {
+                    jsonRepo.salvaImpianto(
+                        tpl.copyWithBasicParams(
+                            id = "imp-${cod.lowercase()}-villa-igea",
+                            cantiereId = cantiere.id,
+                            quantita = 1
+                        )
+                    )
+                }
+            }
+        }
+        return jsonRepo
+    }
 
     // ─── Navigazione dati ────────────────────────────────────────────────────
 

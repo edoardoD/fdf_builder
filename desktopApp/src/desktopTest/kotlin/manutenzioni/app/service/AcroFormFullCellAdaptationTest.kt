@@ -45,15 +45,17 @@ class AcroFormFullCellAdaptationTest {
         )
 
         val html = htmlService.buildHtml(
-            impianto = quadro,
-            attivitaFiltrate = attivitaList,
-            frequenza = Periodo(TipoPeriodo.A, 1),
-            clienteNome = "Azienda Alfa S.r.l.",
-            cantiereNome = "Sede Principale",
-            dataInizioContratto = "01/01/2026",
-            dataInterventoPrecedente = "01/07/2025",
-            dataInizioIntervento = "15/01/2026",
-            nomeManutentore = "Mario Rossi"
+            manutenzioni.domain.service.HtmlRenderContext(
+                impianto = quadro,
+                attivita = attivitaList,
+                frequenza = Periodo(TipoPeriodo.A, 1),
+                clienteNome = "Azienda Alfa S.r.l.",
+                cantiereNome = "Sede Principale",
+                dataInizioContratto = "01/01/2026",
+                dataInterventoPrecedente = "01/07/2025",
+                dataIntervento = "15/01/2026",
+                nomeManutentore = "Mario Rossi"
+            )
         )
 
         val tempHtml = File.createTempFile("test_foglio1_", ".html")
@@ -131,13 +133,15 @@ class AcroFormFullCellAdaptationTest {
         )
 
         val html = htmlService.buildHtml(
-            impianto = quadro,
-            attivitaFiltrate = attivitaList,
-            frequenza = Periodo(TipoPeriodo.A, 1),
-            clienteNome = "Ospedale Regionale",
-            cantiereNome = "Presidio Ovest",
-            dataInizioContratto = "10/02/2026",
-            nomeManutentore = "Ing. Bianchi"
+            manutenzioni.domain.service.HtmlRenderContext(
+                impianto = quadro,
+                attivita = attivitaList,
+                frequenza = Periodo(TipoPeriodo.A, 1),
+                clienteNome = "Ospedale Regionale",
+                cantiereNome = "Presidio Ovest",
+                dataInizioContratto = "10/02/2026",
+                nomeManutentore = "Ing. Bianchi"
+            )
         )
 
         val tempHtml = File.createTempFile("test_foglio2_", ".html")
@@ -178,7 +182,7 @@ class AcroFormFullCellAdaptationTest {
             indirizzo = "Via Dante 10",
             dataInizioContratto = "01/01/2026",
             dataInterventoPrecedente = "01/07/2025",
-            dataInizioIntervento = "20/01/2026",
+            dataIntervento = "20/01/2026",
             nomeManutentore = "Tecnico Specializzato"
         )
         val cliente = Cliente(id = "cl-1", nome = "Gruppo Immobiliare")

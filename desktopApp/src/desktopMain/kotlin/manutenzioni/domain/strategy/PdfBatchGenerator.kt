@@ -11,8 +11,7 @@ import java.io.File
  * Espone **un unico punto d'ingresso**: `generateBatch(...)`.
  * Il caso singolo (1 copia) è un sottoinsieme naturale di N copie con `copies = 1`.
  *
- * Questo contratto sostituisce la vecchia `PdfGeneratorStrategy` (ora deprecata)
- * e incapsula il dettaglio implementativo di `generate()` all'interno
+ * Incapsula il dettaglio implementativo di `generate()` all'interno
  * della classe astratta `AbstractPdfGeneratorStrategy`.
  *
  * @see AbstractPdfGeneratorStrategy per l'implementazione base
@@ -38,7 +37,6 @@ interface PdfBatchGenerator {
         clienteNome: String? = null,
         contextImpianti: List<Impianto> = emptyList(), // Impianti di contesto (tutti quelli del cantiere) per filtraggio avanzato
         cantiereNome: String? = null,
-        dataInizioIntervento: String? = null,
         nomeManutentore: String? = null,
         firmaManutentore: String? = null,
         onProgress: (current: Int, total: Int) -> Unit = { _, _ -> },
@@ -46,4 +44,37 @@ interface PdfBatchGenerator {
         dataIntervento: String? = null,
         dataInterventoPrecedente: String? = null
     ): BatchResult
+
+    /**
+     * Generazione batch asincrona non bloccante su coroutine.
+     */
+    suspend fun generateBatchAsync(
+        impianto: Impianto,
+        frequenza: Periodo,
+        outputDir: File,
+        copies: Int,
+        clienteNome: String? = null,
+        contextImpianti: List<Impianto> = emptyList(),
+        cantiereNome: String? = null,
+        nomeManutentore: String? = null,
+        firmaManutentore: String? = null,
+        onProgress: (current: Int, total: Int) -> Unit = { _, _ -> },
+        dataInizioContratto: String? = null,
+        dataIntervento: String? = null,
+        dataInterventoPrecedente: String? = null
+    ): BatchResult = generateBatch(
+        impianto = impianto,
+        frequenza = frequenza,
+        outputDir = outputDir,
+        copies = copies,
+        clienteNome = clienteNome,
+        contextImpianti = contextImpianti,
+        cantiereNome = cantiereNome,
+        nomeManutentore = nomeManutentore,
+        firmaManutentore = firmaManutentore,
+        onProgress = onProgress,
+        dataInizioContratto = dataInizioContratto,
+        dataIntervento = dataIntervento,
+        dataInterventoPrecedente = dataInterventoPrecedente
+    )
 }

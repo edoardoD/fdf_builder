@@ -10,9 +10,10 @@ import manutenzioni.app.data.ManutenzioniDatabase
 import manutenzioni.app.service.HtmlService
 import manutenzioni.app.service.attachments.QuadroBtAttachmentProvider
 import manutenzioni.app.ui.ManutenzioniViewModel
-import manutenzioni.app.ui.resolveTemporalSubfolderName
+import manutenzioni.app.ui.coordinators.PdfBatchCoordinator
 import manutenzioni.domain.ManutenzioneRepository
 import manutenzioni.domain.model.*
+import manutenzioni.domain.service.HtmlRenderContext
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.*
@@ -55,10 +56,12 @@ class Wave3BatchAndLayoutTest {
         )
 
         val html = htmlService.buildHtml(
-            impianto = impianto,
-            attivitaFiltrate = impianto.listaAttivita,
-            frequenza = Periodo(TipoPeriodo.M, 6),
-            clienteNome = "Clinica San Luca"
+            HtmlRenderContext(
+                impianto = impianto,
+                attivita = impianto.listaAttivita,
+                frequenza = Periodo(TipoPeriodo.M, 6),
+                clienteNome = "Clinica San Luca"
+            )
         )
 
         // R23: Periodicità nel cartiglio a 2 cifre ("06")
@@ -108,10 +111,10 @@ class Wave3BatchAndLayoutTest {
 
     @Test
     fun `R29 - resolveTemporalSubfolderName estrae YYYY_MM da vari formati data`() {
-        assertEquals("2026_10", resolveTemporalSubfolderName("16/10/2026"))
-        assertEquals("2026_03", resolveTemporalSubfolderName("5/3/2026"))
-        assertEquals("2025_12", resolveTemporalSubfolderName("2025-12-31"))
-        assertEquals("2026_06", resolveTemporalSubfolderName("06/2026"))
+        assertEquals("2026_10", PdfBatchCoordinator.resolveTemporalSubfolderName("16/10/2026"))
+        assertEquals("2026_03", PdfBatchCoordinator.resolveTemporalSubfolderName("5/3/2026"))
+        assertEquals("2025_12", PdfBatchCoordinator.resolveTemporalSubfolderName("2025-12-31"))
+        assertEquals("2026_06", PdfBatchCoordinator.resolveTemporalSubfolderName("06/2026"))
     }
 
     @Test
@@ -121,7 +124,7 @@ class Wave3BatchAndLayoutTest {
             id = "cant-w3",
             nome = "Stabilimento Nord",
             clienteId = cliente.id,
-            dataInizioIntervento = "15/10/2026",
+            dataIntervento = "15/10/2026",
             nomeManutentore = "Ing. Giuseppe Verdi"
         )
 
@@ -226,7 +229,7 @@ class Wave3BatchAndLayoutTest {
             id = "cant-r11",
             nome = "Padiglione Chirurgia",
             clienteId = cliente.id,
-            dataInizioIntervento = "16/10/2026",
+            dataIntervento = "16/10/2026",
             nomeManutentore = "Marco Neri"
         )
 
@@ -360,7 +363,7 @@ class Wave3BatchAndLayoutTest {
             nome = "Sede Principale",
             clienteId = cliente.id,
             dataInizioContratto = "01/01/2025",
-            dataInizioIntervento = "10/05/2026",
+            dataIntervento = "10/05/2026",
             dataInterventoPrecedente = "10/11/2025",
             nomeManutentore = "Tecnico Rossi"
         )
@@ -398,7 +401,6 @@ class Wave3BatchAndLayoutTest {
         val updatedCantiere = viewModel.uiState.value.selectedCantiere
         assertNotNull(updatedCantiere)
         assertEquals("20/10/2026", updatedCantiere.dataIntervento)
-        assertEquals("20/10/2026", updatedCantiere.dataInizioIntervento)
         assertEquals("Ing. Bianchi", updatedCantiere.nomeManutentore)
         assertEquals("01/01/2024", updatedCantiere.dataInizioContratto)
         assertEquals("15/04/2026", updatedCantiere.dataInterventoPrecedente)
@@ -428,6 +430,62 @@ class Wave3BatchAndLayoutTest {
             assertEquals("20/10/2026", repoCantiere.dataInterventoPrecedente)
         } finally {
             tempDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `TUTTI i 20 template impianti di manutenzioni_db generano 30 righe in 1 unica pagina A4 con campo Firma ampio e premessa pulita`() {
+        val stream = this::class.java.classLoader?.getResourceAsStream("manutenzioni_db.json")
+        assertNotNull(stream, "manutenzioni_db.json deve essere presente nelle resources")
+        val content = stream.bufferedReader().use { it.readText() }
+        val json = Json {
+            ignoreUnknownKeys = true
+            classDiscriminator = "type"
+        }
+        val db = json.decodeFromString(ManutenzioniDatabase.serializer(), content)
+        val pdfEngine = manutenzioni.app.service.Pdf()
+
+        assertTrue(db.impianti.isNotEmpty(), "Il database deve contenere i template degli impianti")
+
+        for (imp in db.impianti) {
+            val html = htmlService.buildHtml(
+                HtmlRenderContext(
+                    impianto = imp,
+                    attivita = imp.listaAttivita.take(30),
+                    frequenza = Periodo(TipoPeriodo.A, 5),
+                    clienteNome = "Ospedali Privati Forlì",
+                    cantiereNome = "Villa Igea",
+                    dataIntervento = "10/11/2026",
+                    nomeManutentore = "Ing. Edoardo Desiderio"
+                )
+            )
+
+            val tempHtml = File.createTempFile("a4_single_page_${imp.codIntervento}_", ".html")
+            val tempPdf = File.createTempFile("a4_single_page_${imp.codIntervento}_", ".pdf")
+            try {
+                tempHtml.writeText(html)
+                pdfEngine.buildPdf(tempHtml.absolutePath, tempPdf.absolutePath)
+
+                PdfReader(tempPdf).use { reader ->
+                    PdfDocument(reader).use { pdfDoc ->
+                        assertEquals(
+                            1,
+                            pdfDoc.numberOfPages,
+                            "Il Foglio 1 da 30 righe dell'impianto '${imp.codIntervento}' (${imp.listaAttivita.size} attività) deve restare su 1 unica pagina A4, ma ha generato ${pdfDoc.numberOfPages} pagine!"
+                        )
+                        val form = PdfAcroForm.getAcroForm(pdfDoc, false)
+                        assertNotNull(form)
+                        val manutentoreField = form.getField("manutentore")
+                        assertNotNull(manutentoreField, "Il campo manutentore deve esistere nel PDF")
+                        val rect = manutentoreField.widgets.firstOrNull()?.rectangle?.toRectangle()
+                        assertNotNull(rect)
+                        assertTrue(rect.height >= 20f, "Il riquadro Verificatore/Firma deve essere ampio (>= 20pt), trovato: ${rect.height}pt")
+                    }
+                }
+            } finally {
+                tempHtml.delete()
+                tempPdf.delete()
+            }
         }
     }
 

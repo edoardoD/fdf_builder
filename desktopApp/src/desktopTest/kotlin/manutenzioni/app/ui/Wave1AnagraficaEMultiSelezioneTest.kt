@@ -3,6 +3,7 @@ package manutenzioni.app.ui
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import manutenzioni.app.data.JsonManutenzioneRepository
+import manutenzioni.app.ui.coordinators.ImpiantoSelectionCoordinator
 import manutenzioni.domain.model.Attivita
 import manutenzioni.domain.model.Cantiere
 import manutenzioni.domain.model.Cliente
@@ -36,7 +37,7 @@ class Wave1AnagraficaEMultiSelezioneTest {
     @BeforeTest
     fun setup() {
         val userHome = System.getProperty("user.home")
-        testDbFile = File(File(userHome, ".manutenzioni-maker"), testDbFileName)
+        testDbFile = File(File(userHome, ".manutenzioni_maker"), testDbFileName)
         if (testDbFile.exists()) testDbFile.delete()
         repo = JsonManutenzioneRepository(testDbFileName)
         viewModel = ManutenzioniViewModel(repository = repo)
@@ -80,7 +81,7 @@ class Wave1AnagraficaEMultiSelezioneTest {
         repo.salvaCliente(cliente)
         val cantiere = Cantiere(
             id = "can-w1", nome = "Sede", clienteId = cliente.id,
-            dataInizioIntervento = "01/10/2026", nomeManutentore = "Mario Rossi"
+            dataIntervento = "01/10/2026", nomeManutentore = "Mario Rossi"
         )
         repo.salvaCantiere(cantiere)
         viewModel.selectCliente(cliente)
@@ -92,7 +93,7 @@ class Wave1AnagraficaEMultiSelezioneTest {
         val salvato = repo.getCantieriForCliente(cliente.id).first()
         assertEquals("Sede Centrale", salvato.nome)
         assertEquals("Via Milano 10, Torino", salvato.indirizzo)
-        assertEquals("01/10/2026", salvato.dataInizioIntervento)
+        assertEquals("01/10/2026", salvato.dataIntervento)
         assertEquals("Mario Rossi", salvato.nomeManutentore)
 
         // Indirizzo vuoto viene normalizzato a null
@@ -141,8 +142,8 @@ class Wave1AnagraficaEMultiSelezioneTest {
     @Test
     fun `instantiateTemplateForCantiere genera copia indipendente`() {
         val tpl = ImpiantoStandard(id = "tpl-x", codIntervento = "X", nomeCompleto = "X", premessa = null, listaAttivita = emptyList(), quantita = 5)
-        val a = instantiateTemplateForCantiere(tpl, "can-1")
-        val b = instantiateTemplateForCantiere(tpl, "can-1")
+        val a = ImpiantoSelectionCoordinator.instantiateTemplateForCantiere(tpl, "can-1")
+        val b = ImpiantoSelectionCoordinator.instantiateTemplateForCantiere(tpl, "can-1")
         assertNotEquals(tpl.id, a.id)
         assertNotEquals(a.id, b.id)
         assertEquals("can-1", a.cantiereId)

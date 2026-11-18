@@ -57,21 +57,21 @@ class EmergenzaAttachmentProvider : TechnicalAttachmentProvider {
             val noteFieldName = "emerg_note_${emerg.codIntervento}_$rowNum"
 
             val cells = listOf(
-                TechnicalCell.Text(rowNum.toString(), fontSizePt = 6.0),
-                TechnicalCell.Text(lampada.sigla, bold = true, fontSizePt = 6.0),
-                TechnicalCell.Text(lampada.posizione ?: "", align = CellTextAlign.LEFT, fontSizePt = 5.5),
-                TechnicalCell.Text(lampada.modello, align = CellTextAlign.LEFT, fontSizePt = 5.5),
-                TechnicalCell.Text(lampada.produttore ?: "", align = CellTextAlign.CENTER, fontSizePt = 5.5),
-                TechnicalCell.Text(lampada.autonomia, fontSizePt = 6.0),
-                TechnicalCell.Text(lampada.dataUltimoCambioBatteria ?: "", fontSizePt = 5.5),
+                TechnicalCell.Text(rowNum.toString(), fontSizePt = 7.5),
+                TechnicalCell.Text(lampada.sigla, bold = true, fontSizePt = 7.5),
+                TechnicalCell.Text(lampada.posizione ?: "", align = CellTextAlign.LEFT, fontSizePt = 7.2),
+                TechnicalCell.Text(lampada.modello, align = CellTextAlign.LEFT, fontSizePt = 7.2),
+                TechnicalCell.Text(lampada.produttore ?: "", align = CellTextAlign.CENTER, fontSizePt = 7.2),
+                TechnicalCell.Text(lampada.autonomia, fontSizePt = 7.5),
+                TechnicalCell.Text(lampada.dataUltimoCambioBatteria ?: "", fontSizePt = 7.2),
                 TechnicalCell.Radio(funzRadioName, "OK", "Funzionamento OK"),
                 TechnicalCell.Radio(funzRadioName, "NON_OK", "Funzionamento NON OK"),
                 TechnicalCell.Radio(autRadioName, "OK", "Autonomia OK"),
                 TechnicalCell.Radio(autRadioName, "NON_OK", "Autonomia NON OK"),
-                TechnicalCell.TextInput(noteFieldName, label = "Note", fontSizePt = 7.5)
+                TechnicalCell.TextInput(noteFieldName, label = "Note", fontSizePt = 8.0)
             )
 
-            TechnicalRow(heightCm = 0.5, cells = cells)
+            TechnicalRow(heightCm = 0.58, cells = cells)
         }
 
         val isSicurezza = emerg.codIntervento.equals("IS", ignoreCase = true)

@@ -1,1 +1,0 @@
-./gradlew :desktopApp:packageMsi

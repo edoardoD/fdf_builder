@@ -43,7 +43,7 @@ class AntincendioWave2Test {
     )
 
     @Test
-    fun `R18 - Con 0 categorie attive genera esattamente le 10 attivita istituzionali`() {
+    fun `RI - Con 0 impianti collegati genera esattamente le 10 attivita istituzionali senza iniezioni legacy`() {
         val risolte = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impiantoRiBase,
             impiantiNelCantiere = emptyList(),
@@ -55,99 +55,65 @@ class AntincendioWave2Test {
     }
 
     @Test
-    fun `R18 - Con 1 categoria attiva inietta 1 prova dinamica al 50 percento (totale 11)`() {
-        val riCon1 = impiantoRiBase.withCategoria(CategoriaRivelatore.FUMO_PUNTIFORMI, true)
-
-        val risolte = CrossPlantAttivitaResolver.resolveAttivita(
-            impianto = riCon1,
-            impiantiNelCantiere = emptyList(),
-            frequenza = Periodo(TipoPeriodo.M, 6)
-        )
-
-        assertEquals(11, risolte.size, "10 istituzionali + 1 dinamica = 11 attività")
-        assertEquals((1..11).toList(), risolte.map { it.nAttivita })
-
-        val dinamica = risolte.last()
-        assertEquals(11, dinamica.nAttivita)
-        assertEquals("Verifica", dinamica.tipoAttivita)
-        assertEquals(Periodo(TipoPeriodo.M, 6), dinamica.frequenza)
-        assertTrue(dinamica.descrizione?.contains("Rivelatori di Fumo Puntiformi") == true)
-        assertTrue(dinamica.descrizione?.contains("prova sul 50% dell’impianto") == true)
-    }
-
-    @Test
-    fun `R18 - Con 3 categorie attive inietta 3 prove dinamiche (totale 13)`() {
-        val riCon3 = impiantoRiBase
-            .withCategoria(CategoriaRivelatore.FUMO_PUNTIFORMI, true)
-            .withCategoria(CategoriaRivelatore.CALORE_PUNTIFORMI, true)
-            .withCategoria(CategoriaRivelatore.ASPIRAZIONE, true)
-
-        val risolte = CrossPlantAttivitaResolver.resolveAttivita(
-            impianto = riCon3,
-            impiantiNelCantiere = emptyList(),
-            frequenza = Periodo(TipoPeriodo.M, 6)
-        )
-
-        assertEquals(13, risolte.size, "10 istituzionali + 3 dinamiche = 13 attività")
-        assertEquals((1..13).toList(), risolte.map { it.nAttivita })
-
-        val descrizioni = risolte.mapNotNull { it.descrizione }
-        assertTrue(descrizioni.any { it.contains("Rivelatori di Fumo Puntiformi") })
-        assertTrue(descrizioni.any { it.contains("Rivelatori di Calore Puntiformi") })
-        assertTrue(descrizioni.any { it.contains("Rivelazione ad Aspirazione") })
-    }
-
-    @Test
-    fun `R18 - Con tutte e 7 le categorie attive inietta 7 prove dinamiche (totale 17)`() {
-        var riCon7 = impiantoRiBase
-        CategoriaRivelatore.values().forEach { cat ->
-            riCon7 = riCon7.withCategoria(cat, true)
-        }
-
-        val risolte = CrossPlantAttivitaResolver.resolveAttivita(
-            impianto = riCon7,
-            impiantiNelCantiere = emptyList(),
-            frequenza = Periodo(TipoPeriodo.M, 6)
-        )
-
-        assertEquals(17, risolte.size, "10 istituzionali + 7 dinamiche = 17 attività")
-        assertEquals((1..17).toList(), risolte.map { it.nAttivita })
-
-        CategoriaRivelatore.values().forEach { cat ->
-            assertTrue(risolte.any { it.descrizione == cat.buildDescrizione() }, "Manca attività per ${cat.label}")
-        }
-    }
-
-    @Test
-    fun `R18 - Con impianto GE presente nel cantiere include anche attivita cross-plant con numerazione sequenziale`() {
+    fun `RI - Con impianto GE presente nel cantiere include attivita cross-plant con numerazione sequenziale`() {
         val ge = ImpiantoStandard(codIntervento = "GE", nomeCompleto = "Gruppo Elettrogeno")
-        val riCon1 = impiantoRiBase.withCategoria(CategoriaRivelatore.FUMO_PUNTIFORMI, true)
 
         val risolte = CrossPlantAttivitaResolver.resolveAttivita(
-            impianto = riCon1,
-            impiantiNelCantiere = listOf(riCon1, ge),
+            impianto = impiantoRiBase,
+            impiantiNelCantiere = listOf(impiantoRiBase, ge),
             frequenza = Periodo(TipoPeriodo.M, 6)
         )
 
-        assertEquals(12, risolte.size, "10 istituzionali + 1 dinamica + 1 GE = 12 attività")
-        assertEquals((1..12).toList(), risolte.map { it.nAttivita })
+        assertEquals(11, risolte.size, "10 istituzionali + 1 cross-plant GE = 11 attività")
+        assertEquals((1..11).toList(), risolte.map { it.nAttivita })
         assertTrue(risolte.any { it.targetImpiantoCod == "GE" })
     }
 
     @Test
-    fun `R19 - Serializzazione polimorfica di RilevazioneAntincendio con categorie e dispositivi`() {
-        val disp1 = DispositivoRilevazione(
+    fun `RI - Invarianti dominio su Loop (1_8) e Indirizzo (1_150)`() {
+        assertFailsWith<IllegalArgumentException> {
+            DispositivoRilevazione.RivelatoreLoop(loop = 0, numeroIndirizzo = 1, descrizione = "Test")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            DispositivoRilevazione.RivelatoreLoop(loop = 9, numeroIndirizzo = 1, descrizione = "Test")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            DispositivoRilevazione.ModuloLoop(loop = 1, numeroIndirizzo = 0, descrizione = "Test")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            DispositivoRilevazione.ModuloLoop(loop = 8, numeroIndirizzo = 151, descrizione = "Test")
+        }
+
+        val riv8 = DispositivoRilevazione.RivelatoreLoop(
+            loop = 8,
+            numeroIndirizzo = 150,
+            tipo = TipoRivelatore.BARRIERA,
+            descrizione = "BARRIERA RECEPTION"
+        )
+        assertEquals("RIV.L8.150", riv8.indirizzo)
+        assertEquals("LOOP 8", riv8.labelSezione)
+        assertEquals("BARR.", riv8.labelTipo)
+    }
+
+    @Test
+    fun `RI - Serializzazione polimorfica di RilevazioneAntincendio con Comuni, Rivelatori e Moduli`() {
+        val comune = DispositivoRilevazione.ComponenteComune(
+            tipo = TipoComponenteComuneAntincendio.CENTRALE_INCENDIO,
+            indirizzo = "CENTR.1",
+            descrizione = "PORTINERIA"
+        )
+        val disp1 = DispositivoRilevazione.RivelatoreLoop(
             loop = 1,
-            indirizzo = "1",
-            tipo = "FUMO",
+            numeroIndirizzo = 1,
+            tipo = TipoRivelatore.OTTICO,
             descrizione = "CORRIDOIO",
             zona = "Z1"
         )
-        val disp2 = DispositivoRilevazione(
+        val disp2 = DispositivoRilevazione.ModuloLoop(
             loop = 2,
-            indirizzo = "MOD.L2.1",
-            tipo = "MODULO",
-            descrizione = "MODULO SGANCIO",
+            numeroIndirizzo = 1,
+            tipo = TipoModuloAntincendio.PULSANTE,
+            descrizione = "USCITA EST",
             zona = "Z2"
         )
 
@@ -156,27 +122,23 @@ class AntincendioWave2Test {
             codIntervento = "RI",
             nomeCompleto = "Rilevazione Incendi",
             cantiereId = "cantiere-alpha",
-            categorieRivelatori = mapOf(
-                CategoriaRivelatore.FUMO_PUNTIFORMI.key to true,
-                CategoriaRivelatore.FIAMMA.key to true
-            ),
-            listaDispositivi = listOf(disp1, disp2)
+            listaDispositivi = listOf(comune, disp1, disp2)
         )
 
         val encoded = json.encodeToString(Impianto.serializer(), ri)
         assertTrue(encoded.contains("\"type\": \"RilevazioneAntincendio\""))
-        assertTrue(encoded.contains("\"fumo_puntiformi\": true"))
-        assertTrue(encoded.contains("\"fiamma\": true"))
-        assertTrue(encoded.contains("\"MOD.L2.1\""))
+        assertTrue(encoded.contains("\"CENTR.1\""))
+        assertTrue(encoded.contains("\"TERMOVELOCIMETRICO\"") || encoded.contains("\"OTTICO\""))
+        assertTrue(encoded.contains("\"PULSANTE\""))
 
         val decoded = json.decodeFromString(Impianto.serializer(), encoded)
         assertTrue(decoded is RilevazioneAntincendio)
-        assertEquals(2, decoded.categorieRivelatori.size)
-        assertTrue(decoded.isCategoriaAttiva(CategoriaRivelatore.FUMO_PUNTIFORMI))
-        assertTrue(decoded.isCategoriaAttiva(CategoriaRivelatore.FIAMMA))
-        assertFalse(decoded.isCategoriaAttiva(CategoriaRivelatore.ASPIRAZIONE))
-        assertEquals(2, decoded.listaDispositivi.size)
-        assertEquals("MOD.L2.1", decoded.listaDispositivi[1].indirizzo)
+        assertEquals(3, decoded.listaDispositivi.size)
+        assertTrue(decoded.listaDispositivi[0] is DispositivoRilevazione.ComponenteComune)
+        assertTrue(decoded.listaDispositivi[1] is DispositivoRilevazione.RivelatoreLoop)
+        assertTrue(decoded.listaDispositivi[2] is DispositivoRilevazione.ModuloLoop)
+        assertEquals("RIV.L1.1", decoded.listaDispositivi[1].indirizzo)
+        assertEquals("MOD.L2.1", decoded.listaDispositivi[2].indirizzo)
     }
 
     @Test

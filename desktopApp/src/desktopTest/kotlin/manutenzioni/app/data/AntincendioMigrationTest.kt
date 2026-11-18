@@ -14,7 +14,21 @@ class AntincendioMigrationTest {
     
     @Test
     fun popolaImpiantoGlobaleRI() = runBlocking {
-        val repo = MongoManutenzioneRepository(MONGO_URI, DB_NAME)
+        val mongoAvailable = try {
+            java.net.Socket().use { it.connect(java.net.InetSocketAddress("localhost", 27017), 200); true }
+        } catch (_: Exception) {
+            false
+        }
+        val repo: manutenzioni.domain.ManutenzioneRepository = if (mongoAvailable) {
+            MongoManutenzioneRepository(MONGO_URI, DB_NAME)
+        } else {
+            val tempFile = java.nio.file.Files.createTempFile("antincendio_migration_test_", ".json").toFile().apply { deleteOnExit() }
+            val resourceText = javaClass.classLoader.getResourceAsStream("manutenzioni_db.json")
+                ?.bufferedReader()?.use { it.readText() }
+                ?: java.io.File("desktopApp/src/desktopMain/resources/manutenzioni_db.json").takeIf { it.exists() }?.readText()
+            if (resourceText != null) tempFile.writeText(resourceText)
+            JsonManutenzioneRepository(tempFile)
+        }
         
         val attivitaList = listOf(
             // --- ATTIVITA' GLOBALI BASE ---

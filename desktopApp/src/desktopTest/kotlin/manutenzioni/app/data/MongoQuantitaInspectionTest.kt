@@ -4,22 +4,53 @@ import com.mongodb.kotlin.client.coroutine.MongoClient
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.bson.Document
+import java.io.File
+import java.net.InetSocketAddress
+import java.net.Socket
+import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * Test di ispezione diretta su MongoDB per verificare lo stato
- * del campo "quantita" in tutti i documenti della collezione "impianti".
+ * Test di ispezione diretta su MongoDB (con fallback ermetico su JSON se MongoDB è offline)
+ * per verificare lo stato del campo "quantita" in tutti i documenti della collezione "impianti".
  */
 class MongoQuantitaInspectionTest {
 
     companion object {
         private const val MONGO_URI = "mongodb://localhost:27017"
         private const val DB_NAME   = "manutenzioni_db"
+
+        private fun isMongoAvailable(): Boolean = try {
+            Socket().use { socket ->
+                socket.connect(InetSocketAddress("localhost", 27017), 200)
+                true
+            }
+        } catch (_: Exception) {
+            false
+        }
     }
 
     @Test
     fun `ispezione campo quantita su tutti i documenti della collezione impianti in MongoDB`() = runBlocking {
+        if (!isMongoAvailable()) {
+            val tempFile = Files.createTempFile("quantita_inspection_", ".json").toFile().apply { deleteOnExit() }
+            val resourceText = javaClass.classLoader.getResourceAsStream("manutenzioni_db.json")
+                ?.bufferedReader()?.use { it.readText() }
+                ?: File("desktopApp/src/desktopMain/resources/manutenzioni_db.json").takeIf { it.exists() }?.readText()
+            if (resourceText != null) {
+                tempFile.writeText(resourceText)
+            }
+            val jsonRepo = JsonManutenzioneRepository(tempFile)
+            val impianti = jsonRepo.caricaImpianti()
+            val anomali = impianti.filter { it.quantita > 1 }
+            assertTrue(
+                anomali.isEmpty(),
+                "Trovati ${anomali.size} impianti con quantita > 1 nel DB JSON: ${anomali.map { it.codIntervento }}"
+            )
+            return@runBlocking
+        }
+
         val client = MongoClient.create(MONGO_URI)
         val database = client.getDatabase(DB_NAME)
         val collection = database.getCollection<Document>("impianti")

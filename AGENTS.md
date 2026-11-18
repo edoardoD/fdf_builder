@@ -7,13 +7,13 @@
 
 ## 1. 🎯 Identity & Mission
 
-**Ruolo:** Sei un **Senior Solution Architect** specializzato in **Kotlin Multiplatform (Compose Desktop)**, Clean Architecture, NoSQL Data Modeling (MongoDB / Document Store), cataloghi industriali ETIM e generazione documentale PDF industriale (iText7 AcroForm).
+**Ruolo:** Sei un **Senior Solution Architect** specializzato in **Kotlin Multiplatform (Compose Desktop)**, Clean Architecture, NoSQL Data Modeling (MongoDB / Document Store) e generazione documentale PDF industriale (iText7 AcroForm).
 
 **Missione del software:** **Manutenzioni Maker** digitalizza l'intero ciclo di vita delle schede di verifica e manutenzione periodica per impianti elettrici ed elettronici industriali e civili. L'applicazione permette a un ingegnere o tecnico manutentore di:
 
 1. Gestire l'anagrafica di **Clienti** e relativi **Cantieri / Sedi operative**
 2. Configurare gli **Impianti del Cantiere** da un catalogo globale polimorfico (Quadri BT con interruttori, Illuminazione d'emergenza con registro lampade, Rilevazione Incendi interconnessa, Cabine MT/BT, Gruppi Elettrogeni, Fotovoltaico, ecc.)
-3. Arricchire i componenti con specifiche tecniche e codici commerciali tramite ricerca live su **Catalogo ETIM International API**
+3. Configurare rapidamente i componenti d'impianto (interruttori differenziali, lampade di emergenza, presidi antincendio) tramite inserimento strutturato e clonazione massiva
 4. Impostare la **Frequenza di manutenzione** specifica per ciascun impianto del cantiere
 5. Generare automaticamente **schede PDF compilabili (AcroForm)** conformi alle normative CEI/UNI, corredate da **Fogli Tecnici Allegati (Foglio 2+)** per verifiche strumentali (differenziali di quadro, prove di autonomia lampade secondo UNI 11222, ecc.).
 
@@ -27,8 +27,6 @@
 | Database Locale / Fallback | JSON locale + cache in-memory | — | `kotlinx-serialization-json 1.9.0` |
 | PDF Engine | iText7 `kernel` + `layout` + `forms` | `9.4.0` | `com.itextpdf:kernel`, `forms` |
 | HTML→PDF Engine | iText `html2pdf` | `6.3.0` | `com.itextpdf:html2pdf` (AcroForm abilitati) |
-| HTTP Client (API ETIM) | Ktor Client | `2.3.12` | `cio`, `content-negotiation`, `auth`, `serialization-json` |
-| Visual Component Support | OpenJFX (JavaFX) | `21.0.2` | `javafx-base`, `controls`, `graphics` |
 | Concorrenza | `kotlinx-coroutines` | `1.9.0` | `core`, `swing`, `test` |
 | Build System | Gradle KTS + Version Catalog | — | `gradle/libs.versions.toml` |
 | Application Version | SemVer Desktop | **4.0.0** | `packageVersion = "4.0.0"` |
@@ -43,7 +41,7 @@ Ogni agente — umano o AI — che interviene su questo codebase **DEVE** rispet
 
 | Vincolo | Motivazione | Impatto |
 |---|---|---|
-| **Clean Architecture Rigorosa** | Il `domain` non deve dipendere da nessun layer esterno (`app.data`, `app.service`, `app.ui`). | I model di entità risiedono tassativamente in `manutenzioni.domain.model.*`. Il dominio espone interfacce pure (`ManutenzioneRepository`, `ProductSearchApi`, `IPdf`, `Html`). |
+| **Clean Architecture Rigorosa** | Il `domain` non deve dipendere da nessun layer esterno (`app.data`, `app.service`, `app.ui`). | I model di entità risiedono tassativamente in `manutenzioni.domain.model.*`. Il dominio espone interfacce pure (`ManutenzioneRepository`, `IPdf`, `Html`). |
 | **NoSQL Document Model** | I dati sono strutturati per documenti ricchi (MongoDB). | Entità composite ad alto accoppiamento (es. `InterruttoreBT` nel `QuadroBT`, `LampadaEmergenza` nell'`ImpiantoEmergenza`) sono **embedded**. La relazione Cantiere ↔ Impianti usa il discriminante `cantiereId`. |
 | **Template Globali vs Istanze Cantiere** | Un impianto con `cantiereId == null` è un master/template globale; con `cantiereId != null` appartiene a un cantiere specifico. | Modificare un impianto di un cantiere non deve intaccare il template globale né altri cantieri. |
 | **Offline-first & Resilienza Connessione** | L'app supporta sia MongoDB (locale/cloud) sia fallback/migrazione su file JSON. | In avvio, `ConnectionScreen` effettua un handshake con timeout a 5s. La configurazione di connessione è cifrata via AES in `~/.manutenzioni_maker/config.json`. |
@@ -72,38 +70,82 @@ desktopApp/src/desktopMain/kotlin/manutenzioni/
 │   │
 │   ├── data/                                ← 💾 DATA ACCESS & PERSISTENCE
 │   │   ├── MongoManutenzioneRepository.kt   ← Implementazione MongoDB (coroutine driver + BSON kotlinx)
-│   │   ├── JsonManutenzioneRepository.kt    ← Implementazione JSON file + cache in-memory
-│   │   ├── AppConfigRepository.kt           ← Storage cifrato AES credenziali di connessione (~/.manutenzioni_maker)
-│   │   ├── DataMigrator.kt                  ← Utility di migrazione dati tra JSON e MongoDB
+│   │   ├── JsonManutenzioneRepository.kt    ← Facade su DAO specializzati e JsonDatabaseStorage thread-safe
+│   │   ├── storage/
+│   │   │   └── JsonDatabaseStorage.kt       ← Engine snapshot thread-safe (Mutex + scrittura atomica .tmp + auto-recovery)
+│   │   ├── dao/
+│   │   │   ├── JsonClienteDao.kt            ← DAO Clienti con cascade delete
+│   │   │   ├── JsonCantiereDao.kt           ← DAO Cantieri con cascade delete
+│   │   │   ├── JsonImpiantoDao.kt           ← DAO Impianti e propagazione template globali
+│   │   │   └── JsonAuxiliaryDaos.kt         ← DAO Componenti, Catalogo Approvato, Sessioni, Utenti, Eventi
+│   │   ├── AppConfigRepository.kt           ← Storage cifrato AES-CBC+IV credenziali (~/.manutenzioni_maker)
+│   │   ├── DataMigrator.kt                  ← Utility di migrazione completa su 8 collection tra JSON e MongoDB
 │   │   └── ManutenzioneModels.kt            ← Wrapper JSON: ManutenzioniDatabase
 │   │
 │   ├── service/                             ← ⚙️ SERVIZI ESTERNI & ENGINES
-│   │   ├── HtmlService.kt                  ← Template engine primario: placeholder replacement + allegati
-│   │   ├── Pdf.kt                          ← Wrapper iText7 html2pdf con AcroForm abilitati
-│   │   ├── EtimCatalogService.kt           ← Client Ktor: OAuth2 Bearer token caching + API ETIM v2 Search
-│   │   └── attachments/                    ← 📑 Technical Attachment Providers
+│   │   ├── HtmlService.kt                  ← Facade modulare del template engine HTML + allegati
+│   │   ├── html/
+│   │   │   ├── HtmlTemplateLoader.kt        ← Caricamento e cache in-memory di scheletro.html
+│   │   │   ├── SchedaHeaderFormatter.kt     ← Formattazione cartiglio, metadati cliente/cantiere e premesse
+│   │   │   ├── AttivitaTableHtmlBuilder.kt  ← Ordinamento attività, radio group AcroForm e griglia 30 righe
+│   │   │   └── SignatureImageRenderer.kt    ← Decodifica sicura Data-URI e rendering firme
+│   │   ├── Pdf.kt                          ← Wrapper iText7 html2pdf con AcroForm e Dispatchers.IO
+│   │   └── attachments/                    ← 📑 Technical Attachment Providers & Registry
+│   │       ├── DefaultTechnicalAttachmentRegistry.kt ← Registro thread-safe CopyOnWriteArrayList per allegati OCP
 │   │       ├── TechnicalSheetHtmlRenderer.kt   ← Renderer HTML per fogli tecnici tabellari (Foglio 2+)
 │   │       ├── QuadroBtAttachmentProvider.kt   ← Provider Foglio 2: Interruttori Differenziali (ELENCO DIFF)
-│   │       └── EmergenzaAttachmentProvider.kt  ← Provider Foglio 2: Registro Lampade UNI 11222 (ELENCO EM)
+│   │       ├── EmergenzaAttachmentProvider.kt  ← Provider Foglio 2: Registro Lampade UNI 11222 (ELENCO EM)
+│   │       └── AntincendioAttachmentProvider.kt← Provider Foglio 2: Registro Rivelatori / Presidi Antincendio
 │   │
 │   ├── strategy/                            ← 🎯 STRATEGY LAYER
-│   │   └── HtmlToPdfStrategy.kt            ← Strategia PDF: Antincendio Resolver → HtmlService → PdfEngine
+│   │   └── HtmlToPdfStrategy.kt            ← Strategia PDF: CrossPlant Resolver → HtmlService → PdfEngine
 │   │
 │   └── ui/                                  ← 🖥️ PRESENTATION LAYER (Compose Desktop)
 │       ├── App.kt                           ← Root Composable: StatusBar + MainScaffold + routing sezioni
-│       ├── ManutenzioniViewModel.kt         ← StateFlow + UDF: gestione Cantieri, Impianti, ETIM, Batch PDF
-│       ├── ImpiantoEditor.kt                ← Editor universale attività e parametri impianto
+│       ├── ManutenzioniUiState.kt           ← Stato immutabile UDF + AppSection + AdminTab + frequenze precalcolate
+│       ├── ManutenzioniViewModel.kt         ← Facade StateFlow + UDF che orchestra i 5 Coordinator di dominio
+│       ├── coordinators/                    ← 🧭 Domain State Coordinators (testabili con CoroutineDispatcher iniettato)
+│       │   ├── AnagraficaCoordinator.kt     ← CRUD Clienti/Cantieri, Utenti RBAC e selezione sessione
+│       │   ├── ImpiantoSelectionCoordinator.kt ← Configurazione impianti, moduli, interruttori, lampade e cloni
+│       │   ├── PdfBatchCoordinator.kt       ← Generazione batch PDF, cartelle temporali e storicizzazione
+│       │   ├── CatalogSearchCoordinator.kt  ← Caricamento componenti standard e catalogo approvati
+│       │   └── InteractiveSchedulerCoordinator.kt ← Calendario manutenzioni e riconciliazione frequenze
+│       ├── platform/                        ← 🔌 Platform Abstractions (Port/Adapter per testabilità headless)
+│       │   ├── DirectoryPicker.kt           ← Contratto selezione cartella + AwtDirectoryPicker
+│       │   └── SystemFileLauncher.kt        ← Contratto apertura file + AwtSystemFileLauncher
 │       ├── ImpiantoSelectionList.kt         ← Lista selezione impianti per cantiere
 │       ├── layout/
-│       │   └── MainScaffold.kt              ← NavigationRail: switch tra "Operatività" e "Database"
+│       │   └── MainScaffold.kt              ← NavigationRail: switch tra "Operatività", "Calendario" e "Database"
 │       ├── theme/
 │       │   └── Theme.kt                     ← Palette "Modern Desktop Industrial" e MaterialTheme
 │       └── features/
 │           ├── config/
 │           │   └── ConnectionScreen.kt      ← Form credenziali MongoDB, test ping, configurazione
+│           ├── calendario/
+│           │   ├── CalendarioScreen.kt      ← Vista calendario interventi programmati
+│           │   ├── PianificaInterventoDialog.kt ← Modale pianificazione intervento
+│           │   └── RiconciliazioneFrequenzeDialog.kt ← Modale riconciliazione frequenze
 │           ├── operativita/                 ← 🏢 Sezione Cantiere & Operatività Tecnica
 │           │   ├── OperativitaScreen.kt     ← Selezione Cliente e Cantiere di lavoro
-│           │   ├── CantiereDetailScreen.kt  ← Dashboard cantiere: gestione moduli, frequenze, genera PDF
+│           │   ├── CantiereDetailScreen.kt  ← Orchestratore leggero dashboard cantiere
+│           │   ├── model/
+│           │   │   └── CantiereDetailUiModels.kt ← UI models puri per tab e riepiloghi
+│           │   ├── components/
+│           │   │   ├── CantiereSessionHeaderCard.kt ← Header metadati sessione cantiere
+│           │   │   └── CantiereActionBar.kt         ← Barra azioni e lancio generazione PDF
+│           │   ├── tabs/
+│           │   │   ├── CantiereImpiantiTab.kt       ← Tab configurazione moduli d'impianto
+│           │   │   └── CantiereElencoInterruttoriTab.kt ← Tab registro interruttori centralizzato
+│           │   ├── editor/
+│           │   │   ├── ImpiantoEditor.kt            ← Editor modulare polimorfico (0 string-sniffing)
+│           │   │   ├── components/
+│           │   │   │   └── AttivitaCard.kt          ← Card singola attività manutentiva
+│           │   │   └── sections/
+│           │   │       ├── GeneralEditorSection.kt
+│           │   │       ├── QuadroBtEditorSection.kt
+│           │   │       ├── EmergenzaEditorSection.kt
+│           │   │       ├── AntincendioEditorSection.kt
+│           │   │       └── QuadroMqtEditorSection.kt
 │           │   ├── AggiungiComponenteDialog.kt ← Modale aggiunta rapida manuale interruttore quadro
 │           │   ├── AggiungiLampadaDialog.kt    ← Modale aggiunta singola / massiva lampade emergenza
 │           │   ├── MassiveQuadroCreationDialog.kt ← Wizard clonazione e creazione massiva quadri
@@ -117,28 +159,28 @@ desktopApp/src/desktopMain/kotlin/manutenzioni/
 └── domain/                                  ← 🏛️ DOMAIN LAYER (Puro, senza dipendenze da app o framework)
     ├── ManutenzioneRepository.kt            ← Contratto completo CRUD (Clienti, Cantieri, Impianti, Componenti)
     ├── model/                               ← 🧱 ENTITÀ DI DOMINIO (@Serializable)
-    │   ├── ManutenzioneModels.kt            ← sealed class Impianto, sealed interface ImpiantoRilevazione,
+    │   ├── ManutenzioneModels.kt            ← sealed class Impianto (con proprietà polimorfiche incapsulate),
+    │   │                                      sealed interface ImpiantoRilevazione,
     │   │                                      QuadroBT, ImpiantoEmergenza, RilevazioneAntincendio,
     │   │                                      RilevazioneGas, QuadroMQT, ImpiantoStandard,
-    │   │                                      normalizeType() extension, Cliente, Cantiere (con dataInizioIntervento, nomeManutentore),
+    │   │                                      normalizeType() extension, Cliente, Cantiere,
     │   │                                      Attivita, Periodo, InterruttoreBT, LampadaEmergenza, ComponenteApprovato
     │   └── BatchResult.kt                   ← Risultato batch PDF (file generati, successCount, errori)
     ├── service/
     │   ├── FrequencyFilter.kt               ← ⭐ REGOLA CORE: F.inMesi() % A.inMesi() == 0
-    │   ├── CrossPlantAttivitaResolver.kt    ← ⭐ Cross-Plant Discovery: risoluzione contestuale per RI, RIG, ecc.
-    │   ├── ProductSearchApi.kt              ← Contratto per la ricerca catalogo componenti
+    │   ├── CrossPlantAttivitaResolver.kt    ← ⭐ Cross-Plant Discovery: orchestratore estensibile OCP
+    │   ├── rules/                           ← 📐 Strategie Cross-Plant Discovery (OCP)
+    │   │   ├── CrossPlantRule.kt            ← Contratto strategy per regole cross-plant
+    │   │   └── FireAlarmCrossPlantRule.kt   ← Implementazione regole RI, RIG e default
     │   ├── Html.kt                          ← Contratto template engine HTML
-    │   ├── IPdf.kt                          ← Contratto generazione PDF
+    │   ├── HtmlRenderContext.kt             ← Contesto unificato di rendering HTML (0 dipendenze esterne)
+    │   ├── IPdf.kt                          ← Contratto generazione PDF e PdfGenerationException
     │   └── attachments/
-    │       └── TechnicalAttachment.kt       ← Contratti e modelli dichiarativi fogli allegati
+    │       ├── TechnicalAttachment.kt       ← Contratti e modelli dichiarativi fogli allegati
+    │       └── TechnicalAttachmentRegistry.kt ← Contratto registro dinamico OCP per provider allegati
     └── strategy/
         ├── PdfBatchGenerator.kt             ← Interfaccia unificata per la generazione batch
-        ├── AbstractPdfGeneratorStrategy.kt  ← Orchestrazione batch (loop, copie progressive, progress report)
-        └── PdfGeneratorStrategy.kt          ← Alias del contratto Strategy
-
-common/                                      ← 📚 MODULO KMP CONDIVISO
-├── src/commonMain/.../PdfService.kt         ← expect class PdfService (fillAcroForm)
-└── src/desktopMain/.../PdfService.kt        ← actual class PdfService (iText7 PdfAcroForm)
+        └── AbstractPdfGeneratorStrategy.kt  ← Orchestrazione batch (loop, copie progressive, progress report)
 ```
 
 ---
@@ -204,16 +246,7 @@ Per impianti complessi che richiedono verifiche strumentali puntuali su componen
 
 ---
 
-### 4.4 🔍 Integrazione Catalogo ETIM (`EtimCatalogService`)
-
-Il modulo `service/EtimCatalogService.kt` implementa il contratto di dominio `ProductSearchApi` per connettersi all'API internazionale ETIM:
-- **Autenticazione OAuth2 automatica:** Scambia `clientId` e `clientSecret` sull'endpoint token e memorizza il Bearer Token con scadenza, protetto da `Mutex` per garantire la thread-safety.
-- **Client HTTP Ktor (CIO):** Esegue chiamate asincrone all'endpoint di ricerca classi ETIM.
-- **Equivalenze & Approvazione:** Permette di catalogare componenti approvati aziendali (`ComponenteApprovato`), suggerendo varianti commerciali equivalenti in fase di composizione del quadro.
-
----
-
-### 4.5 🚀 Pipeline di Generazione Batch PDF
+### 4.4 🚀 Pipeline di Generazione Batch PDF
 
 ```
 User clicca "Genera PDF" in CantiereDetailScreen
@@ -313,7 +346,7 @@ Per qualsiasi nuova feature o modifica sostanziale, segui il ciclo vitale orches
    - Esegui i test di unità e di integrazione:
      ```bash
      ./gradlew :desktopApp:compileKotlinDesktop
-     ./gradlew :desktopApp:test
+     ./gradlew :desktopApp:desktopTest
      ```
 
 ---
@@ -343,8 +376,11 @@ Per qualsiasi nuova feature o modifica sostanziale, segui il ciclo vitale orches
 | `Pdf.buildPdf()` fallimento silenzioso | **RISOLTO (v3.1)** | Rilancia esplicitamente una `RuntimeException` con causa. |
 | `PdfConfig` inutilizzato | **RISOLTO (v3.1)** | Rimosso da `Pdf.kt`. |
 | Duplicazione logica Cross-Plant RI/RIG & `normalizeType` | **RISOLTO (v3.1)** | Unificata l'interfaccia `ImpiantoRilevazione`, centralizzata `Impianto.normalizeType()` nel domain model e generalizzato `CrossPlantAttivitaResolver` (OCP, senza alias o deprecati). |
-| Thread-safety in `JsonManutenzioneRepository` | 🟡 Monitorato | La persistenza primaria è migrata a MongoDB Coroutine Driver. JSON rimane come fallback/esportazione. |
-| Anteprima PDF nativa embedded nella UI | 🟡 Aperto | Attualmente i PDF vengono aperti tramite il visualizzatore di sistema (`Desktop.getDesktop().open(file)`). |
+| Thread-safety in `JsonManutenzioneRepository` | **RISOLTO (v4.1)** | Introdotto `JsonDatabaseStorage` con `Mutex`, scritture atomiche `.tmp` + `ATOMIC_MOVE`, auto-recovery e decomposizione in DAO specializzati. |
+| Monoliti ViewModel, UI Compose e `HtmlService` | **RISOLTO (v4.1)** | `ManutenzioniViewModel` scomposto in 5 Coordinator con `CoroutineDispatcher` e porte piattaforma (`DirectoryPicker`, `SystemFileLauncher`); `HtmlService` scomposto in 4 builder + `TechnicalAttachmentRegistry` OCP; `CantiereDetailScreen` e `ImpiantoEditor` modularizzati senza string-sniffing né calcoli di dominio nel render loop. |
+| Estensibilità OCP Cross-Plant & Allegati | **RISOLTO (v4.1)** | Estratte l'interfaccia strategy `CrossPlantRule` e `TechnicalAttachmentRegistry` thread-safe per aggiungere nuovi impianti, regole e fogli tecnici senza modificare i motori core. |
+| Rimozione legacy, shim e moduli morti | **RISOLTO (v4.2)** | Rimossi `:common`, dipendenze Ktor/JavaFX inutilizzate, `PdfGeneratorStrategy`, `Cantiere.dataInizioIntervento`, overload `Html.buildHtml` a 11 parametri, facade `ui/ImpiantoEditor.kt`, fallback AES-ECB / `~/.manutenzioni-maker` e file obsoleti di root. |
+| Anteprima PDF nativa embedded nella UI | 🟡 Aperto | Attualmente i PDF vengono aperti tramite `SystemFileLauncher` (`Desktop.getDesktop().open(file)` con fallback OS). |
 
 ### 8.2 Roadmap Feature
 
@@ -355,7 +391,7 @@ Per qualsiasi nuova feature o modifica sostanziale, segui il ciclo vitale orches
 | **v2.1** | Gestione Clienti e iniezione automatica cliente nell'header | ✅ Completata |
 | **v2.2** | Creazione impianti master da UI | ✅ Completata |
 | **v3.0** | **Cantiere-First Architecture:** Introduzione entità Cantiere, separazione template/istanze, gerarchia polimorfica `Impianto`, Cross-Plant Discovery Antincendio (`RI`), backend MongoDB | ✅ Completata |
-| **v3.1** | **Fogli Tecnici Allegati OCP:** Secondo foglio per Quadri BT (differenziali) e Impianti Emergenza (lampade UNI 11222), integrazione Ktor con Catalogo ETIM International | ✅ Completata |
+| **v3.1** | **Fogli Tecnici Allegati OCP:** Secondo foglio per Quadri BT (differenziali) e Impianti Emergenza (lampade UNI 11222), Catalogo Approvato componenti | ✅ Completata |
 | **v3.2** | Viewer PDF embedded nativo nell'area principale (anteprima prima della stampa) | 🔲 Pianificata |
 | **v3.3** | Sync Cloud Storage (Google Drive API / S3 per archiviazione automatica schede) | 🔲 Pianificata |
 | **v4.0** | Firma Grafometrica digitale integrata e sincronizzazione offline bidirezionale | 🔲 Pianificata |
@@ -372,10 +408,10 @@ Per qualsiasi nuova feature o modifica sostanziale, segui il ciclo vitale orches
 ./gradlew :desktopApp:run
 
 # Esecuzione di tutta la suite di test
-./gradlew :desktopApp:test
+./gradlew :desktopApp:desktopTest
 
 # Esecuzione di un test specifico
-./gradlew :desktopApp:test --tests "manutenzioni.app.service.attachments.TechnicalAttachmentTest"
+./gradlew :desktopApp:desktopTest --tests "manutenzioni.app.service.attachments.TechnicalAttachmentTest"
 
 # Creazione installer nativo per macOS (.dmg)
 ./gradlew :desktopApp:packageDmg

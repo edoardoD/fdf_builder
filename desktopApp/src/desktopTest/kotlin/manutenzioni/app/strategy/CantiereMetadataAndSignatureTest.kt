@@ -48,7 +48,7 @@ class CantiereMetadataAndSignatureTest {
     @BeforeTest
     fun setup() {
         val userHome = System.getProperty("user.home")
-        testDbFile = File(File(userHome, ".manutenzioni-maker"), testDbFileName)
+        testDbFile = File(File(userHome, ".manutenzioni_maker"), testDbFileName)
         if (testDbFile.exists()) testDbFile.delete()
         repo = JsonManutenzioneRepository(testDbFileName)
     }
@@ -94,14 +94,17 @@ class CantiereMetadataAndSignatureTest {
             )
 
             val html = htmlService.buildHtml(
-                impianto = quadro,
-                attivitaFiltrate = quadro.listaAttivita,
-                frequenza = Periodo(TipoPeriodo.M, 6),
-                clienteNome = "Ospedali Privati",
-                cantiereNome = "Villa Igea",
-                dataInizioIntervento = "16/10/2026",
-                nomeManutentore = "Ing. Edoardo Desiderio",
-                firmaManutentore = tempPng.absolutePath
+                manutenzioni.domain.service.HtmlRenderContext(
+                    impianto = quadro,
+                    attivita = quadro.listaAttivita,
+                    frequenza = Periodo(TipoPeriodo.M, 6),
+                    clienteNome = "Ospedali Privati",
+                    cantiereNome = "Villa Igea",
+                    dataInizioContratto = "16/10/2026",
+                    dataIntervento = "16/10/2026",
+                    nomeManutentore = "Ing. Edoardo Desiderio",
+                    firmaTecnicoBase64 = tempPng.absolutePath
+                )
             )
 
             // R24: starting_date precompilato nel Foglio 1 e nel Foglio 2
@@ -130,7 +133,8 @@ class CantiereMetadataAndSignatureTest {
             id = "can-e2e",
             nome = "Polo Logistico Forlì",
             clienteId = cliente.id,
-            dataInizioIntervento = "12/10/2026",
+            dataInizioContratto = "01/01/2026",
+            dataIntervento = "12/10/2026",
             nomeManutentore = "Mario Rossi",
             firmaManutentore = sampleDataUri
         )
@@ -159,7 +163,12 @@ class CantiereMetadataAndSignatureTest {
         waitUntil { viewModel.uiState.value.impiantiDelCantiere.isNotEmpty() }
 
         // Verifica anche updateDatiInterventoCantiere e updateFirmaManutentoreCantiere
-        viewModel.updateDatiInterventoCantiere("15/10/2026", "Luigi Bianchi")
+        viewModel.updateDatiInterventoCantiere(
+            dataInizioContratto = "01/01/2026",
+            dataIntervento = "15/10/2026",
+            dataInterventoPrecedente = null,
+            manutentore = "Luigi Bianchi"
+        )
         viewModel.updateFirmaManutentoreCantiere(sampleDataUri)
         viewModel.toggleImpiantoSelection(impianto.id, true)
         viewModel.updateFrequenzaForImpianto(impianto.id, Periodo(TipoPeriodo.M, 6))
@@ -180,7 +189,11 @@ class CantiereMetadataAndSignatureTest {
 
                     val startingDateField = acroForm.getField("starting_date")
                     assertNotNull(startingDateField, "Il campo AcroForm starting_date deve esistere")
-                    assertEquals("15/10/2026", startingDateField.valueAsString, "Il campo starting_date deve essere precompilato con dataInizioIntervento")
+                    assertEquals("01/01/2026", startingDateField.valueAsString, "Il campo starting_date deve essere precompilato con dataInizioContratto")
+
+                    val actualDateField = acroForm.getField("actual_date")
+                    assertNotNull(actualDateField, "Il campo AcroForm actual_date deve esistere")
+                    assertEquals("15/10/2026", actualDateField.valueAsString, "Il campo actual_date deve essere precompilato con dataIntervento")
 
                     val pageText = PdfTextExtractor.getTextFromPage(pdfDoc.getPage(1))
                     val normalizedPageText = pageText.replace(Regex("\\s+"), " ")

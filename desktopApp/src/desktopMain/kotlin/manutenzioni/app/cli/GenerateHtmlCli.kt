@@ -10,6 +10,7 @@ import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.Periodo
 import manutenzioni.domain.model.TipoPeriodo
 import manutenzioni.domain.service.CrossPlantAttivitaResolver
+import manutenzioni.domain.service.HtmlRenderContext
 import java.io.File
 import java.util.Scanner
 
@@ -133,8 +134,9 @@ object GenerateHtmlCli {
         val selectedImpianto: Impianto = if (options.impiantoQuery != null) {
             impiantiContesto.firstOrNull {
                 it.codIntervento.equals(options.impiantoQuery, ignoreCase = true) ||
-                    it.id.equals(options.impiantoQuery, ignoreCase = true) ||
-                    it.nomeCompleto.contains(options.impiantoQuery, ignoreCase = true)
+                    it.id.equals(options.impiantoQuery, ignoreCase = true)
+            } ?: impiantiContesto.firstOrNull {
+                it.nomeCompleto.contains(options.impiantoQuery, ignoreCase = true)
             } ?: impiantiContesto.first()
         } else {
             System.err.println("\nSeleziona Impianto:")
@@ -168,7 +170,7 @@ object GenerateHtmlCli {
 
         // 5. Dati opzionali (Data intervento e Manutentore)
         val defaultData = options.dataIntervento
-            ?: selectedCantiere?.effectiveDataIntervento
+            ?: selectedCantiere?.dataIntervento
             ?: ""
         val finalDataIntervento = if (!isNonInteractive && options.dataIntervento == null) {
             System.err.print("\nData intervento [$defaultData]: ")
@@ -200,17 +202,19 @@ object GenerateHtmlCli {
         val cantiereLabel = options.cantiereNome ?: selectedCantiere?.nome
 
         val generatedHtml = htmlService.buildHtml(
-            impianto = selectedImpianto,
-            attivitaFiltrate = attivitaRisolte,
-            frequenza = selectedFrequenza,
-            clienteNome = clienteLabel,
-            cantiereNome = cantiereLabel,
-            dataInizioIntervento = finalDataIntervento.ifBlank { null },
-            nomeManutentore = finalManutentore.ifBlank { null },
-            firmaManutentore = selectedCantiere?.firmaManutentore,
-            dataInizioContratto = selectedCantiere?.dataInizioContratto,
-            dataIntervento = finalDataIntervento.ifBlank { null },
-            dataInterventoPrecedente = selectedCantiere?.dataInterventoPrecedente
+            HtmlRenderContext(
+                impianto = selectedImpianto,
+                frequenza = selectedFrequenza,
+                attivita = attivitaRisolte,
+                clienteNome = clienteLabel,
+                cantiereNome = cantiereLabel,
+                nomeManutentore = finalManutentore.ifBlank { null },
+                firmaTecnicoBase64 = selectedCantiere?.firmaManutentore,
+                dataInizioContratto = selectedCantiere?.dataInizioContratto,
+                dataIntervento = finalDataIntervento.ifBlank { null },
+                dataInterventoPrecedente = selectedCantiere?.dataInterventoPrecedente,
+                contextImpianti = impiantiContesto
+            )
         )
 
         // 7. Salvataggio su file build/output_anteprima.html

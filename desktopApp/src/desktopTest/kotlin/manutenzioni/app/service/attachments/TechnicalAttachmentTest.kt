@@ -61,7 +61,7 @@ class TechnicalAttachmentTest {
 
         // Verifica rendering HTML
         val html = renderer.render(sheetData, Periodo(TipoPeriodo.A, 1), "Cliente Test")
-        assertContains(html, "width: 18.4cm")
+        assertContains(html, "width: 19.8cm")
         assertContains(html, "QF1.1")
         assertContains(html, "QF1.2")
         assertContains(html, "ABB F202AC-25")
@@ -121,7 +121,7 @@ class TechnicalAttachmentTest {
 
         // Verifica rendering HTML
         val html = renderer.render(sheetData, Periodo(TipoPeriodo.M, 6), "Ospedale Civile")
-        assertContains(html, "width: 18.4cm")
+        assertContains(html, "width: 19.8cm")
         assertContains(html, "sheet--lampade")
         assertContains(html, "EM-01")
         assertContains(html, "Beghelli Formula 65")
@@ -153,10 +153,12 @@ class TechnicalAttachmentTest {
         )
 
         val html = htmlService.buildHtml(
-            impianto = emergenza,
-            attivitaFiltrate = emergenza.listaAttivita,
-            frequenza = Periodo(TipoPeriodo.M, 6),
-            clienteNome = "Azienda Ospedaliera"
+            manutenzioni.domain.service.HtmlRenderContext(
+                impianto = emergenza,
+                attivita = emergenza.listaAttivita,
+                frequenza = Periodo(TipoPeriodo.M, 6),
+                clienteNome = "Azienda Ospedaliera"
+            )
         )
 
         // Foglio 1: attività e premessa (R1: la lista lampade NON deve apparire nella premessa del Foglio 1)
@@ -204,10 +206,12 @@ class TechnicalAttachmentTest {
         )
 
         val html = htmlService.buildHtml(
-            impianto = emergenza,
-            attivitaFiltrate = emergenza.listaAttivita,
-            frequenza = Periodo(TipoPeriodo.M, 6),
-            clienteNome = "Azienda Ospedaliera"
+            manutenzioni.domain.service.HtmlRenderContext(
+                impianto = emergenza,
+                attivita = emergenza.listaAttivita,
+                frequenza = Periodo(TipoPeriodo.M, 6),
+                clienteNome = "Azienda Ospedaliera"
+            )
         )
 
         val tempHtml = java.io.File.createTempFile("test_emerg_", ".html")
@@ -259,7 +263,14 @@ class TechnicalAttachmentTest {
                 LampadaEmergenza(sigla = "EM-02", modello = "NEXI 600", autonomia = "3h", posizione = "Scala")
             )
         )
-        val html = htmlService.buildHtml(emergenza, emergenza.listaAttivita, Periodo(TipoPeriodo.M, 6), "Cliente Test")
+        val html = htmlService.buildHtml(
+            manutenzioni.domain.service.HtmlRenderContext(
+                impianto = emergenza,
+                attivita = emergenza.listaAttivita,
+                frequenza = Periodo(TipoPeriodo.M, 6),
+                clienteNome = "Cliente Test"
+            )
+        )
 
         // Foglio 1 Premessa checks
         assertContains(html, "Premessa custom del cantiere.")

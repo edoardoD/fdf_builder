@@ -730,7 +730,7 @@ private fun MeseAgendaSectionCard(
                                     fontSize = 10.sp,
                                     color = Color(0xFF64748B)
                                 )
-                                val dataRif = item.cantiere.effectiveDataIntervento
+                                val dataRif = item.cantiere.dataIntervento
                                 if (!dataRif.isNullOrBlank()) {
                                     Text(
                                         text = "Data intervento base: $dataRif",

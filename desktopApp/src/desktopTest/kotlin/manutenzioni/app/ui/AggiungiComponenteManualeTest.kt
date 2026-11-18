@@ -22,7 +22,7 @@ class AggiungiComponenteManualeTest {
     @BeforeTest
     fun setup() {
         val userHome = System.getProperty("user.home")
-        testDbFile = File(File(userHome, ".manutenzioni-maker"), testDbFileName)
+        testDbFile = File(File(userHome, ".manutenzioni_maker"), testDbFileName)
         if (testDbFile.exists()) {
             testDbFile.delete()
         }

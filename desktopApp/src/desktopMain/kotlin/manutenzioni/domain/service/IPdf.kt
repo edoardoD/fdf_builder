@@ -1,7 +1,20 @@
 package manutenzioni.domain.service
 
-interface IPdf{
+/**
+ * Contratto di dominio per la conversione da HTML a PDF.
+ */
+interface IPdf {
+
     /**
-     * crea il pdf partendo da un file html*/
+     * Converte un file HTML in un file PDF compilabile (AcroForm).
+     * Garantisce il completamento sincrono confinando le operazioni di I/O.
+     */
     fun buildPdf(htmlFilePath: String, pdfFilePath: String)
+
+    /**
+     * Conversione sospesa non bloccante con confinamento su dispatcher coroutine I/O.
+     */
+    suspend fun buildPdfAsync(htmlFilePath: String, pdfFilePath: String) {
+        buildPdf(htmlFilePath, pdfFilePath)
+    }
 }

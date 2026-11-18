@@ -4,6 +4,45 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+enum class ImpiantoKind {
+    STANDARD,
+    QUADRO_BT,
+    QUADRO_MQT,
+    EMERGENZA,
+    ANTINCENDIO,
+    GAS
+}
+
+object ImpiantoCodici {
+    const val QUADRO_BT = "Q"
+    const val QUADRO_MQT = "QMT"
+    const val EMERGENZA = "EM"
+    const val SICUREZZA = "IS"
+    const val ANTINCENDIO = "RI"
+    const val GAS = "RIG"
+
+    fun isQuadroBT(cod: String?): Boolean {
+        val trimmed = cod?.trim() ?: return false
+        return trimmed.equals(QUADRO_BT, ignoreCase = true) ||
+            (trimmed.startsWith("Q", ignoreCase = true) && !trimmed.equals(QUADRO_MQT, ignoreCase = true))
+    }
+
+    fun isEmergenza(cod: String?): Boolean {
+        val trimmed = cod?.trim() ?: return false
+        return trimmed.equals(EMERGENZA, ignoreCase = true) || trimmed.equals(SICUREZZA, ignoreCase = true)
+    }
+
+    fun isQuadroMQT(cod: String?): Boolean =
+        cod?.trim().equals(QUADRO_MQT, ignoreCase = true)
+
+    fun isAntincendio(cod: String?): Boolean =
+        cod?.trim().equals(ANTINCENDIO, ignoreCase = true)
+
+    fun isGas(cod: String?): Boolean =
+        cod?.trim().equals(GAS, ignoreCase = true)
+}
+
+@Serializable
 sealed class Impianto {
     abstract val id: String
     abstract val codIntervento: String // Esempio: "GE", "CAB"
@@ -14,6 +53,111 @@ sealed class Impianto {
     abstract val cantiereId: String?
     abstract val quantita: Int
     abstract val noteSpecifiche: String?
+
+    // ==========================================
+    // 1. IDENTIFICAZIONE E CARTIGLIO
+    // ==========================================
+
+    /**
+     * Sigla per il cartiglio PDF (R22, R23) e intestazione schede.
+     * Es: "Q - QG1" se [QuadroBT] ha la sigla valorizzata, altrimenti [codIntervento].
+     */
+    open val siglaCartiglio: String
+        get() = codIntervento
+
+    /**
+     * Prefisso standard per il naming del file PDF esportato (R23, R28).
+     * Sostituisce spazi con underscore.
+     * Es: "Q-QG1" per [QuadroBT] con sigla, "Q" altrimenti.
+     */
+    open val filePrefix: String
+        get() = codIntervento.trim().replace(" ", "_")
+
+    /**
+     * Codice sintetico con sigla tra parentesi per elenchi compatti (es. "Q (QG1)").
+     */
+    open val displayCode: String
+        get() = codIntervento
+
+    /**
+     * Descrizione dettagliata/oggetto per il cartiglio PDF e intestazione scheda.
+     * Per [QuadroBT] privilegia la descrizione specifica del quadro rispetto al nome generico.
+     */
+    open val descrizioneDettagliata: String
+        get() = nomeCompleto
+
+    /**
+     * Nome completo con sigla descrittiva per liste e dialog (es. "Quadri Elettrici BT (QG1)").
+     */
+    open val nomeConSigla: String
+        get() = nomeCompleto
+
+    /**
+     * Etichetta distintiva della tecnologia/configurazione (es. "Interruttore: SF6", "EM (Emergenza)").
+     * Restituisce null se l'impianto non ha una sotto-tipologia configurata.
+     */
+    open val subtipoLabel: String?
+        get() = null
+
+    // ==========================================
+    // 2. FOGLIO ALLEGATO (FOGLIO 2+) & COMPONENTI
+    // ==========================================
+
+    /**
+     * Conteggio aggregato dei componenti secondari installati
+     * (differenziali per QuadroBT, lampade per Emergenza, dispositivi per Antincendio).
+     */
+    open val conteggioComponenti: Int
+        get() = 0
+
+    /**
+     * Testo sintetico di riepilogo dell'allegato tecnico nel sommario PDF.
+     * Es: "Sì (12 diff.)", "Sì (35 lampade)", "No".
+     */
+    open val dettaglioAllegato: String
+        get() = "No"
+
+    /**
+     * Testo informativo compatto per dialog e schede (es. "12 interruttori", "35 lampade").
+     */
+    open val extraDettaglio: String?
+        get() = null
+
+    /**
+     * Indica se l'impianto possiede componenti che attivano la generazione del Foglio 2+.
+     */
+    open val hasTechnicalAttachment: Boolean
+        get() = false
+
+    // ==========================================
+    // 3. DISCRIMINANTI DI CATEGORIA & KIND
+    // ==========================================
+
+    open val isQuadro: Boolean get() = false
+    open val isEmergenza: Boolean get() = false
+    open val isAntincendio: Boolean get() = false
+    open val isQuadroMqt: Boolean get() = false
+    open val isGas: Boolean get() = false
+    open val requiresMassiveCreation: Boolean get() = false
+
+    open val kind: ImpiantoKind get() = ImpiantoKind.STANDARD
+
+    // ==========================================
+    // 4. FORMATTAZIONE ATTIVITÀ & ZONA
+    // ==========================================
+
+    /**
+     * Risolve il valore visualizzato nella colonna "Zona" della scheda PDF per l'attività specificata.
+     * Per [QuadroMQT], sostituisce dinamicamente la dicitura generica "interruttore"
+     * con la tecnologia configurata (SF6, ISV, IVOR).
+     */
+    open fun formatZonaAttivita(attivita: Attivita): String {
+        return if (!attivita.zona.isNullOrBlank()) attivita.zona else "attività"
+    }
+
+    // ==========================================
+    // 5. METODI DI COPIA E CICLO DI VITA
+    // ==========================================
 
     // Metodo helper per creare una copia con parametri comuni, utile per il ViewModel/Editor
     abstract fun copyWithBasicParams(
@@ -27,6 +171,24 @@ sealed class Impianto {
         quantita: Int = this.quantita,
         noteSpecifiche: String? = this.noteSpecifiche
     ): Impianto
+
+    /**
+     * Istanzia una copia indipendente di un template globale da associare a un cantiere.
+     * Assegna un nuovo UUID, il [cantiereId] specificato, resetta [quantita] = 1,
+     * e applica eventuali valori predefiniti del sottotipo (es. default SF6 per QuadroMQT).
+     */
+    abstract fun instantiateForCantiere(
+        cantiereId: String?,
+        newId: String = java.util.UUID.randomUUID().toString()
+    ): Impianto
+
+    /**
+     * Sincronizza i dati anagrafici e normativi modificati nel master template
+     * (nomeCompleto, premessa, listaAttivita, listaNormative) preservando rigorosamente
+     * lo stato puntuale dell'istanza di cantiere (id, cantiereId, quantita, noteSpecifiche,
+     * liste di componenti installati e parametri tecnologici).
+     */
+    abstract fun applyTemplateUpdates(template: Impianto): Impianto
 }
 
 @Serializable
@@ -42,6 +204,8 @@ data class ImpiantoStandard(
     override val quantita: Int = 1,
     override val noteSpecifiche: String? = null
 ) : Impianto() {
+    override val kind: ImpiantoKind get() = ImpiantoKind.STANDARD
+
     override fun copyWithBasicParams(
         id: String, codIntervento: String, nomeCompleto: String, premessa: String?, 
         listaAttivita: List<Attivita>, listaNormative: List<Normativa>, 
@@ -50,6 +214,16 @@ data class ImpiantoStandard(
         id = id, codIntervento = codIntervento, nomeCompleto = nomeCompleto, 
         premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative, 
         cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche
+    )
+
+    override fun instantiateForCantiere(cantiereId: String?, newId: String): ImpiantoStandard =
+        copy(id = newId, cantiereId = cantiereId, quantita = 1)
+
+    override fun applyTemplateUpdates(template: Impianto): ImpiantoStandard = copy(
+        nomeCompleto = template.nomeCompleto,
+        premessa = template.premessa,
+        listaAttivita = template.listaAttivita,
+        listaNormative = template.listaNormative
     )
 }
 
@@ -70,6 +244,47 @@ data class QuadroBT(
     val descrizioneQuadro: String = "",
     val listaInterruttori: List<InterruttoreBT> = emptyList()
 ) : Impianto() {
+    override val kind: ImpiantoKind get() = ImpiantoKind.QUADRO_BT
+    override val isQuadro: Boolean get() = true
+    override val requiresMassiveCreation: Boolean get() = true
+
+    override val siglaCartiglio: String
+        get() = if (sigla.isNotBlank()) "$codIntervento - ${sigla.trim()}" else codIntervento
+
+    override val filePrefix: String
+        get() = if (sigla.isNotBlank()) {
+            "${codIntervento}-${sigla.trim().replace(" ", "_")}"
+        } else {
+            codIntervento.trim().replace(" ", "_")
+        }
+
+    override val displayCode: String
+        get() = if (sigla.isNotBlank()) "$codIntervento (${sigla.trim()})" else codIntervento
+
+    override val descrizioneDettagliata: String
+        get() = listOfNotNull(
+            descrizioneQuadro.trim().ifBlank { null },
+            nomeCompleto.trim().ifBlank { null }
+        ).firstOrNull() ?: nomeCompleto
+
+    override val nomeConSigla: String
+        get() = if (sigla.isNotBlank()) "$nomeCompleto (${sigla.trim()})" else nomeCompleto
+
+    override val subtipoLabel: String?
+        get() = if (sigla.isNotBlank()) "Sigla: ${sigla.trim()}" else null
+
+    override val conteggioComponenti: Int
+        get() = listaInterruttori.sumOf { it.quantita.coerceAtLeast(1) }
+
+    override val extraDettaglio: String?
+        get() = if (listaInterruttori.isNotEmpty()) "${listaInterruttori.size} interruttori" else null
+
+    override val dettaglioAllegato: String
+        get() = if (listaInterruttori.isNotEmpty()) "Sì ($conteggioComponenti diff.)" else "No"
+
+    override val hasTechnicalAttachment: Boolean
+        get() = listaInterruttori.isNotEmpty()
+
     override fun copyWithBasicParams(
         id: String, codIntervento: String, nomeCompleto: String, premessa: String?, 
         listaAttivita: List<Attivita>, listaNormative: List<Normativa>, 
@@ -78,6 +293,16 @@ data class QuadroBT(
         id = id, codIntervento = codIntervento, nomeCompleto = nomeCompleto, 
         premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative, 
         cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche
+    )
+
+    override fun instantiateForCantiere(cantiereId: String?, newId: String): QuadroBT =
+        copy(id = newId, cantiereId = cantiereId, quantita = 1)
+
+    override fun applyTemplateUpdates(template: Impianto): QuadroBT = copy(
+        nomeCompleto = template.nomeCompleto,
+        premessa = template.premessa,
+        listaAttivita = template.listaAttivita,
+        listaNormative = template.listaNormative
     )
 }
 
@@ -96,6 +321,24 @@ data class ImpiantoEmergenza(
     
     val listaLampade: List<LampadaEmergenza> = emptyList()
 ) : Impianto() {
+    override val kind: ImpiantoKind get() = ImpiantoKind.EMERGENZA
+    override val isEmergenza: Boolean get() = true
+
+    override val subtipoLabel: String
+        get() = siglaDocumentale.displayLabel
+
+    override val conteggioComponenti: Int
+        get() = listaLampade.size
+
+    override val extraDettaglio: String?
+        get() = if (listaLampade.isNotEmpty()) "${listaLampade.size} lampade" else null
+
+    override val dettaglioAllegato: String
+        get() = if (listaLampade.isNotEmpty()) "Sì ($conteggioComponenti lampade)" else "No"
+
+    override val hasTechnicalAttachment: Boolean
+        get() = listaLampade.isNotEmpty()
+
     override fun copyWithBasicParams(
         id: String, codIntervento: String, nomeCompleto: String, premessa: String?, 
         listaAttivita: List<Attivita>, listaNormative: List<Normativa>, 
@@ -114,6 +357,16 @@ data class ImpiantoEmergenza(
 
     val siglaDocumentale: EmergenzaSiglaDoc
         get() = EmergenzaSiglaDoc.fromCod(codIntervento)
+
+    override fun instantiateForCantiere(cantiereId: String?, newId: String): ImpiantoEmergenza =
+        copy(id = newId, cantiereId = cantiereId, quantita = 1)
+
+    override fun applyTemplateUpdates(template: Impianto): ImpiantoEmergenza = copy(
+        nomeCompleto = template.nomeCompleto,
+        premessa = template.premessa,
+        listaAttivita = template.listaAttivita,
+        listaNormative = template.listaNormative
+    )
 }
 
 @Serializable
@@ -158,32 +411,134 @@ sealed interface ImpiantoRilevazione {
 }
 
 @Serializable
-enum class CategoriaRivelatore(val key: String, val label: String) {
-    FUMO_PUNTIFORMI("fumo_puntiformi", "Rivelatori di Fumo Puntiformi"),
-    FUMO_LINEARI("fumo_lineari", "Rivelatori di Fumo Lineari"),
-    CALORE_PUNTIFORMI("calore_puntiformi", "Rivelatori di Calore Puntiformi"),
-    CALORE_LINEARI("calore_lineari", "Rivelatori di Calore Lineari"),
-    ASPIRAZIONE("aspirazione", "Rivelazione ad Aspirazione"),
-    CONDOTTA("condotta", "Rivelatori di condotta"),
-    FIAMMA("fiamma", "Rivelatori di Fiamma");
-
-    fun buildDescrizione(): String {
-        return "Prova dei $label (prova sul 50% dell’impianto) impiegando dispositivi artificiali di produzione del fumo o di altro, simulando l'insorgere di un incendio"
-    }
+enum class TipoRivelatore(val label: String) {
+    FUMO("FUMO"),
+    TERMO("TERMO"),
+    BARRIERA("BARR."),
+    OTTICO("OTTICO"),
+    TERMOVELOCIMETRICO("TERMOVELOCIMETRICO")
 }
 
 @Serializable
-data class DispositivoRilevazione(
-    val id: String = java.util.UUID.randomUUID().toString(),
-    val loop: Int = 1,
-    val indirizzo: String,
-    val tipo: String,
-    val installazione: String? = null,
-    val descrizione: String,
-    val zona: String? = null,
-    val dataInstallazione: String? = null,
-    val note: String? = null
-)
+enum class TipoModuloAntincendio(val label: String) {
+    MODULO_COMANDO("MODULO DI COMANDO"),
+    PULSANTE("PULSANTE"),
+    M701("M701"),
+    M710("M710"),
+    CMA_11E_IN("CMA 11-E (IN)"),
+    CMA_11E_OUT("CMA 11-E (OUT)"),
+    ALTRO("ALTRO")
+}
+
+@Serializable
+enum class TipoComponenteComuneAntincendio(val label: String) {
+    CENTRALE_INCENDIO("CENTRALE INCENDIO"),
+    ALIMENTATORE_SUPPLEMENTARE("ALIMENTATORE SUPPLEMENTARE"),
+    SIRENA_ESTERNA("SIRENA ESTERNA"),
+    TARGA_OTTICO_ACUSTICA("TARGA OTTICO-ACUSTICA"),
+    PANNELLO_RIPETITORE("PANNELLO RIPETITORE"),
+    COMBINATORE("COMBINATORE"),
+    ALTRO("ALTRO")
+}
+
+@Serializable
+sealed class DispositivoRilevazione {
+    abstract val id: String
+    abstract val indirizzo: String
+    abstract val installazione: String?
+    abstract val descrizione: String
+    abstract val zona: String?
+    abstract val dataInstallazione: String?
+    abstract val note: String?
+
+    abstract val labelTipo: String
+    abstract val labelSezione: String
+
+    @Serializable
+    @SerialName("ComponenteComune")
+    data class ComponenteComune(
+        override val id: String = java.util.UUID.randomUUID().toString(),
+        val tipo: TipoComponenteComuneAntincendio = TipoComponenteComuneAntincendio.CENTRALE_INCENDIO,
+        val tipoCustom: String? = null,
+        override val indirizzo: String,
+        override val installazione: String? = null,
+        override val descrizione: String,
+        override val zona: String? = null,
+        override val dataInstallazione: String? = null,
+        override val note: String? = null
+    ) : DispositivoRilevazione() {
+        override val labelTipo: String
+            get() = if (tipo == TipoComponenteComuneAntincendio.ALTRO && !tipoCustom.isNullOrBlank()) {
+                tipoCustom.trim().uppercase()
+            } else {
+                tipo.label
+            }
+
+        override val labelSezione: String
+            get() = "COMUNI"
+    }
+
+    @Serializable
+    @SerialName("RivelatoreLoop")
+    data class RivelatoreLoop(
+        override val id: String = java.util.UUID.randomUUID().toString(),
+        val loop: Int = 1,
+        val numeroIndirizzo: Int,
+        val tipo: TipoRivelatore = TipoRivelatore.FUMO,
+        override val installazione: String? = null,
+        override val descrizione: String,
+        override val zona: String? = null,
+        override val dataInstallazione: String? = null,
+        override val note: String? = null
+    ) : DispositivoRilevazione() {
+        init {
+            require(loop in 1..8) { "Il loop deve essere compreso tra 1 e 8 (trovato: $loop)" }
+            require(numeroIndirizzo in 1..150) { "L'indirizzo del rivelatore deve essere compreso tra 1 e 150 (trovato: $numeroIndirizzo)" }
+        }
+
+        override val indirizzo: String
+            get() = "RIV.L$loop.$numeroIndirizzo"
+
+        override val labelTipo: String
+            get() = tipo.label
+
+        override val labelSezione: String
+            get() = "LOOP $loop"
+    }
+
+    @Serializable
+    @SerialName("ModuloLoop")
+    data class ModuloLoop(
+        override val id: String = java.util.UUID.randomUUID().toString(),
+        val loop: Int = 1,
+        val numeroIndirizzo: Int,
+        val tipo: TipoModuloAntincendio = TipoModuloAntincendio.MODULO_COMANDO,
+        val tipoCustom: String? = null,
+        override val installazione: String? = null,
+        override val descrizione: String,
+        override val zona: String? = null,
+        override val dataInstallazione: String? = null,
+        override val note: String? = null
+    ) : DispositivoRilevazione() {
+        init {
+            require(loop in 1..8) { "Il loop deve essere compreso tra 1 e 8 (trovato: $loop)" }
+            require(numeroIndirizzo in 1..150) { "L'indirizzo del modulo deve essere compreso tra 1 e 150 (trovato: $numeroIndirizzo)" }
+        }
+
+        override val indirizzo: String
+            get() = "MOD.L$loop.$numeroIndirizzo"
+
+        override val labelTipo: String
+            get() = if (tipo == TipoModuloAntincendio.ALTRO && !tipoCustom.isNullOrBlank()) {
+                tipoCustom.trim().uppercase()
+            } else {
+                tipo.label
+            }
+
+        override val labelSezione: String
+            get() = "LOOP $loop"
+    }
+}
 
 @Serializable
 @SerialName("RilevazioneAntincendio")
@@ -197,37 +552,56 @@ data class RilevazioneAntincendio(
     override val cantiereId: String? = null,
     override val quantita: Int = 1,
     override val noteSpecifiche: String? = null,
-    
+
     override val quantitaComponenti: Map<String, Int> = emptyMap(),
 
-    // R18: Mappa di booleani per le 7 categorie di rivelatori
-    val categorieRivelatori: Map<String, Boolean> = emptyMap(),
-
-    // R19: Registro componenti a Loop (1..4)
+    // Registro componenti: Componenti Comuni + Loop 1..8 (Rivelatori e Moduli, ind. 1..150)
     val listaDispositivi: List<DispositivoRilevazione> = emptyList()
 ) : Impianto(), ImpiantoRilevazione {
+    override val kind: ImpiantoKind get() = ImpiantoKind.ANTINCENDIO
+    override val isAntincendio: Boolean get() = true
+
+    override val conteggioComponenti: Int
+        get() = listaDispositivi.size
+
+    override val extraDettaglio: String?
+        get() = if (listaDispositivi.isNotEmpty()) "${listaDispositivi.size} dispositivi" else null
+
+    override val dettaglioAllegato: String
+        get() = if (listaDispositivi.isNotEmpty()) "Sì ($conteggioComponenti disp.)" else "No"
+
+    override val hasTechnicalAttachment: Boolean
+        get() = listaDispositivi.isNotEmpty()
+
     override fun copyWithBasicParams(
-        id: String, codIntervento: String, nomeCompleto: String, premessa: String?, 
-        listaAttivita: List<Attivita>, listaNormative: List<Normativa>, 
+        id: String, codIntervento: String, nomeCompleto: String, premessa: String?,
+        listaAttivita: List<Attivita>, listaNormative: List<Normativa>,
         cantiereId: String?, quantita: Int, noteSpecifiche: String?
     ): Impianto = copy(
-        id = id, codIntervento = codIntervento, nomeCompleto = nomeCompleto, 
-        premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative, 
+        id = id, codIntervento = codIntervento, nomeCompleto = nomeCompleto,
+        premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative,
         cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche,
-        categorieRivelatori = categorieRivelatori,
+        quantitaComponenti = quantitaComponenti,
         listaDispositivi = listaDispositivi
     )
 
-    fun isCategoriaAttiva(cat: CategoriaRivelatore): Boolean = categorieRivelatori[cat.key] == true
-
-    fun withCategoria(cat: CategoriaRivelatore, attiva: Boolean): RilevazioneAntincendio {
-        val mut = categorieRivelatori.toMutableMap()
-        if (attiva) mut[cat.key] = true else mut.remove(cat.key)
-        return copy(categorieRivelatori = mut)
-    }
-
     fun withDispositivi(dispositivi: List<DispositivoRilevazione>): RilevazioneAntincendio =
         copy(listaDispositivi = dispositivi)
+
+    override fun instantiateForCantiere(cantiereId: String?, newId: String): RilevazioneAntincendio =
+        copy(id = newId, cantiereId = cantiereId, quantita = 1)
+
+    override fun applyTemplateUpdates(template: Impianto): RilevazioneAntincendio {
+        val templateRi = template as? RilevazioneAntincendio
+        return copy(
+            nomeCompleto = template.nomeCompleto,
+            premessa = template.premessa,
+            listaAttivita = template.listaAttivita,
+            listaNormative = template.listaNormative,
+            listaDispositivi = this.listaDispositivi.ifEmpty { templateRi?.listaDispositivi ?: emptyList() },
+            quantitaComponenti = this.quantitaComponenti.ifEmpty { templateRi?.quantitaComponenti ?: emptyMap() }
+        )
+    }
 }
 
 @Serializable
@@ -245,6 +619,21 @@ data class RilevazioneGas(
     
     override val quantitaComponenti: Map<String, Int> = emptyMap()
 ) : Impianto(), ImpiantoRilevazione {
+    override val kind: ImpiantoKind get() = ImpiantoKind.GAS
+    override val isGas: Boolean get() = true
+
+    override val conteggioComponenti: Int
+        get() = quantitaComponenti.values.sum()
+
+    override val extraDettaglio: String?
+        get() = if (quantitaComponenti.isNotEmpty()) "$conteggioComponenti componenti" else null
+
+    override val dettaglioAllegato: String
+        get() = if (conteggioComponenti > 0) "Sì ($conteggioComponenti comp.)" else "No"
+
+    override val hasTechnicalAttachment: Boolean
+        get() = conteggioComponenti > 0
+
     override fun copyWithBasicParams(
         id: String, codIntervento: String, nomeCompleto: String, premessa: String?, 
         listaAttivita: List<Attivita>, listaNormative: List<Normativa>, 
@@ -252,8 +641,23 @@ data class RilevazioneGas(
     ): Impianto = copy(
         id = id, codIntervento = codIntervento, nomeCompleto = nomeCompleto, 
         premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative, 
-        cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche
+        cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche,
+        quantitaComponenti = quantitaComponenti
     )
+
+    override fun instantiateForCantiere(cantiereId: String?, newId: String): RilevazioneGas =
+        copy(id = newId, cantiereId = cantiereId, quantita = 1)
+
+    override fun applyTemplateUpdates(template: Impianto): RilevazioneGas {
+        val templateGas = template as? RilevazioneGas
+        return copy(
+            nomeCompleto = template.nomeCompleto,
+            premessa = template.premessa,
+            listaAttivita = template.listaAttivita,
+            listaNormative = template.listaNormative,
+            quantitaComponenti = this.quantitaComponenti.ifEmpty { templateGas?.quantitaComponenti ?: emptyMap() }
+        )
+    }
 }
 
 @Serializable
@@ -271,16 +675,34 @@ data class QuadroMQT(
     
     val tipoInterruttore: MqtSwitchType? = null
 ) : Impianto() {
+    override val kind: ImpiantoKind get() = ImpiantoKind.QUADRO_MQT
+    override val isQuadroMqt: Boolean get() = true
+
+    override val subtipoLabel: String?
+        get() = tipoInterruttore?.let { "Interruttore: ${it.label}" }
+
+    override fun formatZonaAttivita(attivita: Attivita): String {
+        if (attivita.zona.isNullOrBlank()) return "attività"
+        val switchLabels = setOf("Interruttore", "interruttore", "ISF6", "SF6", "ISV", "IVOR")
+        if (switchLabels.any { it.equals(attivita.zona, ignoreCase = true) }) {
+            return tipoInterruttore?.label ?: "SF6"
+        }
+        return attivita.zona
+    }
+
     override fun copyWithBasicParams(
         id: String, codIntervento: String, nomeCompleto: String, premessa: String?, 
         listaAttivita: List<Attivita>, listaNormative: List<Normativa>, 
         cantiereId: String?, quantita: Int, noteSpecifiche: String?
-    ): Impianto = copy(
-        id = id, codIntervento = codIntervento, nomeCompleto = nomeCompleto, 
-        premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative, 
-        cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche,
-        tipoInterruttore = tipoInterruttore
-    )
+    ): Impianto {
+        val base = copy(
+            id = id, codIntervento = codIntervento, nomeCompleto = nomeCompleto, 
+            premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative, 
+            cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche,
+            tipoInterruttore = tipoInterruttore
+        )
+        return if (tipoInterruttore != null) base.withTipoInterruttore(tipoInterruttore) else base
+    }
 
     /**
      * Sostituisce la keyword "Interruttore" (o precedente switch type) nella colonna "zona"
@@ -300,6 +722,24 @@ data class QuadroMQT(
             tipoInterruttore = tipo,
             listaAttivita = updatedAttivita
         )
+    }
+
+    override fun instantiateForCantiere(cantiereId: String?, newId: String): QuadroMQT {
+        val tipo = tipoInterruttore ?: MqtSwitchType.SF6
+        return copy(id = newId, cantiereId = cantiereId, quantita = 1, tipoInterruttore = tipo)
+            .withTipoInterruttore(tipo)
+    }
+
+    override fun applyTemplateUpdates(template: Impianto): QuadroMQT {
+        val effectiveSwitch = this.tipoInterruttore ?: (template as? QuadroMQT)?.tipoInterruttore
+        val base = copy(
+            nomeCompleto = template.nomeCompleto,
+            premessa = template.premessa,
+            listaAttivita = template.listaAttivita,
+            listaNormative = template.listaNormative,
+            tipoInterruttore = effectiveSwitch
+        )
+        return if (effectiveSwitch != null) base.withTipoInterruttore(effectiveSwitch) else base
     }
 }
 
@@ -343,15 +783,6 @@ data class ComponenteApprovato(
     val caratteristicheTecniche: Map<String, String> = emptyMap(),
     val variantiProduttore: Map<String, VarianteProdotto> = emptyMap(),
     val dataCreazione: String = ""
-)
-
-@Serializable
-data class ComponentCandidate(
-    val etimClassId: String,
-    val etimClassName: String,
-    val descrizioneStandard: String,
-    val caratteristicheTecniche: Map<String, String> = emptyMap(),
-    val variantiDisponibili: List<VarianteProdotto> = emptyList()
 )
 
 @Serializable
@@ -448,48 +879,30 @@ data class Cantiere(
     val id: String,
     val nome: String,
     val clienteId: String,
-    @Deprecated("Usare dataIntervento; mantenuto per retrocompatibilità JSON/BSON", ReplaceWith("dataIntervento"))
-    val dataInizioIntervento: String? = null,
     val dataInizioContratto: String? = null,
     val dataIntervento: String? = null,
     val dataInterventoPrecedente: String? = null,
     val nomeManutentore: String? = null,
-    /** Indirizzo della sede operativa / cantiere (R3). Opzionale per retrocompatibilità. */
+    /** Indirizzo della sede operativa / cantiere (R3). */
     val indirizzo: String? = null,
     /** Percorso o Data URI base64 della firma digitale del tecnico manutentore (R26). */
     val firmaManutentore: String? = null
-) {
-    /**
-     * Data intervento effettiva con fallback automatico su [dataInizioIntervento]
-     * per garantire retrocompatibilità trasparente con record legacy JSON e MongoDB.
-     */
-    val effectiveDataIntervento: String?
-        get() = dataIntervento?.trim()?.ifBlank { null } ?: dataInizioIntervento?.trim()?.ifBlank { null }
-
-    /**
-     * Alias italiano per [effectiveDataIntervento].
-     */
-    val dataInterventoEffettiva: String?
-        get() = effectiveDataIntervento
-}
+)
 
 /**
- * Normalizza le date del cantiere, migrando [dataInizioIntervento] su [dataIntervento] se non ancora valorizzato.
- * Garantisce la sincronizzazione bidirezionale tra dataIntervento e il campo legacy dataInizioIntervento.
+ * Normalizza le date del cantiere rimuovendo spazi superflui e convertendo stringhe vuote in null.
  */
 fun Cantiere.normalizeDates(): Cantiere {
-    val eff = effectiveDataIntervento
     val trimmedContratto = dataInizioContratto?.trim()?.ifBlank { null }
+    val trimmedIntervento = dataIntervento?.trim()?.ifBlank { null }
     val trimmedPrecedente = dataInterventoPrecedente?.trim()?.ifBlank { null }
     return if (dataInizioContratto != trimmedContratto ||
-        dataInterventoPrecedente != trimmedPrecedente ||
-        dataIntervento != eff ||
-        dataInizioIntervento != eff
+        dataIntervento != trimmedIntervento ||
+        dataInterventoPrecedente != trimmedPrecedente
     ) {
         copy(
             dataInizioContratto = trimmedContratto,
-            dataIntervento = eff,
-            dataInizioIntervento = eff,
+            dataIntervento = trimmedIntervento,
             dataInterventoPrecedente = trimmedPrecedente
         )
     } else {
@@ -498,16 +911,15 @@ fun Cantiere.normalizeDates(): Cantiere {
 }
 
 /**
- * Promuove l'attuale data intervento (da [effectiveDataIntervento]) a [dataInterventoPrecedente],
- * impostando opzionalmente la nuova data di intervento sia su [dataIntervento] che su [dataInizioIntervento].
+ * Promuove l'attuale [Cantiere.dataIntervento] a [Cantiere.dataInterventoPrecedente],
+ * impostando opzionalmente la nuova data di intervento.
  */
 fun Cantiere.promoteInterventoToPrecedente(nuovaDataIntervento: String? = null): Cantiere {
-    val currentEffettiva = effectiveDataIntervento
+    val current = dataIntervento?.trim()?.ifBlank { null }
     val trimmedNuova = nuovaDataIntervento?.trim()?.ifBlank { null }
     return copy(
-        dataInterventoPrecedente = currentEffettiva ?: dataInterventoPrecedente,
-        dataIntervento = trimmedNuova,
-        dataInizioIntervento = trimmedNuova
+        dataInterventoPrecedente = current ?: dataInterventoPrecedente,
+        dataIntervento = trimmedNuova
     )
 }
 
@@ -522,7 +934,7 @@ fun Impianto.normalizeType(): Impianto {
         if (att.nAttivita == idx + 1) att else att.copy(nAttivita = idx + 1)
     }
     return when {
-        this !is ImpiantoEmergenza && (codIntervento.equals("EM", ignoreCase = true) || codIntervento.equals("IS", ignoreCase = true)) -> {
+        this !is ImpiantoEmergenza && ImpiantoCodici.isEmergenza(codIntervento) -> {
             ImpiantoEmergenza(
                 id = id,
                 codIntervento = codIntervento,
@@ -536,7 +948,7 @@ fun Impianto.normalizeType(): Impianto {
                 listaLampade = emptyList()
             )
         }
-        this !is QuadroBT && codIntervento.equals("Q", ignoreCase = true) -> {
+        this !is QuadroBT && ImpiantoCodici.isQuadroBT(codIntervento) -> {
             QuadroBT(
                 id = id,
                 codIntervento = codIntervento,
@@ -552,7 +964,7 @@ fun Impianto.normalizeType(): Impianto {
                 listaInterruttori = emptyList()
             )
         }
-        this !is RilevazioneAntincendio && codIntervento.equals("RI", ignoreCase = true) -> {
+        this !is RilevazioneAntincendio && ImpiantoCodici.isAntincendio(codIntervento) -> {
             RilevazioneAntincendio(
                 id = id,
                 codIntervento = codIntervento,
@@ -564,11 +976,10 @@ fun Impianto.normalizeType(): Impianto {
                 quantita = quantita,
                 noteSpecifiche = noteSpecifiche,
                 quantitaComponenti = (this as? ImpiantoRilevazione)?.quantitaComponenti ?: emptyMap(),
-                categorieRivelatori = (this as? RilevazioneAntincendio)?.categorieRivelatori ?: emptyMap(),
                 listaDispositivi = (this as? RilevazioneAntincendio)?.listaDispositivi ?: emptyList()
             )
         }
-        this !is RilevazioneGas && codIntervento.equals("RIG", ignoreCase = true) -> {
+        this !is RilevazioneGas && ImpiantoCodici.isGas(codIntervento) -> {
             RilevazioneGas(
                 id = id,
                 codIntervento = codIntervento,
@@ -581,7 +992,7 @@ fun Impianto.normalizeType(): Impianto {
                 noteSpecifiche = noteSpecifiche
             )
         }
-        this !is QuadroMQT && codIntervento.equals("QMT", ignoreCase = true) -> {
+        this !is QuadroMQT && ImpiantoCodici.isQuadroMQT(codIntervento) -> {
             QuadroMQT(
                 id = id,
                 codIntervento = codIntervento,

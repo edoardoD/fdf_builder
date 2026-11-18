@@ -1,101 +1,95 @@
 package manutenzioni.domain.service
 
 import manutenzioni.domain.model.Attivita
-import manutenzioni.domain.model.CategoriaRivelatore
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.ImpiantoRilevazione
 import manutenzioni.domain.model.Periodo
-import manutenzioni.domain.model.RilevazioneAntincendio
-import manutenzioni.domain.model.TipoPeriodo
+import manutenzioni.domain.service.rules.CrossPlantRule
+import manutenzioni.domain.service.rules.DefaultCrossPlantRule
+import manutenzioni.domain.service.rules.FireAlarmCrossPlantRule
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * Resolver per calcolare le attività effettive e le frequenze per i sistemi di
- * Rilevazione e Allarme (Rilevazione Incendi "RI", Rilevazione Gas "RIG", ecc.)
- * o qualsiasi impianto con attività condizionate (Cross-Plant Discovery)
- * in base alla composizione impiantistica presente nel cantiere.
+ * Resolver unificato per calcolare le attività effettive e le frequenze disponibili per
+ * gli impianti del cantiere, orchestrando il registro delle regole [CrossPlantRule].
+ *
+ * Mantiene la compatibilità al 100% con tutte le chiamate esistenti nel ViewModel, nei servizi PDF
+ * e nei test, consentendo al contempo l'estensione dinamica Open-Closed per nuovi tipi di impianto.
  */
 object CrossPlantAttivitaResolver {
 
-    /**
-     * Determina se un impianto richiede la risoluzione contestuale Cross-Plant.
-     * È vero per [ImpiantoRilevazione] (RI, RIG) o per qualsiasi impianto
-     * che contenga almeno un'attività che specifica un [Attivita.targetImpiantoCod].
-     */
-    fun isCrossPlant(impianto: Impianto): Boolean {
-        return impianto is ImpiantoRilevazione ||
-                impianto.listaAttivita.any { it.targetImpiantoCod != null }
+    private val defaultRule: CrossPlantRule = DefaultCrossPlantRule()
+    private val customRules = CopyOnWriteArrayList<CrossPlantRule>()
+
+    init {
+        // Registra le regole di base standard
+        customRules.add(FireAlarmCrossPlantRule())
     }
 
     /**
-     * Risolve le attività effettive per l'impianto in esame.
-     * Applica prima il filtro di frequenza inclusiva, poi il filtro contestuale
-     * escludendo le attività con [Attivita.targetImpiantoCod] non presente nel cantiere.
-     * Per [RilevazioneAntincendio] include tassativamente le 10 attività istituzionali
-     * a 6M e inietta le prove al 50% per le categorie di rivelatori attive (R18).
+     * Registra una nuova regola di Cross-Plant Discovery all'inizio della catena di priorità.
+     */
+    fun registerRule(rule: CrossPlantRule) {
+        customRules.add(0, rule)
+    }
+
+    /**
+     * Rimuove una regola dal registro.
+     */
+    fun unregisterRule(rule: CrossPlantRule) {
+        customRules.remove(rule)
+    }
+
+    /**
+     * Ripristina il registro alle sole regole di default previste dal sistema.
+     */
+    fun resetToDefaults() {
+        customRules.clear()
+        customRules.add(FireAlarmCrossPlantRule())
+    }
+
+    /**
+     * Restituisce la lista immutabile delle regole registrate.
+     */
+    fun getRegisteredRules(): List<CrossPlantRule> = customRules.toList()
+
+    /**
+     * Seleziona la regola appropriata per l'impianto specificato.
+     */
+    fun findRuleFor(impianto: Impianto): CrossPlantRule {
+        return customRules.firstOrNull { it.canHandle(impianto) } ?: defaultRule
+    }
+
+    /**
+     * Determina se un impianto richiede la risoluzione contestuale Cross-Plant.
+     * È vero per [ImpiantoRilevazione] (RI, RIG), per qualsiasi impianto
+     * che contenga almeno un'attività che specifica un [Attivita.targetImpiantoCod],
+     * oppure per qualsiasi impianto gestito da una regola registrata non di default.
+     */
+    fun isCrossPlant(impianto: Impianto): Boolean {
+        return impianto is ImpiantoRilevazione ||
+                impianto.listaAttivita.any { it.targetImpiantoCod != null } ||
+                customRules.any { it.canHandle(impianto) }
+    }
+
+    /**
+     * Risolve le attività effettive per l'impianto in esame delegando alla regola corrispondente.
      *
      * @param impianto L'impianto in esame (es. RI, RIG o qualsiasi impianto con vincoli cross-plant)
      * @param impiantiNelCantiere Tutti gli impianti presenti nel cantiere
      * @param frequenza La frequenza selezionata per la generazione
-     * @return Lista delle attività filtrate
+     * @return Lista delle attività filtrate e rinumerate 1..N
      */
     fun resolveAttivita(
         impianto: Impianto,
         impiantiNelCantiere: List<Impianto>,
         frequenza: Periodo
     ): List<Attivita> {
-        val codiciPresenti = impiantiNelCantiere.map { it.codIntervento.trim().uppercase() }.toSet()
-
-        if (impianto is RilevazioneAntincendio) {
-            // 1. Attività istituzionali di centrale e linee (tassativamente 10 attività a 6M)
-            val istituzionali = if (frequenza.inMesi() >= 6) {
-                val base = impianto.listaAttivita.filter { it.targetImpiantoCod == null }
-                if (base.size >= 10) base.take(10) else base
-            } else {
-                FrequencyFilter.filterByFrequenza(impianto.listaAttivita.filter { it.targetImpiantoCod == null }, frequenza)
-            }
-
-            // 2. Attività dinamiche di prova al 50% per ciascuna categoria di rivelatori attiva (R18)
-            val dinamiche = if (frequenza.inMesi() % 6 == 0) {
-                CategoriaRivelatore.values().filter { impianto.isCategoriaAttiva(it) }.map { cat ->
-                    Attivita(
-                        nAttivita = 0,
-                        tipoAttivita = "Verifica",
-                        zona = "Componenti",
-                        descrizione = cat.buildDescrizione(),
-                        frequenza = Periodo(TipoPeriodo.M, 6),
-                        targetImpiantoCod = null
-                    )
-                }
-            } else emptyList()
-
-            // 3. Attività cross-plant condizionate dagli altri impianti presenti nel cantiere
-            val crossPlant = impianto.listaAttivita
-                .filter { it.targetImpiantoCod != null && it.targetImpiantoCod.trim().uppercase() in codiciPresenti }
-                .let { FrequencyFilter.filterByFrequenza(it, frequenza) }
-
-            // 4. Concatenazione e rinumerazione progressiva (1..N)
-            val unificate = istituzionali + dinamiche + crossPlant
-            return unificate.mapIndexed { index, att -> att.copy(nAttivita = index + 1) }
-        }
-
-        // 1. Filtro base per frequenza inclusiva
-        val attivitaFrequenzaOk = FrequencyFilter.filterByFrequenza(impianto.listaAttivita, frequenza)
-
-        // Se non contiene alcuna attività condizionata, restituisce direttamente la lista rinumerata 1..N
-        if (impianto.listaAttivita.none { it.targetImpiantoCod != null }) {
-            return attivitaFrequenzaOk.mapIndexed { index, att -> att.copy(nAttivita = index + 1) }
-        }
-
-        // 2. Filtro contestuale in base agli impianti presenti nel cantiere e rinumerazione 1..N
-        return attivitaFrequenzaOk.filter { att ->
-            val target = att.targetImpiantoCod?.trim()?.uppercase()
-            target == null || target in codiciPresenti
-        }.mapIndexed { index, att -> att.copy(nAttivita = index + 1) }
+        return findRuleFor(impianto).resolveAttivita(impianto, impiantiNelCantiere, frequenza)
     }
 
     /**
-     * Calcola le frequenze disponibili per un impianto, tenendo conto
-     * degli impianti effettivamente presenti nel cantiere.
+     * Calcola le frequenze disponibili per un impianto delegando alla regola corrispondente.
      * Esclude le frequenze che deriverebbero solo da attività condizionate
      * i cui impianti target non sono presenti nel cantiere.
      */
@@ -103,32 +97,6 @@ object CrossPlantAttivitaResolver {
         impianto: Impianto,
         impiantiNelCantiere: List<Impianto>
     ): List<Periodo> {
-        if (impianto is RilevazioneAntincendio) {
-            val codiciPresenti = impiantiNelCantiere.map { it.codIntervento.trim().uppercase() }.toSet()
-            val crossPlant = impianto.listaAttivita.filter {
-                val target = it.targetImpiantoCod?.trim()?.uppercase()
-                target == null || target in codiciPresenti
-            }
-            val freqs = FrequencyFilter.frequenzeDisponibili(crossPlant).toMutableList()
-            val semestrale = Periodo(TipoPeriodo.M, 6)
-            if (!freqs.contains(semestrale)) {
-                freqs.add(semestrale)
-            }
-            return freqs.sortedBy { it.inMesi() }
-        }
-
-        if (impianto.listaAttivita.none { it.targetImpiantoCod != null }) {
-            return FrequencyFilter.frequenzeDisponibili(impianto.listaAttivita)
-        }
-
-        val codiciPresenti = impiantiNelCantiere.map { it.codIntervento.trim().uppercase() }.toSet()
-
-        // Filtra le attività contestualmente, poi estrae le frequenze distinte
-        val attivitaApplicabili = impianto.listaAttivita.filter { att ->
-            val target = att.targetImpiantoCod?.trim()?.uppercase()
-            target == null || target in codiciPresenti
-        }
-
-        return FrequencyFilter.frequenzeDisponibili(attivitaApplicabili)
+        return findRuleFor(impianto).resolveFrequenze(impianto, impiantiNelCantiere)
     }
 }

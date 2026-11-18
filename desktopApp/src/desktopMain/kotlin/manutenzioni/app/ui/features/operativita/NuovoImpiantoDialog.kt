@@ -22,10 +22,6 @@ import manutenzioni.app.ui.theme.SlateBorder
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.QuadroBT
 
-/** Un template Quadro BT richiede il wizard di creazione massiva (sigle QG, Q1, ...). */
-internal fun Impianto.isQuadroBtTemplate(): Boolean =
-    this is QuadroBT || codIntervento.equals("Q", ignoreCase = true)
-
 /**
  * Dialog "Aggiungi Attività di Verifica" (R5/R6).
  *
@@ -54,7 +50,7 @@ fun NuovoImpiantoDialog(
     val tuttiFiltratiSelezionati = templatesFiltrati.isNotEmpty() &&
         templatesFiltrati.all { it.id in selectedImpiantoIds }
     val selezionati = impiantiGlobali.filter { it.id in selectedImpiantoIds }
-    val haQuadriBt = selezionati.any { it.isQuadroBtTemplate() }
+    val haQuadriBt = selezionati.any { it.requiresMassiveCreation || it.isQuadro }
 
     AlertDialog(
         modifier = Modifier.width(620.dp),

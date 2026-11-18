@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import java.util.UUID
 import manutenzioni.domain.model.Impianto
-import manutenzioni.app.ui.ImpiantoEditor
+import manutenzioni.app.ui.features.operativita.editor.ImpiantoEditor
 import manutenzioni.app.ui.theme.SlateBorder
 
 @Composable

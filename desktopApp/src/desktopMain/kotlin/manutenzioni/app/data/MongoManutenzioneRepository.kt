@@ -72,7 +72,6 @@ class MongoManutenzioneRepository(
                     baseUpdated.withTipoInterruttore(baseUpdated.tipoInterruttore)
                 baseUpdated is RilevazioneAntincendio && imp is RilevazioneAntincendio ->
                     baseUpdated.copy(
-                        categorieRivelatori = imp.categorieRivelatori,
                         listaDispositivi = imp.listaDispositivi
                     )
                 else -> baseUpdated

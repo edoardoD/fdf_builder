@@ -119,10 +119,12 @@ class QuadroMqtSwitchTypeTest {
 
         val filtrate1A = FrequencyFilter.filterByFrequenza(qmt.listaAttivita, Periodo(TipoPeriodo.A, 1))
         val html = htmlService.buildHtml(
-            impianto = qmt,
-            attivitaFiltrate = filtrate1A,
-            frequenza = Periodo(TipoPeriodo.A, 1),
-            clienteNome = "Industrie Meccaniche Spa"
+            manutenzioni.domain.service.HtmlRenderContext(
+                impianto = qmt,
+                attivita = filtrate1A,
+                frequenza = Periodo(TipoPeriodo.A, 1),
+                clienteNome = "Industrie Meccaniche Spa"
+            )
         )
 
         // Verifica che nel PDF HTML compaia la colonna Impianto/Zona con "ISV"

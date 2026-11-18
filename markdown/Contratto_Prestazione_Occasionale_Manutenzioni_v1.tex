@@ -1,0 +1,270 @@
+\documentclass[11pt,a4paper]{article}
+
+% --- PACCHETTI TIPOGRAFICI E LINGUISTICI ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% --- GEOMETRIA PAGINA E SPAZIATURA ---
+\usepackage[top=25mm,bottom=25mm,left=25mm,right=25mm]{geometry}
+\usepackage{setspace}
+\setstretch{1.18}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt plus 1pt minus 1pt}
+
+% --- PACCHETTI GRAFICI, TABELLE E MATEMATICA ---
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{eurosym}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+% --- INTESTAZIONI E PIÈ DI PAGINA ---
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[C]{\footnotesize\thepage}
+
+% --- COMANDI PERSONALIZZATI ---
+\newcommand{\articolo}[2]{%
+  \vspace{0.8em}%
+  {\noindent\bfseries Articolo #1 \quad---\quad \itshape #2}\par\vspace{0.2em}%
+}
+
+\begin{document}
+
+% ==============================================================================
+% FRONTESPIZIO / TESTATA
+% ==============================================================================
+\begin{center}
+  {\Large\bfseries\scshape Contratto di Prestazione d'Opera Occasionale}\\[0.4em]
+  {\small\itshape Ai sensi dell'art. 2222 e segg. del Codice Civile e dell'art. 67, comma 1, lett. l) del D.P.R. 917/1986 (TUIR)}
+\end{center}
+
+\vspace{0.4em}
+\hrule height 0.8pt
+\vspace{1.2em}
+
+\begin{center}
+  {\bfseries\scshape Tra le sottoscritte parti}
+\end{center}
+
+\vspace{0.5em}
+
+\noindent
+\textbf{1. COMMITTENTE:}\\
+\textbf{[Ragione Sociale Azienda Committente]}, con sede legale in [Indirizzo, Numero Civico, CAP, Città (Prov)],\\
+Codice Fiscale / Partita IVA: \texttt{[00000000000]},\\
+in persona del Legale Rappresentante \emph{pro tempore}, \textbf{[Nome e Cognome del Rappresentante]},\\
+\emph{(di seguito denominata per brevità il \textbf{``Committente''})}
+
+\vspace{0.8em}
+\begin{center}
+  \textbf{E}
+\end{center}
+\vspace{0.4em}
+
+\noindent
+\textbf{2. PRESTATORE D'OPERA:}\\
+\textbf{Prof. Edoardo Desiderio}, residente in Via Fratelli Valpiani 11, 47122 Forlì (FC),\\
+Codice Fiscale: \texttt{DSDDRD01R31D704K},\\
+\emph{(di seguito denominato per brevità il \textbf{``Prestatore''})}
+
+\vspace{0.8em}
+\begin{center}
+  \small\itshape (congiuntamente definite le \textbf{``Parti''})
+\end{center}
+
+\vspace{0.6em}
+\hrule height 0.4pt
+\vspace{0.8em}
+
+% ==============================================================================
+% PREMESSE
+% ==============================================================================
+\noindent{\bfseries\scshape Premesso che:}
+\begin{enumerate}[label=\textbf{\Alph*.}]
+  \item Il Committente opera nel settore impiantistico industriale e civile e intende digitalizzare e rendere conformi e automatiche le attività del proprio Ufficio Tecnico riguardanti la redazione, gestione ed esportazione della documentazione di manutenzione periodica;
+  \item Il Prestatore possiede comprovata competenza tecnica e professionale nell'architettura software e nello sviluppo di applicazioni gestionali e di elaborazione documentale;
+  \item Le Parti intendono stipulare un incarico professionale di natura autonoma e occasionale, privo di alcun vincolo di subordinazione o orario prefissato, per la realizzazione e messa in esercizio della piattaforma desktop gestionale denominata \emph{``Manutenzioni Maker''}.
+\end{enumerate}
+
+\vspace{0.6em}
+\begin{center}
+  \textbf{\scshape Tutto ciò premesso, si conviene e si stipula quanto segue:}
+\end{center}
+\vspace{0.4em}
+
+% ==============================================================================
+% ARTICOLATO
+% ==============================================================================
+
+\articolo{1}{Oggetto dell'incarico}
+\textbf{1.1.} Il Committente affida al Prestatore, che accetta, l'esecuzione di una prestazione d'opera intellettuale avente a oggetto:
+\begin{itemize}
+  \item La progettazione, ingegnerizzazione e sviluppo dell'applicativo desktop in ambiente Windows per la compilazione e generazione massiva di schede e registri di manutenzione in formato PDF compilabile (standard AcroForm);
+  \item La bonifica, normalizzazione e caricamento della base dati storica aziendale (anagrafica quadri BT con interruttori differenziali, registro illuminazione d'emergenza a norma UNI 11222, sistemi di rilevazione fumo e gas);
+  \item L'installazione del software sulle postazioni operative dell'Ufficio Tecnico e l'avvio del database centralizzato di rete locale con modalità di funzionamento e persistenza autonoma (\emph{offline-first}).
+\end{itemize}
+
+\articolo{2}{Modalità di esecuzione ed autonomia}
+\textbf{2.1.} Il presente rapporto è qualificato come prestazione d'opera autonoma occasionale ai sensi e per gli effetti dell'art. 2222 e segg. del Codice Civile.\\
+\textbf{2.2.} Il Prestatore svolgerà l'incarico con assoluta autonomia organizzativa, gestionale e temporale, senza alcun vincolo di coordinamento gerarchico, orario di lavoro prefissato o obbligo di esclusiva.\\
+\textbf{2.3.} Il Prestatore provvede allo svolgimento delle attività avvalendosi di propri strumenti informatici, concordando con il Committente i soli accessi in sede necessari per le fasi di installazione, verifica e collaudo.
+
+\articolo{3}{Consegna, collaudo ed accettazione dell'opera}
+\textbf{3.1.} L'incarico si intende regolarmente adempiuto e concluso con la consegna dell'eseguibile funzionante, la relativa configurazione sui sistemi aziendali e la consegna del consuntivo tecnico di progetto.\\
+\textbf{3.2.} La messa in esercizio dell'applicativo e l'assenza di motivate contestazioni scritte per vizi manifesti entro il termine di \textbf{8 (otto) giorni} dalla messa a disposizione costituiscono accettazione definitiva e senza riserve dell'opera da parte del Committente.
+
+\articolo{4}{Delimitazione dell'opera ed esclusioni}
+\textbf{4.1.} L'incarico si riferisce unicamente alle funzionalità e prestazioni individuate all'Articolo 1 e validate nel collaudo iniziale.\\
+\textbf{4.2.} Qualsiasi implementazione successiva, modifica evolutiva, inserimento di nuovi moduli funzionali o assistenza continuativa esula dal presente contratto e potrà formare oggetto di separata trattativa economica.
+
+\newpage
+
+\articolo{5}{Corrispettivo e modalità di liquidazione}
+\textbf{5.1.} Il corrispettivo forfettario concordato a corpo tra le Parti per l'intera prestazione è convenuto in complessivi:
+\[
+  \mathbf{C_{\text{lordo}} = \text{\euro}\;5.000,00} \quad \text{\small (euro cinquemila/00) lordi}
+\]
+\textbf{5.2.} Sul corrispettivo lordo il Committente applicherà, quale sostituto d'imposta ai sensi dell'art. 25 del D.P.R. 600/1973, la ritenuta d'acconto a titolo di IRPEF nella misura del \textbf{20\%}, pari a:
+\[
+  \mathbf{R_{\text{acconto}} = \text{\euro}\;1.000,00} \quad \text{\small (euro mille/00)}
+\]
+\textbf{5.3.} Il compenso netto spettante al Prestatore risulta pertanto pari a:
+\[
+  \mathbf{C_{\text{netto}} = C_{\text{lordo}} - R_{\text{acconto}} = \text{\euro}\;4.000,00} \quad \text{\small (euro quattromila/00) netti}
+\]
+\textbf{5.4.} Il pagamento sarà effettuato dal Committente mediante bonifico bancario su conto corrente intestato al Prestatore entro i termini concordati a seguito di regolare emissione della ricevuta di prestazione occasionale (Allegato A).
+
+\articolo{6}{Regime fiscale e previdenziale}
+\textbf{6.1.} Il compenso è escluso dal campo di applicazione dell'IVA per carenza del presupposto di abitualità ai sensi dell'art. 5 del D.P.R. 633/1972.\\
+\textbf{6.2.} La prestazione è esente dal contributo previdenziale INPS (Gestione Separata) ai sensi dell'art. 44 del D.L. 269/2003 (convertito in L. 326/2003), non superando nell'anno fiscale il limite di franchigia di \euro~5.000,00 lordi per attività di lavoro autonomo occasionale.
+
+\articolo{7}{Proprietà industriale e riservatezza}
+\textbf{7.1.} A fronte dell'integrale saldo del corrispettivo pattuito, il Committente acquisisce il diritto d'uso esclusivo, perpetuo e intrasferibile del software realizzato per le proprie esigenze operative interne.\\
+\textbf{7.2.} Le Parti si obbligano reciprocamente a trattare con la massima riservatezza i dati tecnici, industriali e commerciali appresi nello svolgimento dell'incarico.
+
+\articolo{8}{Legge applicabile e foro competente}
+\textbf{8.1.} Il presente contratto è regolato dalla legge italiana. Per ogni controversia derivante dall'applicazione, interpretazione o esecuzione del presente accordo è competente in via esclusiva il Foro di \textbf{[Città del Foro, es. Forlì]}.
+
+\vspace{1.5em}
+\noindent
+\textbf{Luogo e data:} [Forlì], il [Data di stipula]
+
+\vspace{2.5em}
+
+% ==============================================================================
+% FIRME
+% ==============================================================================
+\noindent
+\begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \textbf{Per il Committente}\\
+  {\footnotesize (Il Legale Rappresentante)}\\[3.5em]
+  \rule{0.8\textwidth}{0.5pt}\\[0.3em]
+  {\footnotesize [Timbro e Firma]}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.48\textwidth}
+  \centering
+  \textbf{Il Prestatore d'Opera}\\
+  {\footnotesize (Lavoratore Autonomo Occasionale)}\\[3.5em]
+  \rule{0.8\textwidth}{0.5pt}\\[0.3em]
+  \textbf{Prof. Edoardo Desiderio}
+\end{minipage}
+
+\newpage
+
+% ==============================================================================
+% ALLEGATO A — RICEVUTA FISCALE
+% ==============================================================================
+\begin{center}
+  {\footnotesize\scshape Documento Fiscale --- Allegato A}\\[0.3em]
+  {\Large\bfseries\scshape Nota / Ricevuta per Prestazione Occasionale}\\[0.3em]
+  {\small\itshape Rilasciata ai sensi dell'art. 67, comma 1, lett. l) del D.P.R. 917/1986 (TUIR)}
+\end{center}
+
+\vspace{0.4em}
+\hrule height 0.8pt
+\vspace{1.2em}
+
+\noindent
+\begin{minipage}[t]{0.5\textwidth}
+  \textbf{Ricevuta N.:} 01 / 2026\\
+  \textbf{Data di Emissione:} [Data emissione]
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+  \raggedleft
+  \itshape\small
+  Marca da bollo da \euro~2,00\\assolta sull'originale
+\end{minipage}
+
+\vspace{1.2em}
+
+\noindent
+\begin{tabularx}{\textwidth}{@{} X p{0.5cm} X @{}}
+  \toprule
+  \textbf{Prestatore d'Opera} & & \textbf{Spett.le Committente} \\
+  \midrule
+  \textbf{Prof. Edoardo Desiderio} & & \textbf{[Ragione Sociale Committente]} \\
+  Via Fratelli Valpiani 11 & & [Indirizzo, Numero Civico] \\
+  47122 Forlì (FC) & & [CAP, Città (Prov)] \\
+  Codice Fiscale: \texttt{DSDDRD01R31D704K} & & P.IVA / C.F.: \texttt{[00000000000]} \\
+  \bottomrule
+\end{tabularx}
+
+\vspace{1.5em}
+
+\noindent
+\textbf{Oggetto:} Saldo corrispettivo prestazione occasionale per progettazione, sviluppo e configurazione del software gestionale per l'Ufficio Tecnico.
+
+\vspace{1.2em}
+
+\noindent
+\begin{tabularx}{\textwidth}{@{} X r @{}}
+  \toprule
+  \textbf{Descrizione delle Voci} & \textbf{Importo} \\
+  \midrule
+  Compenso professionale a corpo per prestazione d'opera autonoma & \euro~5.000,00 \\
+  Ritenuta d'acconto IRPEF 20\% a carico del committente \emph{(art. 25 D.P.R. 600/73)} & -\text{\euro}~1.000,00 \\
+  Rimborso imposta di bollo assolta sul documento originale & +\text{\euro}~2,00 \\
+  \midrule[\heavyrulewidth]
+  \textbf{TOTALE NETTO A SALDO A FAVORE DEL PRESTATORE} & \textbf{\euro~4.002,00} \\
+  \bottomrule
+\end{tabularx}
+
+\vspace{0.8em}
+\noindent
+{\footnotesize\itshape Operazione fuori campo IVA ai sensi dell'art. 5 del D.P.R. 633/1972. Imposta di bollo da \euro~2,00 applicata sull'originale per importi superiori a \euro~77,47.}
+
+\vspace{1.5em}
+
+\noindent
+\textbf{Dichiarazione Previdenziale (D.L. 269/2003):}\\
+{\small Il sottoscritto Edoardo Desiderio dichiara sotto la propria personale responsabilità che il compenso percepito per la presente prestazione occasionale non eccede il limite di franchigia annua di \euro~5.000,00 lordi e pertanto non è assoggettato a contributo previdenziale INPS Gestione Separata.}
+
+\vspace{2.5em}
+
+\noindent
+\begin{minipage}[b]{0.52\textwidth}
+  \textbf{Coordinate bancarie per il bonifico:}\\
+  Beneficiario: \textbf{Prof. Edoardo Desiderio}\\
+  IBAN: \texttt{IT03M0357601601010004762611}\\
+  Banca: Credit Agricole Italia
+\end{minipage}
+\hfill
+\begin{minipage}[b]{0.42\textwidth}
+  \centering
+  \rule{0.85\textwidth}{0.5pt}\\[0.3em]
+  \textbf{Firma del Prestatore}\\
+  {\footnotesize (Prof. Edoardo Desiderio)}
+\end{minipage}
+
+\end{document}
+

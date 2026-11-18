@@ -1,6 +1,7 @@
 package manutenzioni.app.service
 
 import manutenzioni.domain.model.*
+import manutenzioni.domain.service.HtmlRenderContext
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertContains
@@ -18,6 +19,30 @@ class HtmlServiceTest {
 
     private val htmlService = HtmlService()
 
+    private fun buildHtml(
+        impianto: Impianto,
+        attivitaFiltrate: List<Attivita>,
+        frequenza: Periodo,
+        clienteNome: String? = null,
+        cantiereNome: String? = null,
+        nomeManutentore: String? = null,
+        dataInizioContratto: String? = null,
+        dataIntervento: String? = null,
+        dataInterventoPrecedente: String? = null
+    ): String = htmlService.buildHtml(
+        HtmlRenderContext(
+            impianto = impianto,
+            frequenza = frequenza,
+            attivita = attivitaFiltrate,
+            clienteNome = clienteNome,
+            cantiereNome = cantiereNome,
+            nomeManutentore = nomeManutentore,
+            dataInizioContratto = dataInizioContratto,
+            dataIntervento = dataIntervento,
+            dataInterventoPrecedente = dataInterventoPrecedente
+        )
+    )
+
     // Fixture comune
     private val impiantoGE = ImpiantoStandard(
         id = "test-ge",
@@ -34,7 +59,7 @@ class HtmlServiceTest {
 
     @Test
     fun `buildHtml sostituisce COD_SCHEDA con codIntervento`() {
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = impiantoGE.listaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -45,7 +70,7 @@ class HtmlServiceTest {
 
     @Test
     fun `buildHtml sostituisce OGGETTO con nomeCompleto`() {
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = impiantoGE.listaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -62,7 +87,7 @@ class HtmlServiceTest {
             sigla = "QG",
             descrizioneQuadro = "Quadro Generale Reparto Presse"
         )
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = quadro,
             attivitaFiltrate = emptyList(),
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -73,7 +98,7 @@ class HtmlServiceTest {
 
     @Test
     fun `buildHtml inietta nome cliente`() {
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = impiantoGE.listaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -84,7 +109,7 @@ class HtmlServiceTest {
 
     @Test
     fun `buildHtml senza cliente mostra placeholder generico`() {
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = impiantoGE.listaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -98,7 +123,7 @@ class HtmlServiceTest {
         val attivitaFiltrate = listOf(
             Attivita(1, "Controllo", "Test attività", Periodo(TipoPeriodo.M, 1))
         )
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = attivitaFiltrate,
             frequenza = Periodo(TipoPeriodo.M, 1),
@@ -120,7 +145,7 @@ class HtmlServiceTest {
         val attivitaFiltrate = listOf(
             Attivita(1, "Controllo", "Test attività", Periodo(TipoPeriodo.M, 1))
         )
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = attivitaFiltrate,
             frequenza = Periodo(TipoPeriodo.M, 1),
@@ -141,7 +166,7 @@ class HtmlServiceTest {
                 Attivita(1, "Controllo", "Controllo visivo", Periodo(TipoPeriodo.M, 1))
             )
         )
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = quadro,
             attivitaFiltrate = quadro.listaAttivita,
             frequenza = Periodo(TipoPeriodo.M, 1),
@@ -151,13 +176,14 @@ class HtmlServiceTest {
     }
 
     @Test
-    fun `buildHtml con QuadroBT mostra ubicazione e interruttori nella premessa`() {
+    fun `buildHtml con QuadroBT non inietta caratteristiche quadro nella premessa ma genera Foglio 2`() {
         val quadro = QuadroBT(
             id = "test-q",
             codIntervento = "Q",
             nomeCompleto = "Quadri Elettrici BT",
             sigla = "QG1",
             descrizioneQuadro = "Piano Terra",
+            premessa = "Le attività sui quadri elettrici devono essere svolte da personale addestrato ai lavori elettrici con qualifica PES.",
             listaInterruttori = listOf(
                 InterruttoreBT(id = "i1", nome = "ABB 63A"),
                 InterruttoreBT(id = "i2", nome = "Schneider 32A")
@@ -166,20 +192,22 @@ class HtmlServiceTest {
                 Attivita(1, "Controllo", "Test", Periodo(TipoPeriodo.M, 1))
             )
         )
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = quadro,
             attivitaFiltrate = quadro.listaAttivita,
             frequenza = Periodo(TipoPeriodo.M, 1),
             clienteNome = null
         )
-        assertContains(html, "Ubicazione Quadro: Piano Terra")
+        assertFalse(html.contains("Ubicazione Quadro:"), "La premessa non deve contenere 'Ubicazione Quadro:'")
+        assertFalse(html.contains("Interruttori e componenti presenti:"), "La premessa non deve contenere l'elenco interruttori")
+        assertContains(html, "Le attività sui quadri elettrici devono essere svolte da personale addestrato")
         assertContains(html, "ABB 63A")
         assertContains(html, "Schneider 32A")
     }
 
     @Test
     fun `buildHtml con lista vuota di attivita genera 30 righe di riempimento compilabili`() {
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = emptyList(),
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -202,7 +230,7 @@ class HtmlServiceTest {
                 Attivita(1, "Test", "Descrizione con \"virgolette\" e <tag>", Periodo(TipoPeriodo.M, 1))
             )
         )
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoConCaratteriSpeciali,
             attivitaFiltrate = impiantoConCaratteriSpeciali.listaAttivita,
             frequenza = Periodo(TipoPeriodo.M, 1),
@@ -246,7 +274,7 @@ class HtmlServiceTest {
             )
         )
 
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = quadro,
             attivitaFiltrate = quadro.listaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -316,7 +344,7 @@ class HtmlServiceTest {
             )
         )
 
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = quadro,
             attivitaFiltrate = quadro.listaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -336,7 +364,7 @@ class HtmlServiceTest {
 
     @Test
     fun `buildHtml con impianto non QuadroBT non genera secondo foglio differenziali`() {
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = impiantoGE.listaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -382,7 +410,7 @@ class HtmlServiceTest {
             )
         )
 
-        val htmlContent = htmlService.buildHtml(
+        val htmlContent = buildHtml(
             impianto = quadro,
             attivitaFiltrate = quadro.listaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -431,7 +459,7 @@ class HtmlServiceTest {
             Attivita(2, "Misura", "Misura parametri", Periodo(TipoPeriodo.M, 1))
         )
 
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = attivita,
             frequenza = Periodo(TipoPeriodo.M, 1),
@@ -481,7 +509,7 @@ class HtmlServiceTest {
 
     @Test
     fun `buildHtml verifica ordine intestazione colonne tabella attivita`() {
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = impiantoGE.listaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -506,7 +534,7 @@ class HtmlServiceTest {
             Attivita(25, "Revisione", "Revisione biennale", Periodo(TipoPeriodo.A, 2), zona = "Zona 4")
         )
 
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = attivitaNonContigue,
             frequenza = Periodo(TipoPeriodo.A, 2),
@@ -540,7 +568,7 @@ class HtmlServiceTest {
             Attivita(2, "Test", "Seconda attività", Periodo(TipoPeriodo.M, 6), zona = "Z2")
         )
 
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = dueAttivita,
             frequenza = Periodo(TipoPeriodo.M, 6),
@@ -603,7 +631,7 @@ class HtmlServiceTest {
 
     @Test
     fun `buildHtml inietta le tre date distinte nei rispettivi campi AcroForm`() {
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = impiantoGE.listaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -632,7 +660,7 @@ class HtmlServiceTest {
             Attivita(nAttivita = 2, tipoAttivita = "Verifica", descrizione = "Zona blank", frequenza = Periodo(TipoPeriodo.M, 3), zona = "   "),
             Attivita(nAttivita = 3, tipoAttivita = "Misura", descrizione = "Zona esplicita", frequenza = Periodo(TipoPeriodo.M, 6), zona = "Locale Quadri")
         )
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = attivitaSenzaZona,
             frequenza = Periodo(TipoPeriodo.M, 6),
@@ -657,7 +685,7 @@ class HtmlServiceTest {
             Attivita(nAttivita = 40, tipoAttivita = "M1", descrizione = "Attività 1 mese", frequenza = Periodo(TipoPeriodo.M, 1), zona = "Z-M1"),
             Attivita(nAttivita = 50, tipoAttivita = "M3", descrizione = "Attività 3 mesi", frequenza = Periodo(TipoPeriodo.M, 3), zona = "Z-M3")
         )
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = attivitaDisordinate,
             frequenza = Periodo(TipoPeriodo.A, 2),
@@ -685,7 +713,7 @@ class HtmlServiceTest {
                 zona = if (idx % 2 == 0) null else "Zona $idx"
             )
         }
-        val html = htmlService.buildHtml(
+        val html = buildHtml(
             impianto = impiantoGE,
             attivitaFiltrate = trentaAttivita,
             frequenza = Periodo(TipoPeriodo.A, 1),
@@ -730,23 +758,29 @@ class HtmlServiceTest {
 
     @Test
     fun `GenerateHtmlCli genera file HTML valido da linea di comando non interattiva`() {
+        val tempDb = java.io.File.createTempFile("cli_db_", ".json")
         val tempOut = java.io.File.createTempFile("cli_preview_", ".html")
         try {
+            tempDb.delete()
+            val repo = manutenzioni.app.data.JsonManutenzioneRepository(tempDb)
             val html = manutenzioni.app.cli.GenerateHtmlCli.execute(
-                arrayOf(
+                args = arrayOf(
                     "--impianto", "GE",
                     "--frequenza", "06",
                     "--cliente", "Cliente CLI Test",
-                    "--cantiere", "Cantiere CLI Test",
+                    "--sito", "Cantiere CLI Test",
                     "--output", tempOut.absolutePath
-                )
+                ),
+                repository = repo
             )
             assertTrue(tempOut.exists() && tempOut.length() > 0, "Il file HTML di output deve essere creato")
             assertContains(html, "Cliente: Cliente CLI Test")
-            assertContains(html.uppercase(), "GRUPP")
-            assertContains(html, "<td class=\"cell--data-empty\"><p>attività</p></td>")
+            assertContains(html, "Sito: Cantiere CLI Test")
+            assertContains(html, "Gruppo elettrogeno")
+            assertContains(html, "<td class=\"cell--data-empty\"><p>Gruppo Elettrogeno</p></td>")
         } finally {
             tempOut.delete()
+            tempDb.delete()
         }
     }
 }

@@ -151,14 +151,28 @@ class AggiornaAttivitaQuadroTest {
 
     @Test
     fun `aggiorna attivita del quadro in MongoDB e verifica`() = runBlocking {
-        // 1. Elimina documenti orfani senza campo "id"
-        val client = MongoClient.create("mongodb://localhost:27017")
-        val db = client.getDatabase("manutenzioni_db")
-        val col = db.getCollection<Document>("impianti")
-        col.deleteMany(or(eq("id", null), eq("id", ""), exists("id", false)))
-        client.close()
+        val mongoAvailable = try {
+            java.net.Socket().use { it.connect(java.net.InetSocketAddress("localhost", 27017), 200); true }
+        } catch (_: Exception) {
+            false
+        }
 
-        val repo = MongoManutenzioneRepository()
+        val repo: manutenzioni.domain.ManutenzioneRepository = if (mongoAvailable) {
+            // 1. Elimina documenti orfani senza campo "id"
+            val client = MongoClient.create("mongodb://localhost:27017")
+            val db = client.getDatabase("manutenzioni_db")
+            val col = db.getCollection<Document>("impianti")
+            col.deleteMany(or(eq("id", null), eq("id", ""), exists("id", false)))
+            client.close()
+            MongoManutenzioneRepository()
+        } else {
+            val tempFile = java.nio.file.Files.createTempFile("aggiorna_quadro_test_", ".json").toFile().apply { deleteOnExit() }
+            val resourceText = javaClass.classLoader.getResourceAsStream("manutenzioni_db.json")
+                ?.bufferedReader()?.use { it.readText() }
+                ?: java.io.File("desktopApp/src/desktopMain/resources/manutenzioni_db.json").takeIf { it.exists() }?.readText()
+            if (resourceText != null) tempFile.writeText(resourceText)
+            JsonManutenzioneRepository(tempFile)
+        }
 
         // 2. Prepara il template globale aggiornato
         val templateQuadro = QuadroBT(

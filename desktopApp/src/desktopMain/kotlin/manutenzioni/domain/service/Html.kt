@@ -1,30 +1,15 @@
 package manutenzioni.domain.service
 
-import manutenzioni.domain.model.Attivita
-import manutenzioni.domain.model.Impianto
-import manutenzioni.domain.model.Periodo
-
+/**
+ * Contratto di dominio per la generazione del codice HTML della scheda di manutenzione.
+ */
 interface Html {
+
     /**
-     * Genera l'HTML completo con i dati dell'impianto e le attività filtrate.
+     * Genera l'HTML completo utilizzando l'oggetto di contesto unificato [HtmlRenderContext].
      *
-     * @param impianto L'impianto selezionato
-     * @param attivitaFiltrate Le attività filtrate in base alla frequenza
-     * @param frequenza La frequenza dell'intervento
-     * @param clienteNome Nome del cliente da iniettare nell'header (opzionale)
-     * @return il contenuto HTML come stringa
+     * @param context L'oggetto contesto contenente tutti i parametri e metadati
+     * @return Il contenuto HTML come stringa
      */
-    fun buildHtml(
-        impianto: Impianto,
-        attivitaFiltrate: List<Attivita>,
-        frequenza: Periodo,
-        clienteNome: String? = null,
-        cantiereNome: String? = null,
-        dataInizioIntervento: String? = null,
-        nomeManutentore: String? = null,
-        firmaManutentore: String? = null,
-        dataInizioContratto: String? = null,
-        dataIntervento: String? = null,
-        dataInterventoPrecedente: String? = null
-    ): String
+    fun buildHtml(context: HtmlRenderContext): String
 }

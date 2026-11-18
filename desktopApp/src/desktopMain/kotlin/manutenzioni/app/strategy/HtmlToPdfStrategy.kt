@@ -1,10 +1,11 @@
 package manutenzioni.app.strategy
 
-import manutenzioni.domain.model.Impianto
-import manutenzioni.domain.model.Periodo
 import manutenzioni.app.service.HtmlService
 import manutenzioni.app.service.Pdf
-import manutenzioni.domain.service.FrequencyFilter
+import manutenzioni.domain.model.Impianto
+import manutenzioni.domain.model.Periodo
+import manutenzioni.domain.service.CrossPlantAttivitaResolver
+import manutenzioni.domain.service.HtmlRenderContext
 import manutenzioni.domain.strategy.AbstractPdfGeneratorStrategy
 import java.io.File
 
@@ -16,7 +17,7 @@ import java.io.File
  * Questa classe implementa solo il metodo `generate()` per produrre un singolo PDF.
  *
  * Orchestra il flusso completo:
- * 1. FrequencyFilter filtra le attività per la frequenza selezionata
+ * 1. CrossPlantAttivitaResolver filtra le attività per frequenza e contesto cantiere
  * 2. HtmlService genera l'HTML dinamico dal template
  * 3. Pdf (iText7 html2pdf) converte l'HTML in PDF con campi compilabili
  */
@@ -32,7 +33,6 @@ class HtmlToPdfStrategy(
         clienteNome: String?,
         contextImpianti: List<Impianto>,
         cantiereNome: String?,
-        dataInizioIntervento: String?,
         nomeManutentore: String?,
         firmaManutentore: String?,
         dataInizioContratto: String?,
@@ -40,7 +40,7 @@ class HtmlToPdfStrategy(
         dataInterventoPrecedente: String?
     ): File {
         // 1. Filtra attività per frequenza inclusiva e componenti del cantiere
-        val attivitaFiltrate = manutenzioni.domain.service.CrossPlantAttivitaResolver.resolveAttivita(
+        val attivitaFiltrate = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impianto,
             impiantiNelCantiere = contextImpianti,
             frequenza = frequenza
@@ -52,19 +52,21 @@ class HtmlToPdfStrategy(
             )
         }
 
-        // 2. Genera HTML dinamico (con dati cliente, cantiere, data inizio, manutentore e firma)
+        // 2. Genera HTML dinamico tramite HtmlRenderContext
         val htmlContent = htmlService.buildHtml(
-            impianto = impianto,
-            attivitaFiltrate = attivitaFiltrate,
-            frequenza = frequenza,
-            clienteNome = clienteNome,
-            cantiereNome = cantiereNome,
-            dataInizioIntervento = dataInizioIntervento,
-            nomeManutentore = nomeManutentore,
-            firmaManutentore = firmaManutentore,
-            dataInizioContratto = dataInizioContratto,
-            dataIntervento = dataIntervento,
-            dataInterventoPrecedente = dataInterventoPrecedente
+            HtmlRenderContext(
+                impianto = impianto,
+                frequenza = frequenza,
+                attivita = attivitaFiltrate,
+                clienteNome = clienteNome,
+                cantiereNome = cantiereNome,
+                nomeManutentore = nomeManutentore,
+                firmaTecnicoBase64 = firmaManutentore,
+                dataInizioContratto = dataInizioContratto,
+                dataIntervento = dataIntervento,
+                dataInterventoPrecedente = dataInterventoPrecedente,
+                contextImpianti = contextImpianti
+            )
         )
 
         // 3. Scrivi HTML temporaneo

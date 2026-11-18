@@ -100,4 +100,14 @@ interface TechnicalAttachmentProvider {
 
     /** Genera i dati strutturati per il foglio allegato (Foglio 2+) */
     fun buildSheetData(impianto: Impianto, frequenza: Periodo, clienteNome: String?): TechnicalSheetData?
+
+    /**
+     * Genera uno o più fogli allegati tecnici (es. Componenti Comuni + Rivelatori/Moduli per Loop).
+     * Di default restituisce una lista con il singolo foglio di [buildSheetData] per piena compatibilità.
+     */
+    fun buildSheetsData(
+        impianto: Impianto,
+        frequenza: Periodo,
+        clienteNome: String?
+    ): List<TechnicalSheetData> = listOfNotNull(buildSheetData(impianto, frequenza, clienteNome))
 }

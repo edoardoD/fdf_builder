@@ -8,13 +8,13 @@
     <meta name="author" content="Edoardo Desiderio" />
     <meta name="description"
         content="Scheda per verifica e manutenzione periodica programmata di impianti elettrici/elettronici" />
-    <meta name="modified" content="2025-12-11" />
+    <meta name="modified" content="2026-11-10" />
 
     <style>
         /* ============ Reset e Base ============ */
         @page {
-            size: A4;
-            margin: 0.45cm 0.6cm;
+            size: A4 portrait;
+            margin: 0.45cm 0.5cm;
         }
 
         * {
@@ -29,10 +29,10 @@
         }
 
         body {
-            margin-left: auto;
-            margin-right: auto;
-            width: 21cm;
-            /* larghezza standard A4, centrare la tabella */
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            /* Occupa l'intera larghezza stampabile A4 (19.80 cm) senza scalatura */
             direction: ltr;
         }
 
@@ -40,7 +40,7 @@
             border-collapse: collapse;
             border-spacing: 0;
             empty-cells: show;
-            width: 100%;
+            width: 19.80cm;
             table-layout: fixed;
             /* Impedisce overflow colonne */
             page-break-inside: auto;
@@ -61,18 +61,15 @@
 
         td {
             vertical-align: top;
-            font-size: 11pt;
-            padding: 0.05cm;
+            font-size: 8pt;
+            padding: 0.03cm 0.05cm;
             border: 0.0133cm solid #000000;
-            font-family: Calibri;
+            font-family: Calibri, Arial, sans-serif;
             overflow-wrap: break-word;
-            /* Permette a testi lunghi di andare a capo senza spezzare le parole a metà */
             word-break: normal;
-            /* Con table-layout: fixed, limita la larghezza effettiva */
         }
 
         p {
-            /* white-space: nowrap; */ /* RIMOSSO: consente il wrap automatico */
             margin: 0;
             font-size: inherit;
         }
@@ -95,35 +92,46 @@
         .cell--title {
             background-color: var(--color-title-bg);
             color: var(--color-title-text);
-            font-size: 11pt;
+            font-size: 10.5pt;
             vertical-align: middle;
             text-align: center;
             font-weight: bold;
+            height: 0.62cm;
         }
 
-        /* Intestazioni sezione 1 (info azienda) */
+        /* Intestazioni sezione 1 (info scheda) */
         .cell--header-section {
             background-color: var(--color-header-light);
             color: var(--color-text-dark);
-            font-size: 5pt;
+            font-size: 6.5pt;
             vertical-align: top;
             text-align: left;
+            padding: 0.03cm 0.06cm;
         }
 
-        /* Intestazioni sezione 2 (azienda) */
+        .cell--header-section p:last-child {
+            font-size: 8.5pt;
+            font-weight: bold;
+            margin-top: 1px;
+        }
+
+        /* Intestazioni sezione 2 (azienda, sito, cliente) */
         .cell--header-form {
             background-color: var(--color-header-light);
             color: var(--color-text-dark);
-            font-size: 6pt;
+            font-size: 7pt;
+            font-weight: bold;
             vertical-align: top;
             text-align: left;
+            padding: 0.04cm 0.06cm;
         }
 
         /* Intestazioni colonne tabella risultati */
         .cell--header-column {
             background-color: var(--color-header-medium);
             color: var(--color-text-dark);
-            font-size: 6pt;
+            font-size: 7pt;
+            font-weight: bold;
             vertical-align: middle;
             text-align: center;
         }
@@ -132,17 +140,17 @@
         .cell--header-outcome {
             background-color: var(--color-header-medium);
             color: var(--color-text-dark);
-            font-size: 6pt;
+            font-size: 7pt;
             vertical-align: middle;
             text-align: center;
             font-weight: bold;
         }
 
-        /* Celle dati vuote */
+        /* Celle dati statiche e radio */
         .cell--data-empty {
             background-color: transparent;
             color: var(--color-text-dark);
-            font-size: 6pt;
+            font-size: 6.8pt;
             vertical-align: middle;
             text-align: center;
         }
@@ -151,69 +159,80 @@
         .cell--data-standard {
             background-color: transparent;
             color: var(--color-text-dark);
-            font-size: 11pt;
+            font-size: 7.5pt;
             vertical-align: top;
             text-align: justify;
-            /* giustifica il testo delle celle dati */
         }
 
-        /* Celle per input form */
+        /* Celle per input form (Date, Periodicità, Manutentore, Firma) */
         .cell--form-input {
             background-color: transparent;
             color: var(--color-text-dark);
-            font-size: 5pt;
+            font-size: 6.5pt;
+            font-weight: bold;
             vertical-align: top;
             text-align: left;
-            padding: 0.02cm 0.04cm;
+            padding: 0.03cm 0.06cm;
+        }
+
+        .cell--form-input p:nth-child(2) {
+            font-size: 8.5pt;
+            font-weight: bold;
+            margin-top: 1px;
         }
 
         .cell--form-input input[type="text"] {
             width: 100%;
-            height: 0.32cm;
-            line-height: 0.32cm;
+            height: 0.36cm;
+            line-height: 0.36cm;
             border: none;
             outline: none;
             background: transparent;
             font-family: Calibri, Arial, sans-serif;
-            font-size: 7pt;
+            font-size: 8.5pt;
             font-weight: bold;
-            padding: 0 0.02cm;
-            margin: 0;
+            padding: 0 0.03cm;
+            margin-top: 1px;
             box-sizing: border-box;
+        }
+
+        /* Riquadro grande per Verificatore/Manutentore e Firma (12.20cm + 7.60cm x 1.55cm) */
+        .cell--signature-box {
+            height: 1.55cm;
+            min-height: 1.55cm;
+            padding: 0.05cm 0.10cm;
+            vertical-align: top;
         }
 
         /* Celle per note con stilizzazione */
         .cell--form-note {
             background-color: transparent;
             color: var(--color-text-gray);
-            font-size: 11pt;
+            font-size: 7.5pt;
             font-style: italic;
             vertical-align: top;
         }
 
-        /* Celle per etichette */
+        /* Celle per etichette e premessa */
         .cell--label {
             background-color: transparent;
             color: var(--color-text-dark);
-            font-size: 6pt;
+            font-size: 7pt;
             vertical-align: top;
             font-weight: bold;
             text-align: left;
+            padding: 0.04cm 0.08cm;
         }
 
         /* Celle per legenda */
         .cell--legend {
             background-color: transparent;
             color: var(--color-text-dark);
-            font-size: 11pt;
-            vertical-align: top;
+            font-size: 5.5pt;
+            line-height: 1.10;
+            vertical-align: middle;
             text-align: left;
-        }
-
-        /* Celle spacer (non visibili) */
-        .cell--spacer {
-            background-color: transparent;
-            border: none;
+            padding: 1px 3px;
         }
 
         .visually-hidden {
@@ -225,95 +244,121 @@
             white-space: nowrap;
         }
 
-        /* ============ Larghezze colonne ============ */
+        /* ============ Larghezze colonne (Totale = 19.80 cm A4) ============ */
         .col--w1 {
-            width: 0.956cm;
+            width: 0.70cm;
         }
 
         .col--w2 {
-            width: 0.938cm;
+            width: 1.15cm;
         }
 
         .col--w3 {
-            width: 1.090cm;
+            width: 1.35cm;
         }
 
         .col--w4 {
-            width: 1.100cm;
+            width: 0.90cm;
         }
 
         .col--w5 {
-            width: 6.899cm;
+            width: 8.10cm;
         }
 
         .col--w6 {
-            width: 0.605cm;
+            width: 0.55cm;
         }
 
         .col--w7 {
-            width: 0.554cm;
+            width: 0.55cm;
         }
 
         .col--w8 {
-            width: 0.540cm;
+            width: 0.55cm;
         }
 
         .col--w9 {
-            width: 0.529cm;
+            width: 0.55cm;
         }
 
         .col--w10 {
-            width: 0.547cm;
+            width: 0.55cm;
         }
 
         .col--w11 {
-            width: 0.400cm;
+            width: 0.55cm;
         }
 
         .col--w12 {
-            width: 4.307cm;
-        }
-
-        .col--w13 {
-            width: 1.413cm;
+            width: 4.30cm;
         }
 
         /* ============ Altezze righe ============ */
         .row--title {
-            height: 0.801cm;
+            height: 0.68cm;
         }
 
         .row--standard {
-            height: 0.487cm;
+            height: 0.56cm;
         }
 
-        .row--data {
-            height: 0.35cm;
-        }
-
-        .row--data td {
-            padding: 0.02cm 0.04cm;
-        }
-
-        .row--data input[type="radio"] {
-            width: 0.26cm;
-            height: 0.26cm;
-            margin: 0;
+        .row--standard td {
+            height: 0.56cm;
         }
 
         .row--section {
-            height: 0.46cm;
+            height: 0.56cm;
+        }
+
+        .row--section td {
+            height: 0.56cm;
+        }
+
+        .row--signature {
+            height: 1.55cm;
+        }
+
+        .row--header-table {
+            height: 0.42cm;
+        }
+
+        .row--header-table td {
+            height: 0.42cm;
+        }
+
+        .row--data {
+            height: 0.44cm;
+        }
+
+        .row--data td {
+            height: 0.44cm;
+            padding: 0.02cm 0.04cm;
+            line-height: 1.12;
+        }
+
+        .row--data input[type="radio"] {
+            width: 0.30cm;
+            height: 0.30cm;
+            margin: 0;
+        }
+
+        .row--footer {
+            height: 1.15cm;
+        }
+
+        .row--footer td {
+            height: 1.15cm;
         }
 
         /* ============ Stili testo ============ */
         .text--bold {
             font-weight: bold;
-            font-size: 7pt;
+            font-size: 7.5pt;
         }
 
         .text--normal {
             font-weight: normal;
-            font-size: 7pt;
+            font-size: 7.5pt;
         }
 
         input[type="text"],
@@ -346,15 +391,15 @@
 
         .row--data input[type="text"] {
             width: 100%;
-            height: 100%;
-            min-height: 0.35cm;
-            line-height: 0.35cm;
+            height: 0.42cm;
+            min-height: 0.42cm;
+            line-height: 0.42cm;
             border: none;
             outline: none;
             background: transparent;
             margin: 0;
             padding: 0 0.04cm;
-            font-size: 6.5pt;
+            font-size: 7.5pt;
             box-sizing: border-box;
             vertical-align: middle;
         }
@@ -369,7 +414,7 @@
 <body>
 
     <form>
-        <!-- Tabella principale: Scheda di Verifica e Manutenzione -->
+        <!-- Tabella principale: Scheda di Verifica e Manutenzione (12 colonne = 19.80 cm) -->
         <table class="table--main">
             <colgroup>
                 <col class="col--w1" />
@@ -384,7 +429,6 @@
                 <col class="col--w10" />
                 <col class="col--w11" />
                 <col class="col--w12" />
-                <col class="col--w13" />
             </colgroup>
 
             <thead>
@@ -394,7 +438,6 @@
                         <p>SCHEDA DI VERIFICA E MANUTENZIONE PERIODICA PROGRAMMATA</p>
                         <p>IMPIANTI ELETTRICI/ELETTRONICI</p>
                     </td>
-                    <td class="cell--spacer"></td>
                 </tr>
 
                 <!-- ========== SEZIONE 2: INFO SCHEDA ========== -->
@@ -403,26 +446,17 @@
                         <p>Codice Scheda:</p>
                         <p><!-- COD_SCHEDA --></p>
                     </td>
-                    <td class="cell--spacer"></td>
-                    <td colspan="8" class="cell--header-section">
+                    <td colspan="9" class="cell--header-section">
                         <p>Oggetto</p>
                         <p><!-- OGGETTO --></p>
                     </td>
-                    <td class="cell--form-input">
+                    <td class="cell--form-input" style="background-color: #b4c6e7;">
                         <p>Periodicità:</p>
                         <p><!-- PERIODICITA --></p>
                     </td>
-                    <td class="cell--spacer"></td>
                 </tr>
 
-                <!-- Riga per compilazione periodicità -->
-                <tr class="row--standard">
-                    <td colspan="11" class="cell--data-standard"></td>
-                    <td class="cell--data-standard"></td>
-                    <td class="cell--spacer"></td>
-                </tr>
-
-                <!-- ========== SEZIONE 3: DATI AZIENDA ========== -->
+                <!-- ========== SEZIONE 3: DATI AZIENDA & INIZIO CONTRATTO ========== -->
                 <tr class="row--section">
                     <td colspan="3" class="cell--header-form">
                         <p>Azienda Appaltatrice</p>
@@ -438,59 +472,44 @@
                         <input type="text" name="starting_date" id="starting-date" value="<!-- DATA_INIZIO_CONTRATTO -->" placeholder="gg/mm/aaaa" />
                         <label for="starting-date" class="visually-hidden">Data inizio contratto</label>
                     </td>
-                    <td class="cell--spacer"></td>
                 </tr>
 
-                <!-- Riga premessa -->
+                <!-- ========== SEZIONE 4: PREMESSA + DATE INTERVENTO ========== -->
                 <tr class="row--standard">
-                    <td colspan="11" class="cell--label">
-                        <p>Premessa e/o informazioni:</p>
-                        <p style="font-weight: normal; font-size: 5pt;"><!-- PREMESSA --></p>
+                    <td colspan="11" rowspan="2" class="cell--label">
+                        <p style="font-size: 7pt; margin-bottom: 1px;">Premessa e/o informazioni:</p>
+                        <p style="font-weight: normal; font-size: 6.4pt; line-height: 1.15;"><!-- PREMESSA --></p>
                     </td>
                     <td class="cell--form-input">
                         <p>Data intervento precedente:</p>
                         <input type="text" name="previous_date" id="previous-date" value="<!-- DATA_PRECEDENTE -->" placeholder="gg/mm/aaaa" />
                         <label for="previous-date" class="visually-hidden">Data intervento precedente</label>
                     </td>
-                    <td class="cell--spacer"></td>
                 </tr>
 
-                <!-- ========== SEZIONE 4: FORM PRINCIPALE ========== -->
                 <tr class="row--standard">
-                    <td colspan="11" rowspan="4" class="cell--data-empty"></td>
                     <td class="cell--form-input">
                         <p>Data intervento:</p>
                         <input type="text" name="actual_date" id="today-date" value="<!-- DATA_INTERVENTO -->" placeholder="gg/mm/aaaa" />
                         <label for="today-date" class="visually-hidden">Data intervento</label>
                     </td>
-                    <td class="cell--spacer"></td>
                 </tr>
 
-                <tr class="row--standard">
-                    <td class="cell--form-input">
-                        <p>Data intervento</p>
+                <!-- ========== SEZIONE 4B: VERIFICATORE/MANUTENTORE E FIRMA (AMPI RIQUADRI AFFIANCATI) ========== -->
+                <tr class="row--signature">
+                    <td colspan="5" class="cell--form-input cell--signature-box">
+                        <p style="font-size: 7.5pt; font-weight: bold;">Verificatore/Manutentore <span style="font-size: 1pt; color: #ffffff;"><!-- MANUTENTORE --></span></p>
+                        <input type="text" name="manutentore" id="manutentore" value="<!-- MANUTENTORE -->" placeholder="Nome e cognome verificatore" style="height: 1.00cm; line-height: 1.00cm; font-size: 10pt; font-weight: bold;" />
+                        <label for="manutentore" class="visually-hidden">Verificatore/Manutentore</label>
                     </td>
-                    <td class="cell--spacer"></td>
-                </tr>
-
-                <tr class="row--standard">
-                    <td class="cell--form-input">
-                        <p>Verificatore/Manutentore</p>
-                        <p style="font-weight: bold; font-size: 6.5pt;"><!-- MANUTENTORE --></p>
-                    </td>
-                    <td class="cell--spacer"></td>
-                </tr>
-
-                <tr class="row--standard">
-                    <td class="cell--form-input">
-                        <p>Firma</p>
+                    <td colspan="7" class="cell--form-input cell--signature-box">
+                        <p style="font-size: 7.5pt; font-weight: bold;">Firma</p>
                         <!-- FIRMA -->
                     </td>
-                    <td class="cell--spacer"></td>
                 </tr>
 
                 <!-- ========== SEZIONE 5: INTESTAZIONE TABELLA RISULTATI ========== -->
-                <tr class="row--standard">
+                <tr class="row--header-table">
                     <td rowspan="2" class="cell--header-column">
                         <p>N. Attività</p>
                     </td>
@@ -512,11 +531,10 @@
                     <td class="cell--header-column">
                         <p>Nota</p>
                     </td>
-                    <td class="cell--spacer"></td>
                 </tr>
 
                 <!-- Sottointestazione esiti -->
-                <tr class="row--standard">
+                <tr class="row--header-table">
                     <td class="cell--header-outcome">
                         <p>P</p>
                     </td>
@@ -535,10 +553,9 @@
                     <td class="cell--header-outcome">
                         <p>B</p>
                     </td>
-                    <td class="cell--legend" style="font-size: 4.5pt; line-height: 1.05; vertical-align: middle; padding: 1px 2px;">
+                    <td class="cell--legend">
                         <p><strong>Legenda:</strong> <strong>P</strong>=Positivo | <strong>PI</strong>=Pos. prev. int. | <strong>NA</strong>=Rimandato | <strong>NP</strong>=Non pres. | <strong>VN</strong>=Vedere nota | <strong>B</strong>=Costr./Assist.</p>
                     </td>
-                    <td class="cell--spacer"></td>
                 </tr>
             </thead>
             
@@ -548,19 +565,10 @@
             
             <tfoot>
                 <!-- ========== SEZIONE 8: SPAZIO NOTE ========== -->
-                <tr class="row--standard">
-                    <td colspan="12" rowspan="3" class="cell--data-standard">
-                        <textarea name="note_generali_<!-- COD_IMPIANTO -->" id="note_generali_<!-- COD_IMPIANTO -->" style="width: 100%; height: 100%; min-height: 1.0cm; font-size: 7.5pt; font-family: Calibri; border: none; resize: none; box-sizing: border-box;"></textarea>
+                <tr class="row--footer">
+                    <td colspan="12" class="cell--data-standard" style="padding: 0;">
+                        <textarea name="note_generali_<!-- COD_IMPIANTO -->" id="note_generali_<!-- COD_IMPIANTO -->" style="width: 100%; height: 100%; min-height: 0.95cm; font-size: 8pt; font-family: Calibri, Arial, sans-serif; border: none; padding: 0.05cm 0.08cm; resize: none; box-sizing: border-box;"></textarea>
                     </td>
-                    <td class="cell--spacer"></td>
-                </tr>
-
-                <tr class="row--standard">
-                    <td class="cell--spacer"></td>
-                </tr>
-
-                <tr class="row--standard">
-                    <td class="cell--spacer"></td>
                 </tr>
             </tfoot>
         </table>
@@ -572,4 +580,3 @@
 </body>
 
 </html>
-

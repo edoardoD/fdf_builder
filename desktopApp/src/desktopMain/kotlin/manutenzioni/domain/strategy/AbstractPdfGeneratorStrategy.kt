@@ -1,14 +1,18 @@
 package manutenzioni.domain.strategy
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import manutenzioni.domain.model.BatchResult
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.Periodo
 import manutenzioni.domain.model.QuadroBT
-import manutenzioni.domain.model.BatchResult
 import java.io.File
 
 /**
  * Classe astratta che implementa `PdfBatchGenerator` e fornisce la logica
- * di orchestrazione batch (loop, naming, progress, error collection).
+ * di orchestrazione batch (loop, naming, progress, error collection) confinata su [ioDispatcher].
  *
  * Le sottoclassi devono implementare solo `generate(...)` — il metodo
  * che sa produrre un singolo file PDF. `generate` è **protected**: non
@@ -22,7 +26,9 @@ import java.io.File
  *
  * @see PdfBatchGenerator interfaccia pubblica
  */
-abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
+abstract class AbstractPdfGeneratorStrategy(
+    protected val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : PdfBatchGenerator {
 
     /**
      * Genera un singolo PDF per l'impianto dato.
@@ -43,7 +49,6 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
         clienteNome: String? = null,
         contextImpianti: List<Impianto> = emptyList(),
         cantiereNome: String? = null,
-        dataInizioIntervento: String? = null,
         nomeManutentore: String? = null,
         firmaManutentore: String? = null,
         dataInizioContratto: String? = null,
@@ -52,11 +57,8 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
     ): File
 
     /**
-     * Implementazione batch: itera su `generate()` N volte, gestendo
-     * naming progressivo, callback di progresso ed errori parziali.
-     *
-     * Naming standard (R22): `{SIGLA_O_COD}_{PERIODICITA}.pdf` (es. `QG_06.pdf`, `Q1_06.pdf`, `QG_1.pdf`, `GE_06.pdf`).
-     * Se `copies > 1`, ogni file ha il suffisso `_copia_{i}`.
+     * Implementazione batch sincrona: delega a [generateBatchAsync] eseguendolo
+     * all'interno del contesto [ioDispatcher].
      */
     override fun generateBatch(
         impianto: Impianto,
@@ -66,15 +68,56 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
         clienteNome: String?,
         contextImpianti: List<Impianto>,
         cantiereNome: String?,
-        dataInizioIntervento: String?,
         nomeManutentore: String?,
         firmaManutentore: String?,
         onProgress: (current: Int, total: Int) -> Unit,
         dataInizioContratto: String?,
         dataIntervento: String?,
         dataInterventoPrecedente: String?
-    ): BatchResult {
+    ): BatchResult = runBlocking(ioDispatcher) {
+        generateBatchAsync(
+            impianto = impianto,
+            frequenza = frequenza,
+            outputDir = outputDir,
+            copies = copies,
+            clienteNome = clienteNome,
+            contextImpianti = contextImpianti,
+            cantiereNome = cantiereNome,
+            nomeManutentore = nomeManutentore,
+            firmaManutentore = firmaManutentore,
+            onProgress = onProgress,
+            dataInizioContratto = dataInizioContratto,
+            dataIntervento = dataIntervento,
+            dataInterventoPrecedente = dataInterventoPrecedente
+        )
+    }
+
+    /**
+     * Implementazione batch sospesa confinata su [ioDispatcher]: itera su `generate()` N volte, gestendo
+     * naming progressivo, callback di progresso ed errori parziali.
+     *
+     * Naming standard (R22): `{SIGLA_O_COD}_{PERIODICITA}.pdf` (es. `QG_06.pdf`, `Q1_06.pdf`, `QG_1.pdf`, `GE_06.pdf`).
+     * Se `copies > 1`, ogni file ha il suffisso `_copia_{i}`.
+     */
+    override suspend fun generateBatchAsync(
+        impianto: Impianto,
+        frequenza: Periodo,
+        outputDir: File,
+        copies: Int,
+        clienteNome: String?,
+        contextImpianti: List<Impianto>,
+        cantiereNome: String?,
+        nomeManutentore: String?,
+        firmaManutentore: String?,
+        onProgress: (current: Int, total: Int) -> Unit,
+        dataInizioContratto: String?,
+        dataIntervento: String?,
+        dataInterventoPrecedente: String?
+    ): BatchResult = withContext(ioDispatcher) {
         require(copies >= 1) { "Il numero di copie deve essere >= 1" }
+        if (!outputDir.exists()) {
+            outputDir.mkdirs()
+        }
 
         val prefix = if (impianto is QuadroBT && impianto.sigla.isNotBlank()) {
             impianto.sigla.trim().replace(" ", "_").replace("/", "-").replace("\\", "-")
@@ -87,11 +130,7 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
 
         for (i in 1..copies) {
             try {
-                val fileName = if (copies == 1) {
-                    "$baseName.pdf"
-                } else {
-                    "${baseName}_copia_$i.pdf"
-                }
+                val fileName = if (copies == 1) "$baseName.pdf" else "${baseName}_copia_$i.pdf"
                 val outputPath = File(outputDir, fileName).absolutePath
                 val file = generate(
                     impianto = impianto,
@@ -100,7 +139,6 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
                     clienteNome = clienteNome,
                     contextImpianti = contextImpianti,
                     cantiereNome = cantiereNome,
-                    dataInizioIntervento = dataInizioIntervento,
                     nomeManutentore = nomeManutentore,
                     firmaManutentore = firmaManutentore,
                     dataInizioContratto = dataInizioContratto,
@@ -114,7 +152,7 @@ abstract class AbstractPdfGeneratorStrategy : PdfBatchGenerator {
             onProgress(i, copies)
         }
 
-        return BatchResult(
+        BatchResult(
             generatedFiles = generatedFiles,
             totalRequested = copies,
             errors = errors

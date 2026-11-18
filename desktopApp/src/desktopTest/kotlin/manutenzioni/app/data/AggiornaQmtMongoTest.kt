@@ -29,10 +29,25 @@ class AggiornaQmtMongoTest {
 
     @Test
     fun `aggiorna QMT in MongoDB con i dati di QMT csv e verifica`() = runBlocking {
-        val repo = MongoManutenzioneRepository(
-            connectionString = "mongodb://localhost:27017",
-            dbName = "manutenzioni_db"
-        )
+        val mongoAvailable = try {
+            java.net.Socket().use { it.connect(java.net.InetSocketAddress("localhost", 27017), 200); true }
+        } catch (_: Exception) {
+            false
+        }
+
+        val repo: manutenzioni.domain.ManutenzioneRepository = if (mongoAvailable) {
+            MongoManutenzioneRepository(
+                connectionString = "mongodb://localhost:27017",
+                dbName = "manutenzioni_db"
+            )
+        } else {
+            val tempFile = java.nio.file.Files.createTempFile("aggiorna_qmt_test_", ".json").toFile().apply { deleteOnExit() }
+            val resourceText = javaClass.classLoader.getResourceAsStream("manutenzioni_db.json")
+                ?.bufferedReader()?.use { it.readText() }
+                ?: File("desktopApp/src/desktopMain/resources/manutenzioni_db.json").takeIf { it.exists() }?.readText()
+            if (resourceText != null) tempFile.writeText(resourceText)
+            JsonManutenzioneRepository(tempFile)
+        }
 
         // 1. Carica il template QMT da manutenzioni_db.json (allineato a QMT.csv)
         val resourceStream = javaClass.classLoader.getResourceAsStream("manutenzioni_db.json")

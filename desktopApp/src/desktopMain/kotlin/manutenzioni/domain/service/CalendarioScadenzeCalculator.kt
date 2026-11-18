@@ -66,8 +66,8 @@ object CalendarioScadenzeCalculator {
     /**
      * Calcola le scadenze mensili raggruppate per un singolo cantiere su un orizzonte di [mesiOrizzonte] mesi.
      *
-     * La priorità della data di calcolo base è data tassativamente da [Cantiere.effectiveDataIntervento]
-     * (ovvero [Cantiere.dataIntervento]), con fallback su [Cantiere.dataInizioContratto] e poi su [fallbackDate].
+     * La priorità della data di calcolo base è data tassativamente da [Cantiere.dataIntervento],
+     * con fallback su [Cantiere.dataInizioContratto] e poi su [fallbackDate].
      *
      * Se [frequenzeConfiguratePerImpianto] è specificato, la proiezione considera unicamente le frequenze
      * concordate/selezionate per ciascun impianto in quel cantiere, evitando scadenze su frequenze teoriche non attive.
@@ -81,7 +81,7 @@ object CalendarioScadenzeCalculator {
     ): List<MeseScadenzaGroup> {
         if (impianti.isEmpty() || mesiOrizzonte <= 0) return emptyList()
 
-        val rawBaseDate = cantiere.effectiveDataIntervento?.takeIf { it.isNotBlank() }
+        val rawBaseDate = cantiere.dataIntervento?.takeIf { it.isNotBlank() }
             ?: cantiere.dataInizioContratto?.takeIf { it.isNotBlank() }
         val baseDate = parseDataRiferimento(rawBaseDate, fallbackDate)
 

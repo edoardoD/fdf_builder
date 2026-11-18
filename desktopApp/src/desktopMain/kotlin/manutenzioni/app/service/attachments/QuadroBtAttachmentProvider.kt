@@ -16,23 +16,7 @@ class QuadroBtAttachmentProvider : TechnicalAttachmentProvider {
         return impianto is QuadroBT && impianto.listaInterruttori.isNotEmpty()
     }
 
-    override fun buildPremessaSummary(impianto: Impianto): String? {
-        val quadro = impianto as? QuadroBT ?: return null
-        if (quadro.listaInterruttori.isEmpty()) return null
-
-        return buildString {
-            if (quadro.descrizioneQuadro.isNotBlank()) {
-                append("Ubicazione Quadro: ").append(quadro.descrizioneQuadro).append("\n")
-            }
-            append("Interruttori e componenti presenti:\n")
-            append(quadro.listaInterruttori.joinToString("\n") {
-                val qta = if (it.quantita > 1) "${it.quantita}x " else ""
-                val prod = if (!it.produttore.isNullOrBlank() && !it.codiceArticolo.isNullOrBlank()) " [${it.produttore} ${it.codiceArticolo}]" else ""
-                val circuito = if (!it.siglaCircuito.isNullOrBlank()) " (Circuito: ${it.siglaCircuito})" else ""
-                "• $qta${it.nome}$prod$circuito"
-            })
-        }
-    }
+    override fun buildPremessaSummary(impianto: Impianto): String? = null
 
     override fun buildSheetData(
         impianto: Impianto,
@@ -120,28 +104,28 @@ class QuadroBtAttachmentProvider : TechnicalAttachmentProvider {
                     val strumentoRadioName = "strumento_diff_${quadro.codIntervento}_$rowNum"
                     val misuraTextName = "misura_diff_${quadro.codIntervento}_$rowNum"
                     listOf(
-                        TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                        TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 6.0),
-                        TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                        TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 6.0),
+                        TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 7.5),
+                        TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 7.5),
+                        TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 7.5),
+                        TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 7.5),
                         TechnicalCell.Radio(tastoRadioName, "OK", "Tasto OK"),
                         TechnicalCell.Radio(tastoRadioName, "NON_OK", "Tasto NON OK"),
                         TechnicalCell.Radio(strumentoRadioName, "OK", "Strumento OK"),
                         TechnicalCell.Radio(strumentoRadioName, "NON_OK", "Strumento NON OK"),
-                        TechnicalCell.TextInput(misuraTextName, placeholder = "", label = "Misura", fontSizePt = 7.5, align = CellTextAlign.CENTER)
+                        TechnicalCell.TextInput(misuraTextName, placeholder = "", label = "Misura", fontSizePt = 8.0, align = CellTextAlign.CENTER)
                     )
                 } else {
                     listOf(
-                        TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                        TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 6.0),
-                        TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                        TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 6.0),
+                        TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 7.5),
+                        TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 7.5),
+                        TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 7.5),
+                        TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 7.5),
                         TechnicalCell.Radio(tastoRadioName, "OK", "Tasto OK"),
                         TechnicalCell.Radio(tastoRadioName, "NON_OK", "Tasto NON OK")
                     )
                 }
 
-                rows.add(TechnicalRow(heightCm = 0.48, cells = cells))
+                rows.add(TechnicalRow(heightCm = 0.58, cells = cells))
             }
         }
 
@@ -246,27 +230,27 @@ class QuadroBtAttachmentProvider : TechnicalAttachmentProvider {
                         val strumentoRadioName = "strumento_diff_Q_$rowNum"
                         val misuraTextName = "misura_diff_Q_$rowNum"
                         listOf(
-                            TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                            TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 6.0),
-                            TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                            TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 6.0),
+                            TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 7.5),
+                            TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 7.5),
+                            TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 7.5),
+                            TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 7.5),
                             TechnicalCell.Radio(tastoRadioName, "OK", "Tasto OK"),
                             TechnicalCell.Radio(tastoRadioName, "NON_OK", "Tasto NON OK"),
                             TechnicalCell.Radio(strumentoRadioName, "OK", "Strumento OK"),
                             TechnicalCell.Radio(strumentoRadioName, "NON_OK", "Strumento NON OK"),
-                            TechnicalCell.TextInput(misuraTextName, placeholder = "", label = "Misura", fontSizePt = 7.5, align = CellTextAlign.CENTER)
+                            TechnicalCell.TextInput(misuraTextName, placeholder = "", label = "Misura", fontSizePt = 8.0, align = CellTextAlign.CENTER)
                         )
                     } else {
                         listOf(
-                            TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                            TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 6.0),
-                            TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 6.0),
-                            TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 6.0),
+                            TechnicalCell.Text(siglaQuadro, align = CellTextAlign.CENTER, fontSizePt = 7.5),
+                            TechnicalCell.Text(siglaInterruttore, align = CellTextAlign.CENTER, bold = true, fontSizePt = 7.5),
+                            TechnicalCell.Text(datiInterruttore, align = CellTextAlign.CENTER, fontSizePt = 7.5),
+                            TechnicalCell.Text(taratura, align = CellTextAlign.CENTER, fontSizePt = 7.5),
                             TechnicalCell.Radio(tastoRadioName, "OK", "Tasto OK"),
                             TechnicalCell.Radio(tastoRadioName, "NON_OK", "Tasto NON OK")
                         )
                     }
-                    rows.add(TechnicalRow(heightCm = 0.48, cells = cells))
+                    rows.add(TechnicalRow(heightCm = 0.58, cells = cells))
                 }
             }
         }

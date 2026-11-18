@@ -35,7 +35,12 @@ class GasMigrationTest {
 
     @Test
     fun aggiornaImpiantoGlobaleRigNelJsonRepository() = runBlocking {
-        val repo = JsonManutenzioneRepository()
+        val tempFile = java.nio.file.Files.createTempFile("gas_migration_test_", ".json").toFile().apply { deleteOnExit() }
+        val resourceText = javaClass.classLoader.getResourceAsStream("manutenzioni_db.json")
+            ?.bufferedReader()?.use { it.readText() }
+            ?: java.io.File("desktopApp/src/desktopMain/resources/manutenzioni_db.json").takeIf { it.exists() }?.readText()
+        if (resourceText != null) tempFile.writeText(resourceText)
+        val repo = JsonManutenzioneRepository(tempFile)
         val impianti = repo.caricaImpianti()
         val existingRig = impianti.firstOrNull { it.codIntervento == "RIG" && it.cantiereId == null }
 

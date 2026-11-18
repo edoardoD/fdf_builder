@@ -19,6 +19,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "fdf_builder"
-include(":common")
 include(":desktopApp")
 

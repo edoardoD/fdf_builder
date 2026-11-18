@@ -22,6 +22,7 @@ interface ManutenzioneRepository {
     suspend fun getImpiantiForCantiere(cantiereId: String): List<Impianto>
     
     // --- CRUD Cantieri ---
+    suspend fun caricaCantieri(): List<Cantiere> = emptyList()
     suspend fun salvaCantiere(cantiere: Cantiere)
     suspend fun updateCantiere(id: String, newName: String)
     suspend fun eliminaCantiere(id: String)
@@ -36,6 +37,7 @@ interface ManutenzioneRepository {
     suspend fun trovaEquivalentiApprovati(etimClassId: String): List<manutenzioni.domain.model.ComponenteApprovato>
 
     // --- Storicizzazione Sessioni di Verifica (Wave 4: R25, R30) ---
+    suspend fun caricaSessioniVerifica(): List<manutenzioni.domain.model.SessioneVerifica> = emptyList()
     suspend fun salvaSessioneVerifica(sessione: manutenzioni.domain.model.SessioneVerifica) {}
     suspend fun getSessioniPerCantiere(cantiereId: String): List<manutenzioni.domain.model.SessioneVerifica> = emptyList()
     suspend fun eliminaSessioneVerifica(id: String) {}
