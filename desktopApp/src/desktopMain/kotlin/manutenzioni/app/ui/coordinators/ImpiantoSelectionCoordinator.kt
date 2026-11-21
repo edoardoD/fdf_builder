@@ -265,6 +265,7 @@ class ImpiantoSelectionCoordinator(
                     nuoviImpianti.forEach { repository.salvaImpianto(it) }
                     repository.getImpiantiForCantiere(cantiereId) to repository.caricaImpianti()
                 }
+                val firstNewRi = nuoviImpianti.filterIsInstance<RilevazioneAntincendio>().firstOrNull()
                 val frequenzeMap = impiantiDelCantiere.associate { it.id to CrossPlantAttivitaResolver.resolveFrequenze(it, impiantiDelCantiere) }
                 uiState.update { state ->
                     val globalCal = recomputeGlobalCalendar(state.copy(impianti = tuttiImpianti), null)
@@ -273,6 +274,11 @@ class ImpiantoSelectionCoordinator(
                         impiantiDelCantiere = if (state.selectedCantiere?.id == cantiereId) impiantiDelCantiere else state.impiantiDelCantiere,
                         frequenzeDisponibiliPerImpianto = frequenzeMap,
                         calendarioGlobale = globalCal,
+                        pendingAntincendioLoopTrigger = if (state.selectedCantiere?.id == cantiereId && firstNewRi != null) {
+                            firstNewRi
+                        } else {
+                            state.pendingAntincendioLoopTrigger
+                        },
                         isLoading = false,
                         statusMessage = "✓ ${nuoviImpianti.size} attività di verifica aggiunte: " +
                             nuoviImpianti.joinToString(", ") { imp -> imp.codIntervento },
@@ -326,10 +332,11 @@ class ImpiantoSelectionCoordinator(
     }
 
     fun saveImpianto(impianto: Impianto) {
-        val impiantoToSave = if (impianto is QuadroMQT && impianto.tipoInterruttore != null) {
-            impianto.withTipoInterruttore(impianto.tipoInterruttore)
+        val impiantoNormalizzato = impianto.normalizeType()
+        val impiantoToSave = if (impiantoNormalizzato is QuadroMQT && impiantoNormalizzato.tipoInterruttore != null) {
+            impiantoNormalizzato.withTipoInterruttore(impiantoNormalizzato.tipoInterruttore)
         } else {
-            impianto
+            impiantoNormalizzato
         }
 
         if (impiantoToSave.id.isBlank()) {
@@ -340,6 +347,11 @@ class ImpiantoSelectionCoordinator(
             uiState.update { it.copy(errorMessage = "Il nome completo è obbligatorio") }
             return
         }
+
+        val isNuovoRiPerCantiere = impiantoToSave is RilevazioneAntincendio &&
+            impiantoToSave.cantiereId != null &&
+            impiantoToSave.listaDispositivi.isEmpty() &&
+            uiState.value.impiantiDelCantiere.none { it.id == impiantoToSave.id }
 
         scope.launch {
             try {
@@ -360,6 +372,11 @@ class ImpiantoSelectionCoordinator(
                         frequenzeDisponibiliPerImpianto = frequenzeMap,
                         calendarioGlobale = globalCal,
                         selectedImpianto = impiantoToSave,
+                        pendingAntincendioLoopTrigger = if (isNuovoRiPerCantiere && cantiereId == impiantoToSave.cantiereId) {
+                            impiantoToSave as RilevazioneAntincendio
+                        } else {
+                            state.pendingAntincendioLoopTrigger
+                        },
                         statusMessage = "✓ Impianto ${impiantoToSave.id} salvato",
                         errorMessage = null
                     )
@@ -713,14 +730,13 @@ class ImpiantoSelectionCoordinator(
         }
     }
 
+    fun clearPendingAntincendioLoopTrigger() {
+        uiState.update { it.copy(pendingAntincendioLoopTrigger = null) }
+    }
+
     companion object {
         fun instantiateTemplateForCantiere(template: Impianto, cantiereId: String?): Impianto {
-            val copy = template.copyWithBasicParams(
-                id = UUID.randomUUID().toString(),
-                cantiereId = cantiereId,
-                quantita = 1
-            )
-            return if (copy is QuadroMQT) copy.withTipoInterruttore(copy.tipoInterruttore ?: MqtSwitchType.SF6) else copy
+            return template.normalizeType().instantiateForCantiere(cantiereId)
         }
     }
 }

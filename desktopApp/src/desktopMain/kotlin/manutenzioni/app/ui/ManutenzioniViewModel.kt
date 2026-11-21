@@ -186,6 +186,7 @@ class ManutenzioniViewModel(
     fun sostituisciProduttoreComponente(quadro: QuadroBT, interruttoreId: String, nuovaVariante: VarianteProdotto) = impiantoCoordinator.sostituisciProduttoreComponente(quadro, interruttoreId, nuovaVariante)
     fun aggiungiDispositivoAdAntincendio(impianto: RilevazioneAntincendio, dispositivo: DispositivoRilevazione) = impiantoCoordinator.aggiungiDispositivoAdAntincendio(impianto, dispositivo)
     fun aggiungiDispositiviAdAntincendio(impianto: RilevazioneAntincendio, dispositivi: List<DispositivoRilevazione>) = impiantoCoordinator.aggiungiDispositiviAdAntincendio(impianto, dispositivi)
+    fun clearPendingAntincendioLoopTrigger() = impiantoCoordinator.clearPendingAntincendioLoopTrigger()
     fun aggiornaDispositivoInAntincendio(impianto: RilevazioneAntincendio, dispositivoAggiornato: DispositivoRilevazione) = impiantoCoordinator.aggiornaDispositivoInAntincendio(impianto, dispositivoAggiornato)
     fun eliminaDispositivoDaAntincendio(impianto: RilevazioneAntincendio, dispositivoId: String) = impiantoCoordinator.eliminaDispositivoDaAntincendio(impianto, dispositivoId)
     fun svuotaDispositiviAntincendio(impianto: RilevazioneAntincendio) = impiantoCoordinator.svuotaDispositiviAntincendio(impianto)

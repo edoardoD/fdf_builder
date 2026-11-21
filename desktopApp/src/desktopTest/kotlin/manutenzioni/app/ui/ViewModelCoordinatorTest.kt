@@ -401,4 +401,83 @@ class ViewModelCoordinatorTest {
         assertEquals("Luca Bianchi", eventi.first().nomeManutentore)
         assertTrue(viewModel.uiState.value.statusMessage.contains("pianificat", ignoreCase = true))
     }
+
+    @Test
+    fun `Adding RI template to cantiere fires pendingAntincendioLoopTrigger and clear consumes it`() = runTest {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        val repo = InMemoryManutenzioneRepository()
+        val cliente = Cliente(id = "cli-1", nome = "Cliente Test")
+        val cantiere = Cantiere(id = "cant-1", clienteId = "cli-1", nome = "Cantiere RI")
+        val templateRi = RilevazioneAntincendio(
+            id = "tpl-ri",
+            codIntervento = "RI",
+            nomeCompleto = "Rilevazione incendi",
+            cantiereId = null,
+            listaAttivita = listOf(Attivita(1, "Controllo", "Centrale", Periodo(TipoPeriodo.M, 6)))
+        )
+        repo.clienti.add(cliente)
+        repo.cantieri.add(cantiere)
+        repo.impianti.add(templateRi)
+
+        val viewModel = ManutenzioniViewModel(
+            repository = repo,
+            ioDispatcher = testDispatcher,
+            defaultDispatcher = testDispatcher
+        )
+        advanceUntilIdle()
+
+        viewModel.selectCliente(cliente)
+        advanceUntilIdle()
+        viewModel.selectCantiere(cantiere)
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.pendingAntincendioLoopTrigger)
+
+        viewModel.addImpiantiFromTemplates(listOf(templateRi))
+        advanceUntilIdle()
+
+        val triggered = viewModel.uiState.value.pendingAntincendioLoopTrigger
+        assertNotNull(triggered, "Deve scattare il trigger per aprire il dialog dei loop")
+        assertEquals("cant-1", triggered.cantiereId)
+        assertEquals("RI", triggered.codIntervento)
+
+        viewModel.clearPendingAntincendioLoopTrigger()
+        assertNull(viewModel.uiState.value.pendingAntincendioLoopTrigger)
+    }
+
+    @Test
+    fun `Saving new custom RI impianto on cantiere fires pendingAntincendioLoopTrigger`() = runTest {
+        val testDispatcher = StandardTestDispatcher(testScheduler)
+        val repo = InMemoryManutenzioneRepository()
+        val cliente = Cliente(id = "cli-1", nome = "Cliente Test")
+        val cantiere = Cantiere(id = "cant-1", clienteId = "cli-1", nome = "Cantiere Custom RI")
+        repo.clienti.add(cliente)
+        repo.cantieri.add(cantiere)
+
+        val viewModel = ManutenzioniViewModel(
+            repository = repo,
+            ioDispatcher = testDispatcher,
+            defaultDispatcher = testDispatcher
+        )
+        advanceUntilIdle()
+
+        viewModel.selectCliente(cliente)
+        advanceUntilIdle()
+        viewModel.selectCantiere(cantiere)
+        advanceUntilIdle()
+
+        val nuovoRi = ImpiantoStandard(
+            id = "ri-custom-1",
+            codIntervento = "RI",
+            nomeCompleto = "Rilevazione Incendi",
+            cantiereId = "cant-1"
+        )
+        viewModel.saveImpianto(nuovoRi)
+        advanceUntilIdle()
+
+        val triggered = viewModel.uiState.value.pendingAntincendioLoopTrigger
+        assertNotNull(triggered)
+        assertEquals("ri-custom-1", triggered.id)
+        assertEquals("cant-1", triggered.cantiereId)
+    }
 }

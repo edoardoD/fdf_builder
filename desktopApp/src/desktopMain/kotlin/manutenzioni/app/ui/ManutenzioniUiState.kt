@@ -63,6 +63,8 @@ data class ManutenzioniUiState(
     val orizzonteScadenzeMesi: Int = 12,
     /** Storico sessioni di verifica salvate per il cantiere selezionato (R25, R30) */
     val sessioniVerificaCantiere: List<SessioneVerifica> = emptyList(),
+    /** Trigger UDF: impianto RI appena aggiunto al cantiere per aprire subito l'inserimento componenti/loop */
+    val pendingAntincendioLoopTrigger: RilevazioneAntincendio? = null,
     /** Eventi di manutenzione pianificati e gestiti a calendario (Interactive Scheduler) */
     val eventiManutenzione: List<EventoManutenzione> = emptyList(),
     /** Data del giorno correntemente selezionato a calendario ("dd/MM/yyyy", es. "22/10/2026") */

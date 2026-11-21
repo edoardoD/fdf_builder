@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import manutenzioni.app.ui.theme.SlateBorder
 import manutenzioni.domain.model.Impianto
+import manutenzioni.domain.model.ImpiantoCodici
 import manutenzioni.domain.model.QuadroBT
 
 /**
@@ -51,6 +52,7 @@ fun NuovoImpiantoDialog(
         templatesFiltrati.all { it.id in selectedImpiantoIds }
     val selezionati = impiantiGlobali.filter { it.id in selectedImpiantoIds }
     val haQuadriBt = selezionati.any { it.requiresMassiveCreation || it.isQuadro }
+    val haAntincendio = selezionati.any { it.isAntincendio || ImpiantoCodici.isAntincendio(it.codIntervento) }
 
     AlertDialog(
         modifier = Modifier.width(620.dp),
@@ -131,6 +133,15 @@ fun NuovoImpiantoDialog(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "ℹ I Quadri BT selezionati proseguiranno nel wizard di creazione quadri (sigle QG, Q1, …).",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colors.secondary
+                    )
+                }
+
+                if (haAntincendio) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "ℹ La Rilevazione Incendi selezionata aprirà subito il foglio di inserimento componenti e Loop (1..8) del cantiere.",
                         fontSize = 11.sp,
                         color = MaterialTheme.colors.secondary
                     )

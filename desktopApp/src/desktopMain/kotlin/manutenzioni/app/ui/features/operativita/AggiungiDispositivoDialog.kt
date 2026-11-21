@@ -80,6 +80,7 @@ private val INSTALLAZIONI_SUGGERITE = listOf(
 @Composable
 fun MassiveDispositivoAntincendioDialog(
     dispositiviEsistenti: List<DispositivoRilevazione>,
+    cantiereNome: String? = null,
     onDismiss: () -> Unit,
     onConfirmBatch: (List<DispositivoRilevazione>) -> Unit
 ) {
@@ -500,11 +501,13 @@ fun MassiveDispositivoAntincendioDialog(
         onConfirmBatch(result)
     }
 
+    val subtitlePrefix = cantiereNome?.takeIf { it.isNotBlank() }?.let { "Cantiere: $it — " }.orEmpty()
+
     when (val sez = sezioneAttiva) {
         SezioneInserimentoAntincendio.Comuni -> {
             SpreadsheetCreationDialog(
                 title = "ELENCO COMPONENTI IMPIANTO RILEVAZIONE INCENDI",
-                subtitle = "Inserimento rapido Componenti Comuni e Loop 1..8 (Rivelatori e Moduli, ind. 1..150)",
+                subtitle = "${subtitlePrefix}Inserimento rapido Componenti Comuni e Loop 1..8 (Rivelatori e Moduli, ind. 1..150)",
                 rows = comuniDrafts,
                 rowKey = { _, r -> r.id },
                 columns = comuniColumns,
@@ -548,7 +551,7 @@ fun MassiveDispositivoAntincendioDialog(
 
             SpreadsheetCreationDialog(
                 title = "ELENCO COMPONENTI IMPIANTO RILEVAZIONE INCENDI",
-                subtitle = "Sezione attiva: Loop ${sez.numero} — ${famigliaAttiva.label} (indirizzi 1..150)",
+                subtitle = "${subtitlePrefix}Sezione attiva: Loop ${sez.numero} — ${famigliaAttiva.label} (indirizzi 1..150)",
                 rows = activeRows,
                 rowKey = { _, r -> r.id },
                 columns = columns,

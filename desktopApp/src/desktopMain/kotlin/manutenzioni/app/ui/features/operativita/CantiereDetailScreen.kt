@@ -45,6 +45,7 @@ fun CantiereDetailScreen(
     onAggiornaLampadaInEmergenza: ((ImpiantoEmergenza, LampadaEmergenza) -> Unit)? = null,
     onAggiungiDispositiviAdAntincendio: ((RilevazioneAntincendio, List<DispositivoRilevazione>) -> Unit)? = null,
     onAggiornaDispositivoInAntincendio: ((RilevazioneAntincendio, DispositivoRilevazione) -> Unit)? = null,
+    onDismissAntincendioLoopTrigger: () -> Unit = {},
     onExportStandaloneTechnicalSheet: ((Impianto) -> Unit)? = null,
     onExportCantiereInterruttoriPdf: () -> Unit = {},
     onUpdateDatiIntervento: (String?, String?, String?, String?) -> Unit = { _, _, _, _ -> },
@@ -110,8 +111,12 @@ fun CantiereDetailScreen(
                 }
             },
             onCreateEmpty = {
-                onCreateNewImpianto(null)
                 showNuovoImpiantoDialog = false
+                impiantoInModifica = ImpiantoStandard(
+                    codIntervento = "",
+                    nomeCompleto = "",
+                    cantiereId = state.selectedCantiere?.id
+                )
             }
         )
     }
@@ -156,6 +161,24 @@ fun CantiereDetailScreen(
             onSave = { nuoviQuadri ->
                 nuoviQuadri.forEach { onSaveImpianto(it) }
                 showMassiveQuadroDialog = false
+            }
+        )
+    }
+
+    val pendingRiTrigger = state.pendingAntincendioLoopTrigger
+        ?.takeIf { it.cantiereId == state.selectedCantiere?.id }
+    if (!showMassiveQuadroDialog && pendingRiTrigger != null) {
+        MassiveDispositivoAntincendioDialog(
+            dispositiviEsistenti = pendingRiTrigger.listaDispositivi,
+            cantiereNome = state.selectedCantiere?.nome,
+            onDismiss = { onDismissAntincendioLoopTrigger() },
+            onConfirmBatch = { nuovi ->
+                if (onAggiungiDispositiviAdAntincendio != null) {
+                    onAggiungiDispositiviAdAntincendio.invoke(pendingRiTrigger, nuovi)
+                } else {
+                    onSaveImpianto(pendingRiTrigger.copy(listaDispositivi = pendingRiTrigger.listaDispositivi + nuovi))
+                }
+                onDismissAntincendioLoopTrigger()
             }
         )
     }
