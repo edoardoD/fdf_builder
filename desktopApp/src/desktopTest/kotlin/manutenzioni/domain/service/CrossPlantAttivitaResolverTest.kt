@@ -49,47 +49,43 @@ class CrossPlantAttivitaResolverTest {
     )
 
     @Test
-    fun `resolveAttivita con cantiere vuoto mostra solo base per 6 mesi`() {
+    fun `resolveAttivita per RI normalizza sempre alle 13 attivita semestrali B2 indipendentemente da altri impianti`() {
         val filtrate = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impiantoRi,
             impiantiNelCantiere = emptyList(),
             frequenza = Periodo(TipoPeriodo.M, 6)
         )
-        
-        assertEquals(1, filtrate.size)
-        assertEquals("Prova fumo", filtrate.first().tipoAttivita)
+
+        assertEquals(13, filtrate.size)
+        assertTrue(filtrate.all { it.frequenza == Periodo(TipoPeriodo.M, 6) && it.targetImpiantoCod == null })
     }
 
     @Test
-    fun `resolveAttivita con cantiere che ha GE mostra base e GE per 6 mesi`() {
-        val ge = ImpiantoStandard(codIntervento = "GE", nomeCompleto = "Gruppo")
-        
-        val filtrate = CrossPlantAttivitaResolver.resolveAttivita(
-            impianto = impiantoRi,
-            impiantiNelCantiere = listOf(impiantoRi, ge),
-            frequenza = Periodo(TipoPeriodo.M, 6)
-        )
-        
-        assertEquals(2, filtrate.size)
-        assertTrue(filtrate.any { it.targetImpiantoCod == null })
-        assertTrue(filtrate.any { it.targetImpiantoCod == "GE" })
-    }
-
-    @Test
-    fun `resolveAttivita per 1 anno include base, GE e GAS se RIG e GE sono presenti`() {
+    fun `resolveAttivita per RI con GE e RIG presenti ignora vecchie attivita cross-plant e mantiene il catalogo B2`() {
         val ge = ImpiantoStandard(codIntervento = "GE", nomeCompleto = "Gruppo")
         val rig = ImpiantoStandard(codIntervento = "RIG", nomeCompleto = "Rilevazione Gas")
-        
+
         val filtrate = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impiantoRi,
             impiantiNelCantiere = listOf(impiantoRi, ge, rig),
-            frequenza = Periodo(TipoPeriodo.A, 1) // 12 mesi include 6 mesi e 12 mesi
+            frequenza = Periodo(TipoPeriodo.M, 6)
         )
-        
-        assertEquals(3, filtrate.size)
-        assertTrue(filtrate.any { it.targetImpiantoCod == null }) // Base (6m)
-        assertTrue(filtrate.any { it.targetImpiantoCod == "GE" }) // GE (6m)
-        assertTrue(filtrate.any { it.targetImpiantoCod == "RIG" }) // GAS (1a)
+
+        assertEquals(13, filtrate.size)
+        assertTrue(filtrate.none { it.targetImpiantoCod != null })
+    }
+
+    @Test
+    fun `resolveFrequenze per RI restituisce esclusivamente 6 Mesi`() {
+        val ge = ImpiantoStandard(codIntervento = "GE", nomeCompleto = "Gruppo")
+        val rig = ImpiantoStandard(codIntervento = "RIG", nomeCompleto = "Rilevazione Gas")
+
+        val freqs = CrossPlantAttivitaResolver.resolveFrequenze(
+            impianto = impiantoRi,
+            impiantiNelCantiere = listOf(impiantoRi, ge, rig)
+        )
+
+        assertEquals(listOf(Periodo(TipoPeriodo.M, 6)), freqs)
     }
 
     // --- TEST PER RILEVAZIONE GAS (RIG) ---

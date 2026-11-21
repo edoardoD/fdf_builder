@@ -1,0 +1,108 @@
+﻿SCHEDA DI VERIFICA E MANUTENZIONE PERIODICA PROGRAMMATA IMPIANTI ELETTRICI/ELETTRONICI;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+"Codice 
+Scheda:";;;RI;;;.;06;;Oggetto scheda:;;RI;;;;Impianto rilevazione incendi;;;;;;;;;;;;Periodicità:;;;06;;MESI;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+"Azienda
+Appaltat.";;;Desiderio Impianti S.r.l.;;;;;;;Sito;;;;;;;Cliente:;;;;;;;;;;"Data inizio periodo
+attività";;;;01/01/00;;;;
+Premessa e/o informazioni: CEI 0-10:2012, CEI EN 50110:2014, CEI 11-27:2014, CEI 64-8, CEI 64-14:2007, UNI 9795:2021, UNI 11224:2026;;;;;;;;;;;;;;;;;;;;;;;;;;;Data precedente;;;;;;;;
+Il controllo periodico deve essere effettuato da tecnico manutentore qualificato. Prima di passare alla fase esecutiva Prima di procedere con le prove della parte di rivelazione degli impianti di rivelazione e spegnimento, porre le apparecchiature di comando dello spegnimento autotatico in sicurezza, per evitare l'attivazione dello spegnimento a causa delle operazioni di controllo. In modo particolare assicurarsi che gli effetti delle prove (segnalazioni e comandi) non producano situazioni di pericolo o attuazioni indesiderate, pianificando ed organizzando le prove, ed i metodi di prova, con il responsabile della sicurezza e/o con il responsabile del servizio prevenzione e protezione competente.;;;;;;;;;;;;;;;;;;;;;;;;;;;attività V&M;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;"Data attuale
+attività V&M";;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;"Verificatore/
+Manutentore";;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;Firma;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+B2-Lista di Riscontro per Verifica sul Sistema;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Codice Attività;;;;;;Tipo Attività;;;Impianto;;;Attività;;;;;;;;;;;;;;Esito;;;;;;Nota;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;O;P;PI;NA;NP;VN;B;;;;
+RI;;#RIF!;06;;.1;Controllo;;;Centrale;;;Efficienza e commutazione delle alimentazioni, con rimozione alimentazione primaria;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.2;Controllo;;;Centrale;;;Controllo del valore e dello stato delle batterie;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.3;Controllo;;;Centrale;;;Efficienza di lampade, led e segnalazioni ottiche e digitali;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.4;Controllo;;;Centrale;;;Efficienza delle segnalazioni acustiche;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.5;Controllo;;;Centrale;;;Verifica dell’intensità delle segnalazioni acustiche;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.6;Controllo;;;Sistemi di Ripetizione;;;Efficienza dei segnali di rinvio degli stati di allarme e guasto su ripetitori, modem, comunicatore/combinatori;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.6;Controllo;;;Sistemi di Ripetizione;;;Efficienza del sistema di visualizzazione grafica e possibilità di inviare e ricevere comandi;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.7;Controllo;;;Linee;;;Segnalazione guasto su apertura o corto circuito delle linee di rivelazione o ingresso sorvegliate;;;;;;;;;;;;;x;;;;;;;A campione scollegando un morsetto;;;
+RI;;#RIF!;06;;.8;Controllo;;;Linee;;;Segnalazione guasto su apertura o corto circuito delle linee di comando sorvegliate;;;;;;;;;;;;;x;;;;;;;A campione scollegando un morsetto;;;
+RI;;#RIF!;06;;.9;Controllo;;;Tutti i componenti;;;Esecuzione positiva delle prove di allarme su tutti i componenti come indicato nel punto 10.2 UNI 11224;;;;;;;;;;;;;x;;;;;;;Non barrare se presente lista di controllo;;;
+RI;;#RIF!;06;;.10;Controllo;;;Tutti i componenti;;;Controllo positivo delle segnalazione di allarme presso l'impianto;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.11;Controllo;;;Funzionale del sistema;;;Controlli addizionali sul sistema radio Segnalazione guasto con rimozione dispositivi a campione Segnalazione guasto con rimozione batteria a  campione, vedere punto 8.3.4.5. Misurazione segnale radio;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.12;Controllo;;;Tutti i componenti;;;"Controllo positivo della udibilità e/o visibilità delle segnalazioni di
+allarme nell’ambiente protetto";;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.13;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.14;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.15;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.16;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.17;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.18;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.19;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.20;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+"Legenda: O = Obbligatorio
+Nella colonna esito spuntare:  P = Positivo| PI =Positivo previo intervento | NA =Intervento rimandato a sessione successiva | NP =Componente non presente | VN = Vedere nota B = Gli interventi saranno eseguiti dal costruttore e/o dal centro assistenza | Numerare le Note e descriverle nell'apposito riquadro";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+SCHEDA DI VERIFICA E MANUTENZIONE PERIODICA PROGRAMMATA IMPIANTI ELETTRICI/ELETTRONICI;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+"Codice 
+Scheda:";;;RI;;;.;06;;Oggetto scheda:;;RI;;;;Impianto rilevazione incendi;;;;;;;;;;;;Periodicità:;;;06;;MESI;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+"Azienda
+Appaltat.";;;Desiderio Impianti S.r.l.;;;;;;;Sito;;;;;;;Cliente:;;;;;;;;;;"Data inizio periodo
+attività";;;;01/01/00;;;;
+Premessa e/o informazioni: CEI 0-10:2012, CEI EN 50110:2014, CEI 11-27:2014, CEI 64-8, CEI 64-14:2007, UNI 9795:2021, UNI 11224:2026;;;;;;;;;;;;;;;;;;;;;;;;;;;Data precedente;;;;;;;;
+Il controllo periodico deve essere effettuato da tecnico manutentore qualificato. Prima di passare alla fase esecutiva Prima di procedere con le prove della parte di rivelazione degli impianti di rivelazione e spegnimento, porre le apparecchiature di comando dello spegnimento autotatico in sicurezza, per evitare l'attivazione dello spegnimento a causa delle operazioni di controllo. In modo particolare assicurarsi che gli effetti delle prove (segnalazioni e comandi) non producano situazioni di pericolo o attuazioni indesiderate, pianificando ed organizzando le prove, ed i metodi di prova, con il responsabile della sicurezza e/o con il responsabile del servizio prevenzione e protezione competente.;;;;;;;;;;;;;;;;;;;;;;;;;;;attività V&M;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;"Data attuale
+attività V&M";;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;"Verificatore/
+Manutentore";;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;Firma;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Prospetto B.3 — Lista di Riscontro per Controlli Addizionali su Sistemi ASD (Aspirazione);;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Classe di Sensibilità ASD:  [  ] Classe A   [  ] Classe B   [  ] Classe C    |    Tempo Max Trasporto Richiesto:  [  ] ≤ 60 s   [  ] ≤ 90 s   [  ] ≤ 120 s;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Codice Attività;;;;;;Tipo Attività;;;Impianto;;;Attività;;;;;;;;;;;;;;Esito;;;;;;Nota;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;O;P;PI;NA;NP;VN;B;;;;
+RI;;#RIF!;06;;.1;Controllo;;;Rivelatori ASD;;;Efficienza e commutazione delle alimentazioni, con rimozione alimentazione primaria;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.2;Controllo;;;Rivelatori ASD;;;Controllo del valore e dello stato delle batterie;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.3;Controllo;;;Rivelatori ASD;;;Efficienza di lampade, led e segnalazioni ottiche e digitali del rivelatore ASD;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.4;Controllo;;;Rivelatori ASD;;;Verifica che le soglie siano state programmate secondo i dati di progetto;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.5;Controllo;;;Sistema di Ripetizione;;;Efficienza dei segnali di rinvio degli stati di allarme e guasto su ripetitori, modem o comunicatore/combinatore;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.6;Controllo;;;Sistema di Ripetizione;;;Efficienza del sistema di visualizzazione grafica e possibilità di inviare e ricevere comandi;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.7;Controllo;;;Sitema di Aspirazione;;;Ispezione visiva dei tratti di tubo per rilevare eventuali ostruzioni o danneggiamenti;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.8;Controllo;;;Sitema di Aspirazione;;;Controllo con vacuometro delle depressioni su ciascun foro;;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.9;Controllo;;;Sitema di Aspirazione;;;"Segnalazione guasto su ostruzione del sistema aspirante
+ottenuta occludendo i fori (vedi 8.3.3.4)";;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.10;Controllo;;;ASD a commutazione;;;Controllo di commutazione e corrispondenza tra segnalazioni e zone di origine;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.11;Controllo;;;Segnalazioni;;;"Controllo di intervento delle soglie di allarme
+(almeno un punto di aspirazione per ciascun ramo)";;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.12;Controllo;;;Segnalazioni;;;"Esito delle logiche funzionali dei comandi e delle
+Temporizzazioni";;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.13;Controllo;;;Segnalazioni;;;"Controllo positivo delle congruenze delle segnalazioni su
+sistema di visualizzazione grafica e/o stampante";;;;;;;;;;;;;x;;;;;;;;;;
+RI;;#RIF!;06;;.14;Controllo;;;Funzionale del sistema;;;"Controllo del tempo massimo di trasporto sul punto di
+aspirazione più remoto con fumo o sistema di simulazione per ciascun ramo";;;;;;;;;;;;;x;;;;;;;Tempo rilevato:;;;
+RI;;#RIF!;06;;.15;Controllo;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.16;Controllo;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.17;Controllo;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.18;Controllo;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.19;Controllo;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+RI;;#RIF!;06;;.20;Controllo;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+"Legenda: O = Obbligatorio
+Nella colonna esito spuntare:  P = Positivo| PI =Positivo previo intervento | NA =Intervento rimandato a sessione successiva | NP =Componente non presente | VN = Vedere nota B = Gli interventi saranno eseguiti dal costruttore e/o dal centro assistenza | Numerare le Note e descriverle nell'apposito riquadro";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

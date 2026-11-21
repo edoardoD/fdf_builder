@@ -4,18 +4,18 @@ import manutenzioni.domain.model.Attivita
 import manutenzioni.domain.model.Impianto
 import manutenzioni.domain.model.Periodo
 import manutenzioni.domain.model.RilevazioneAntincendio
-import manutenzioni.domain.model.TipoPeriodo
-import manutenzioni.domain.service.FrequencyFilter
+import manutenzioni.domain.model.TipoVerbaleRi
 
 /**
- * Regola di dominio per i sistemi di Rilevazione Incendi ("RI").
+ * Regola di dominio per i sistemi di Rilevazione e Segnalazione Incendi ("RI" — IRAI)
+ * conforme alle norme UNI 11224:2026 e UNI 9795:2021.
  *
- * Applica le seguenti regole normative e operative:
- * 1. Attività istituzionali di centrale e linee: fino a 10 attività base a frequenza semestrale (6M)
- *    oppure filtrate per frequenze inferiori.
- * 2. Prove cross-plant condizionate: include le prove su altri impianti del cantiere
- *    (es. sgancio GE, PEM, interfacce RIG) solo se l'impianto target è presente nel cantiere.
- * 3. Frequenze disponibili: include sempre la frequenza semestrale (6M).
+ * Vincoli normativi:
+ * 1. Periodicità unica obbligatoria: Semestrale (`06 MESI` — [Uni11224RiCatalog.FREQUENZA_SEMESTRALE]).
+ * 2. Liste di riscontro obbligatorie:
+ *    - [TipoVerbaleRi.VERIFICA_PERIODICA_B]: 13 attività di verifica sul sistema (Prospetto B.2).
+ *    - [TipoVerbaleRi.VERIFICA_INIZIALE_A]: 17 attività di controllo sul sistema e dispositivi (Prospetto A.3),
+ *      affiancate nel libretto dalle 19 verifiche preliminari (Prospetto A.2).
  */
 class FireAlarmCrossPlantRule : CrossPlantRule {
 
@@ -29,43 +29,15 @@ class FireAlarmCrossPlantRule : CrossPlantRule {
         impiantiNelCantiere: List<Impianto>,
         frequenza: Periodo
     ): List<Attivita> {
-        val codiciPresenti = impiantiNelCantiere.map { it.codIntervento.trim().uppercase() }.toSet()
-
-        // 1. Attività istituzionali di centrale e linee (fino a 10 attività a 6M)
-        val istituzionali = if (frequenza.inMesi() >= 6) {
-            val base = impianto.listaAttivita.filter { it.targetImpiantoCod == null }
-            if (base.size >= 10) base.take(10) else base
-        } else {
-            FrequencyFilter.filterByFrequenza(
-                impianto.listaAttivita.filter { it.targetImpiantoCod == null },
-                frequenza
-            )
+        val ri = impianto as? RilevazioneAntincendio
+        if (ri != null && ri.tipoVerbale == TipoVerbaleRi.VERIFICA_INIZIALE_A) {
+            return Uni11224RiCatalog.LISTA_A3_CONTROLLI_SISTEMA
         }
-
-        // 2. Attività cross-plant condizionate dagli altri impianti presenti nel cantiere
-        val crossPlant = impianto.listaAttivita
-            .filter { it.targetImpiantoCod != null && it.targetImpiantoCod.trim().uppercase() in codiciPresenti }
-            .let { FrequencyFilter.filterByFrequenza(it, frequenza) }
-
-        // 3. Concatenazione e rinumerazione progressiva (1..N)
-        val unificate = istituzionali + crossPlant
-        return unificate.mapIndexed { index, att -> att.copy(nAttivita = index + 1) }
+        return Uni11224RiCatalog.normalizeRiAttivita(impianto.listaAttivita)
     }
 
     override fun resolveFrequenze(
         impianto: Impianto,
         impiantiNelCantiere: List<Impianto>
-    ): List<Periodo> {
-        val codiciPresenti = impiantiNelCantiere.map { it.codIntervento.trim().uppercase() }.toSet()
-        val crossPlant = impianto.listaAttivita.filter {
-            val target = it.targetImpiantoCod?.trim()?.uppercase()
-            target == null || target in codiciPresenti
-        }
-        val freqs = FrequencyFilter.frequenzeDisponibili(crossPlant).toMutableList()
-        val semestrale = Periodo(TipoPeriodo.M, 6)
-        if (!freqs.contains(semestrale)) {
-            freqs.add(semestrale)
-        }
-        return freqs.sortedBy { it.inMesi() }
-    }
+    ): List<Periodo> = listOf(Uni11224RiCatalog.FREQUENZA_SEMESTRALE)
 }

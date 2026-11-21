@@ -40,45 +40,44 @@ class CrossPlantRuleTest {
     }
 
     @Test
-    fun `FireAlarmCrossPlantRule injects 10 institutional base activities at 6M`() {
+    fun `FireAlarmCrossPlantRule enforces single 6M frequency and resolves B2 or A3 catalog activities`() {
         val rule = FireAlarmCrossPlantRule()
-        val baseActivities = (1..15).map { idx ->
-            Attivita(
-                nAttivita = idx,
-                descrizione = "Attivita Base $idx",
-                frequenza = Periodo(TipoPeriodo.M, 6),
-                targetImpiantoCod = null
-            )
-        }
-        val plant = RilevazioneAntincendio(
+        val plantPeriodica = RilevazioneAntincendio(
             codIntervento = "RI",
             nomeCompleto = "Rilevazione Incendi",
-            listaAttivita = baseActivities
+            tipoVerbale = TipoVerbaleRi.VERIFICA_PERIODICA_B
         )
 
-        val resolved = rule.resolveAttivita(
-            impianto = plant,
-            impiantiNelCantiere = listOf(plant),
+        val resolvedPeriodica = rule.resolveAttivita(
+            impianto = plantPeriodica,
+            impiantiNelCantiere = listOf(plantPeriodica),
             frequenza = Periodo(TipoPeriodo.M, 6)
         )
+        assertEquals(13, resolvedPeriodica.size, "Verifica Periodica B2 deve avere 13 attività obbligatorie a 6M")
+        assertEquals(1, resolvedPeriodica.first().nAttivita)
+        assertEquals(13, resolvedPeriodica.last().nAttivita)
+        assertEquals(listOf(Periodo(TipoPeriodo.M, 6)), rule.resolveFrequenze(plantPeriodica, listOf(plantPeriodica)))
 
-        // Must take at most 10 institutional activities when size >= 10
-        assertEquals(10, resolved.size)
-        assertEquals(1, resolved.first().nAttivita)
-        assertEquals(10, resolved.last().nAttivita)
+        val plantIniziale = plantPeriodica.copy(tipoVerbale = TipoVerbaleRi.VERIFICA_INIZIALE_A)
+        val resolvedIniziale = rule.resolveAttivita(
+            impianto = plantIniziale,
+            impiantiNelCantiere = listOf(plantIniziale),
+            frequenza = Periodo(TipoPeriodo.M, 6)
+        )
+        assertEquals(17, resolvedIniziale.size, "Verifica Iniziale A3 deve avere 17 attività obbligatorie a 6M")
     }
 
     @Test
-    fun `FireAlarmCrossPlantRule includes cross-plant activities only when target plant exists in cantiere`() {
+    fun `FireAlarmCrossPlantRule normalizes legacy cross-plant or non-6M RI activities to canonical B2 6M catalog`() {
         val rule = FireAlarmCrossPlantRule()
-        val antincendio = RilevazioneAntincendio(
+        val legacyRi = RilevazioneAntincendio(
             codIntervento = "RI",
             nomeCompleto = "Rilevazione Incendi",
             listaAttivita = listOf(
                 Attivita(
                     nAttivita = 1,
                     descrizione = "Centrale",
-                    frequenza = Periodo(TipoPeriodo.M, 6)
+                    frequenza = Periodo(TipoPeriodo.M, 1)
                 ),
                 Attivita(
                     nAttivita = 2,
@@ -89,21 +88,14 @@ class CrossPlantRuleTest {
             )
         )
 
-        val resolvedWithoutGe = rule.resolveAttivita(
-            impianto = antincendio,
-            impiantiNelCantiere = listOf(antincendio),
+        val resolved = rule.resolveAttivita(
+            impianto = legacyRi,
+            impiantiNelCantiere = listOf(legacyRi, ImpiantoStandard(codIntervento = "GE", nomeCompleto = "GE")),
             frequenza = Periodo(TipoPeriodo.M, 6)
         )
-        assertEquals(1, resolvedWithoutGe.size)
-        assertEquals("Centrale", resolvedWithoutGe[0].descrizione)
-
-        val resolvedWithGe = rule.resolveAttivita(
-            impianto = antincendio,
-            impiantiNelCantiere = listOf(antincendio, ImpiantoStandard(codIntervento = "GE", nomeCompleto = "GE")),
-            frequenza = Periodo(TipoPeriodo.M, 6)
-        )
-        assertEquals(2, resolvedWithGe.size)
-        assertEquals(listOf(1, 2), resolvedWithGe.map { it.nAttivita })
+        assertEquals(13, resolved.size)
+        assertTrue(resolved.all { it.frequenza == Periodo(TipoPeriodo.M, 6) && it.targetImpiantoCod == null })
+        assertEquals(listOf(Periodo(TipoPeriodo.M, 6)), rule.resolveFrequenze(legacyRi, listOf(legacyRi)))
     }
 
     @Test

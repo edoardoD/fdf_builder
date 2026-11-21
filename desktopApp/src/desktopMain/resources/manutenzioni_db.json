@@ -1961,111 +1961,161 @@
     },
     {
       "codIntervento": "RI",
-      "nomeCompleto": "Rilevazione incendi",
-      "premessa": "Il controllo periodico deve essere effettuato da tecnico qualificato. Prima di passare alla fase esecutiva delle prove, occorre controllare la presenza dei documenti riguardanti il controllo iniziale. Durante le operazioni di controllo periodico, deve essere eseguito un controllo funzionale sul sistema, e sul 50% di tutti i dispositivi e azionamenti presenti nel sistema, essendo le verifiche semestrali, raggiungendo il 100% dei dispositivi nell'arco dei 12 mesi. Prima di procedere con le prove della parte di rivelazione degli impianti di rivelazione e spegnimento, porre le apparecchiature di comando dello spegnimento autotatico in sicurezza, per evitare l'attivazione dello spegnimento a causa delle operazioni di controllo. In modo particolare assicurarsi che gli effetti delle prove (segnalazioni e comandi) non producano situazioni di pericolo o attuazioni indesiderate, pianificando ed organizzando le prove, ed i metodi di prova, con il responsabile della sicurezza e/o con il responsabile del servizio prevenzione e protezione competente.",
+      "nomeCompleto": "Impianto rilevazione incendi",
+      "premessa": "Il controllo periodico deve essere effettuato da tecnico manutentore qualificato. Prima di procedere con le prove della parte di rivelazione degli impianti di rivelazione e spegnimento, porre le apparecchiature di comando dello spegnimento automatico in sicurezza, per evitare l'attivazione dello spegnimento a causa delle operazioni di controllo. In modo particolare assicurarsi che gli effetti delle prove (segnalazioni e comandi) non producano situazioni di pericolo o attuazioni indesiderate, pianificando ed organizzando le prove, ed i metodi di prova, con il responsabile della sicurezza e/o con il responsabile del servizio prevenzione e protezione competente.",
       "listaAttivita": [
         {
           "tipoAttivita": "Controllo",
-          "descrizione": "Nel caso di modifiche all'impianto, controllare il firmware della centrale e dei teminali remoti ove presenti",
-          "frequenza": {
-            "tipo": "M",
-            "valore": 1
-          },
-          "zona": "Centrale"
-        },
-        {
-          "tipoAttivita": "Controllo",
-          "descrizione": "Verifica degli eventi registrati nella centrale. Verifica che non siano presenti allarmi.",
-          "frequenza": {
-            "tipo": "M",
-            "valore": 1
-          },
-          "zona": "Centrale"
-        },
-        {
-          "tipoAttivita": "Controllo",
-          "descrizione": "Verifica dell'efficienza, commutazione delle alimentazioni, segnalazioni, rimozione alimentazione primaria.",
-          "frequenza": {
-            "tipo": "M",
-            "valore": 1
-          },
-          "zona": "Centrale"
-        },
-        {
-          "tipoAttivita": "Controllo",
-          "descrizione": "Stato delle batterie, efficienza di lampade, led e segnalazioni ottiche e digitali",
-          "frequenza": {
-            "tipo": "M",
-            "valore": 2
-          },
-          "zona": "Centrale"
-        },
-        {
-          "tipoAttivita": "Controllo",
-          "descrizione": "Prova di funzionamento delle segnalazioni ottice ed acustiche locali, verifica della capacità di ricevere gli allarmi provenienti dai dispositivi automatici e manuali",
-          "frequenza": {
-            "tipo": "M",
-            "valore": 2
-          },
-          "zona": "Centrale"
-        },
-        {
-          "tipoAttivita": "Verifica",
-          "descrizione": "Esecuzione del test automatico dell'impianto da parte della centrale",
-          "frequenza": {
-            "tipo": "M",
-            "valore": 2
-          },
-          "zona": "Centrale"
-        },
-        {
-          "tipoAttivita": "Controllo",
-          "descrizione": "Controllo generale a vista sull'integrità esteriore, stato di conservazione e stabilità dei vari componenti dell'impianto",
-          "frequenza": {
-            "tipo": "M",
-            "valore": 4
-          },
-          "zona": "Componenti"
-        },
-        {
-          "tipoAttivita": "Verifica",
-          "descrizione": "Verifica di efficienza del sistema di visualizzazione grafica e possibilità di inviare e ricevere comandi",
-          "frequenza": {
-            "tipo": "M",
-            "valore": 4
-          },
-          "zona": "Sistema"
-        },
-        {
-          "tipoAttivita": "Verifica",
-          "descrizione": "Verifica di efficienza dei segnali di rinvio degli stati di allarme e guasto sui ripetitori, modem, combinatori",
-          "frequenza": {
-            "tipo": "M",
-            "valore": 4
-          },
-          "zona": "Sitema"
-        },
-        {
-          "tipoAttivita": "Controllo",
-          "descrizione": "Verifica segnalazione guasto su apertura o corto circuito delle linee di rivelazione e di comando sovegliate",
+          "descrizione": "Efficienza e commutazione delle alimentazioni, con rimozione alimentazione primaria",
           "frequenza": {
             "tipo": "M",
             "valore": 6
           },
-          "zona": "Linee"
+          "zona": "Centrale",
+          "obbligatoria": true
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo del valore e dello stato delle batterie",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Centrale",
+          "obbligatoria": true
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Efficienza di lampade, led e segnalazioni ottiche e digitali",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Centrale",
+          "obbligatoria": true
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Efficienza delle segnalazioni acustiche",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Centrale",
+          "obbligatoria": true
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Verifica dell’intensità delle segnalazioni acustiche",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Centrale",
+          "obbligatoria": true
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Efficienza dei segnali di rinvio degli stati di allarme e guasto su ripetitori, modem, comunicatore/combinatori",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Sistemi di Ripetizione",
+          "obbligatoria": true
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Efficienza del sistema di visualizzazione grafica e possibilità di inviare e ricevere comandi",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Sistemi di Ripetizione",
+          "obbligatoria": true
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Segnalazione guasto su apertura o corto circuito delle linee di rivelazione o ingresso sorvegliate",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Linee",
+          "obbligatoria": true,
+          "notaPrecompilata": "A campione scollegando un morsetto"
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Segnalazione guasto su apertura o corto circuito delle linee di comando sorvegliate",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Linee",
+          "obbligatoria": true,
+          "notaPrecompilata": "A campione scollegando un morsetto"
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Esecuzione positiva delle prove di allarme su tutti i componenti come indicato nel punto 10.2 UNI 11224",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Tutti i componenti",
+          "obbligatoria": true,
+          "notaPrecompilata": "Non barrare esito se presente lista di controllo"
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo positivo delle segnalazione di allarme presso l'impianto",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Tutti i componenti",
+          "obbligatoria": true
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controlli addizionali sul sistema radio Segnalazione guasto con rimozione dispositivi a campione Segnalazione guasto con rimozione batteria a campione, vedere punto 8.3.4.5. Misurazione segnale radio",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Funzionale del sistema",
+          "obbligatoria": true
+        },
+        {
+          "tipoAttivita": "Controllo",
+          "descrizione": "Controllo positivo della udibilità e/o visibilità delle segnalazioni di allarme nell’ambiente protetto",
+          "frequenza": {
+            "tipo": "M",
+            "valore": 6
+          },
+          "zona": "Tutti i componenti",
+          "obbligatoria": true
         }
       ],
       "listaNormative": [
         {
-          "codNormativa": "UNI 9795",
+          "codNormativa": "UNI 9795:2021",
           "descrizione": "Sistemi fissi automatici di rivelazione e di segnalazione allarme d'incendio"
         },
         {
-          "codNormativa": "UNI 11224",
+          "codNormativa": "UNI 11224:2026",
           "descrizione": "Controllo iniziale e manutenzione dei sistemi di rivelazione incendi"
         }
       ],
-      "type": "ImpiantoStandard"
+      "architettura": "INDIRIZZATO",
+      "hasAsd": false,
+      "hasRadio": false,
+      "hasEvac": false,
+      "tipoVerbale": "VERIFICA_PERIODICA_B",
+      "estensioneProtezione": "TOTALE",
+      "tipoEsecuzione": "INDUSTRIALE_DEPOSITO",
+      "type": "RilevazioneAntincendio"
     },
     {
       "codIntervento": "RIF",

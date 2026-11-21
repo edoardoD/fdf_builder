@@ -441,6 +441,65 @@ enum class TipoComponenteComuneAntincendio(val label: String) {
     ALTRO("ALTRO")
 }
 
+/**
+ * Architettura base dell'impianto di rilevazione incendi (UNI 9795 / UNI 11224:2026):
+ * mutuamente esclusiva tra Convenzionale e Indirizzato.
+ */
+@Serializable
+enum class ArchitetturaImpiantoRi(val label: String) {
+    CONVENZIONALE("Convenzionale"),
+    INDIRIZZATO("Indirizzato")
+}
+
+/**
+ * Tipologia di Libretto / Verbale UNI 11224:2026 da generare per l'impianto RI.
+ */
+@Serializable
+enum class TipoVerbaleRi(val label: String, val codiceSezioneAnagrafica: String) {
+    VERIFICA_PERIODICA_B("Verifica Periodica Semestrale (Appendice B)", "B1"),
+    VERIFICA_INIZIALE_A("Verifica Iniziale / Presa in Carico (Appendice A)", "A1")
+}
+
+/**
+ * Estensione della protezione dell'impianto di rilevazione incendi.
+ */
+@Serializable
+enum class EstensioneProtezioneRi(val label: String) {
+    TOTALE("Totale dell'edificio"),
+    PARZIALE("Parziale")
+}
+
+/**
+ * Classificazione dell'ambiente/esecuzione dell'impianto RI (A1 / B1).
+ */
+@Serializable
+enum class TipoEsecuzioneRi(val label: String) {
+    CIVILE("Tipo Civile"),
+    TERZIARIO_UFFICI("Terziario / Uffici"),
+    INDUSTRIALE_DEPOSITO("Industriale / Deposito"),
+    ATEX("Luogo a Rischio Esplosione (ATEX)")
+}
+
+/**
+ * Classe di sensibilità per i sistemi di rivelazione ad aspirazione ASD (Prospetto A.4 / B.3).
+ */
+@Serializable
+enum class ClasseSensibilitaAsd(val label: String) {
+    CLASSE_A("Classe A"),
+    CLASSE_B("Classe B"),
+    CLASSE_C("Classe C")
+}
+
+/**
+ * Tempo massimo di trasporto richiesto per i sistemi ASD (Prospetto A.4 / B.3).
+ */
+@Serializable
+enum class TempoTrasportoAsd(val label: String) {
+    MAX_60S("≤ 60 s"),
+    MAX_90S("≤ 90 s"),
+    MAX_120S("≤ 120 s")
+}
+
 @Serializable
 sealed class DispositivoRilevazione {
     abstract val id: String
@@ -547,8 +606,8 @@ data class RilevazioneAntincendio(
     override val codIntervento: String,
     override val nomeCompleto: String,
     override val premessa: String? = null,
-    override val listaAttivita: List<Attivita> = emptyList(),
-    override val listaNormative: List<Normativa> = emptyList(),
+    override val listaAttivita: List<Attivita> = manutenzioni.domain.service.rules.Uni11224RiCatalog.LISTA_B2_VERIFICA_PERIODICA_SISTEMA,
+    override val listaNormative: List<Normativa> = manutenzioni.domain.service.rules.Uni11224RiCatalog.LISTA_NORMATIVE_RI,
     override val cantiereId: String? = null,
     override val quantita: Int = 1,
     override val noteSpecifiche: String? = null,
@@ -556,10 +615,31 @@ data class RilevazioneAntincendio(
     override val quantitaComponenti: Map<String, Int> = emptyMap(),
 
     // Registro componenti: Componenti Comuni + Loop 1..8 (Rivelatori e Moduli, ind. 1..150)
-    val listaDispositivi: List<DispositivoRilevazione> = emptyList()
+    val listaDispositivi: List<DispositivoRilevazione> = emptyList(),
+
+    // Caratteristiche tecnologiche e anagrafiche UNI 11224:2026 storicizzate nel DB
+    val architettura: ArchitetturaImpiantoRi = ArchitetturaImpiantoRi.INDIRIZZATO,
+    val hasAsd: Boolean = false,
+    val hasRadio: Boolean = false,
+    val hasEvac: Boolean = false,
+    val classeSensibilitaAsd: ClasseSensibilitaAsd? = null,
+    val tempoMaxTrasportoAsd: TempoTrasportoAsd? = null,
+    val tipoVerbale: TipoVerbaleRi = TipoVerbaleRi.VERIFICA_PERIODICA_B,
+    val estensioneProtezione: EstensioneProtezioneRi = EstensioneProtezioneRi.TOTALE,
+    val localiProtetti: String? = null,
+    val tipoEsecuzione: TipoEsecuzioneRi = TipoEsecuzioneRi.INDUSTRIALE_DEPOSITO,
+    val responsabileSistema: String? = null
 ) : Impianto(), ImpiantoRilevazione {
     override val kind: ImpiantoKind get() = ImpiantoKind.ANTINCENDIO
     override val isAntincendio: Boolean get() = true
+
+    override val subtipoLabel: String
+        get() = listOfNotNull(
+            architettura.label,
+            "ASD".takeIf { hasAsd },
+            "Radio".takeIf { hasRadio },
+            "EVAC".takeIf { hasEvac }
+        ).joinToString(" • ")
 
     override val conteggioComponenti: Int
         get() = listaDispositivi.size
@@ -582,21 +662,37 @@ data class RilevazioneAntincendio(
         premessa = premessa, listaAttivita = listaAttivita, listaNormative = listaNormative,
         cantiereId = cantiereId, quantita = quantita, noteSpecifiche = noteSpecifiche,
         quantitaComponenti = quantitaComponenti,
-        listaDispositivi = listaDispositivi
+        listaDispositivi = listaDispositivi,
+        architettura = architettura,
+        hasAsd = hasAsd,
+        hasRadio = hasRadio,
+        hasEvac = hasEvac,
+        classeSensibilitaAsd = classeSensibilitaAsd,
+        tempoMaxTrasportoAsd = tempoMaxTrasportoAsd,
+        tipoVerbale = tipoVerbale,
+        estensioneProtezione = estensioneProtezione,
+        localiProtetti = localiProtetti,
+        tipoEsecuzione = tipoEsecuzione,
+        responsabileSistema = responsabileSistema
     )
 
     fun withDispositivi(dispositivi: List<DispositivoRilevazione>): RilevazioneAntincendio =
         copy(listaDispositivi = dispositivi)
 
     override fun instantiateForCantiere(cantiereId: String?, newId: String): RilevazioneAntincendio =
-        copy(id = newId, cantiereId = cantiereId, quantita = 1)
+        copy(
+            id = newId,
+            cantiereId = cantiereId,
+            quantita = 1,
+            listaAttivita = manutenzioni.domain.service.rules.Uni11224RiCatalog.normalizeRiAttivita(listaAttivita)
+        )
 
     override fun applyTemplateUpdates(template: Impianto): RilevazioneAntincendio {
         val templateRi = template as? RilevazioneAntincendio
         return copy(
             nomeCompleto = template.nomeCompleto,
             premessa = template.premessa,
-            listaAttivita = template.listaAttivita,
+            listaAttivita = manutenzioni.domain.service.rules.Uni11224RiCatalog.normalizeRiAttivita(template.listaAttivita),
             listaNormative = template.listaNormative,
             listaDispositivi = this.listaDispositivi.ifEmpty { templateRi?.listaDispositivi ?: emptyList() },
             quantitaComponenti = this.quantitaComponenti.ifEmpty { templateRi?.quantitaComponenti ?: emptyMap() }
@@ -823,7 +919,9 @@ data class Attivita(
     val visibile: Boolean = true, // Per gestire la visibilità condizionale (es. attività custom Antincendio)
     val componentRef: String? = null, // ID del componente che attiva questa attività
     val targetImpiantoCod: String? = null, // Codice impianto bersaglio per discovery cross-plant (es. "GE", "PEM")
-    val zona: String? = null // Sotto-sistema/zona dell'impianto (es. "Q.M.T.", "SEZ.", "Interruttore", "SF6", "ISV", "IVOR")
+    val zona: String? = null, // Sotto-sistema/zona dell'impianto (es. "Q.M.T.", "SEZ.", "Interruttore", "SF6", "ISV", "IVOR")
+    val obbligatoria: Boolean = true, // Colonna "O" (Obbligatorio = x) nei libretti UNI 11224:2026
+    val notaPrecompilata: String? = null // Nota operativa pre-stampata o suggerita (es. "A campione scollegando un morsetto")
 )
 
 @Serializable
@@ -969,15 +1067,19 @@ fun Impianto.normalizeType(): Impianto {
                 id = id,
                 codIntervento = codIntervento,
                 nomeCompleto = nomeCompleto,
-                premessa = premessa,
-                listaAttivita = numberedAttivita,
-                listaNormative = listaNormative,
+                premessa = premessa ?: manutenzioni.domain.service.rules.Uni11224RiCatalog.PREMESSA_SICUREZZA_RI,
+                listaAttivita = manutenzioni.domain.service.rules.Uni11224RiCatalog.normalizeRiAttivita(numberedAttivita),
+                listaNormative = listaNormative.ifEmpty { manutenzioni.domain.service.rules.Uni11224RiCatalog.LISTA_NORMATIVE_RI },
                 cantiereId = cantiereId,
                 quantita = quantita,
                 noteSpecifiche = noteSpecifiche,
                 quantitaComponenti = (this as? ImpiantoRilevazione)?.quantitaComponenti ?: emptyMap(),
                 listaDispositivi = (this as? RilevazioneAntincendio)?.listaDispositivi ?: emptyList()
             )
+        }
+        this is RilevazioneAntincendio -> {
+            val normalizedAttivita = manutenzioni.domain.service.rules.Uni11224RiCatalog.normalizeRiAttivita(numberedAttivita)
+            if (normalizedAttivita != listaAttivita) copy(listaAttivita = normalizedAttivita) else this
         }
         this !is RilevazioneGas && ImpiantoCodici.isGas(codIntervento) -> {
             RilevazioneGas(

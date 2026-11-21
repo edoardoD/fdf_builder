@@ -44,19 +44,19 @@ class ChallengerDomainStressTest {
     fun `CrossPlantAttivitaResolver handles empty context with 0, 10, and 20 base activities`() {
         val rule = FireAlarmCrossPlantRule()
 
-        // 1. Plant with 0 base activities
+        // 1. Plant with 0 base activities -> falls back to canonical 13 B2 activities at 6M
         val emptyPlant = RilevazioneAntincendio(
             codIntervento = "RI",
             nomeCompleto = "Rilevazione Incendi Vuoto",
             listaAttivita = emptyList()
         )
         val resEmpty = rule.resolveAttivita(emptyPlant, emptyList(), Periodo(TipoPeriodo.M, 6))
-        assertTrue(resEmpty.isEmpty(), "Con 0 attività base deve restituire lista vuota")
+        assertEquals(13, resEmpty.size, "Con lista vuota deve normalizzare alle 13 attività canoniche B2 UNI 11224:2026")
 
         val freqsEmpty = rule.resolveFrequenze(emptyPlant, emptyList())
-        assertEquals(listOf(6), freqsEmpty.map { it.inMesi() }, "Deve includere comunque il semestrale 6M")
+        assertEquals(listOf(6), freqsEmpty.map { it.inMesi() }, "Deve restituire esclusivamente il semestrale 6M")
 
-        // 2. Plant with exactly 10 base activities
+        // 2. Plant with 10 custom 6M activities
         val tenActivities = (1..10).map { i ->
             Attivita(nAttivita = i, descrizione = "Base $i", frequenza = Periodo(TipoPeriodo.M, 6))
         }
@@ -69,7 +69,7 @@ class ChallengerDomainStressTest {
         assertEquals(10, res10.size)
         assertEquals((1..10).toList(), res10.map { it.nAttivita })
 
-        // 3. Plant with 20 base activities (must cap at 10 institutional activities at 6M)
+        // 3. Plant with 20 6M activities (all preserved at 6M without arbitrary truncation)
         val twentyActivities = (1..20).map { i ->
             Attivita(nAttivita = i, descrizione = "Base $i", frequenza = Periodo(TipoPeriodo.M, 6))
         }
@@ -79,8 +79,8 @@ class ChallengerDomainStressTest {
             listaAttivita = twentyActivities
         )
         val res20 = rule.resolveAttivita(plant20, emptyList(), Periodo(TipoPeriodo.M, 6))
-        assertEquals(10, res20.size, "Deve limitare tassativamente a 10 le attività istituzionali base a 6M")
-        assertEquals((1..10).toList(), res20.map { it.nAttivita })
+        assertEquals(20, res20.size)
+        assertEquals((1..20).toList(), res20.map { it.nAttivita })
     }
 
     @Test
@@ -115,7 +115,7 @@ class ChallengerDomainStressTest {
         assertEquals(1, resNonMatching.size)
         assertEquals("Base Centrale", resNonMatching[0].descrizione)
 
-        // Case B: FireAlarmCrossPlantRule with conditioned activities and empty context
+        // Case B: FireAlarmCrossPlantRule with legacy conditioned activities normalizes to 13 canonical B2 activities
         val riPlant = RilevazioneAntincendio(
             codIntervento = "RI",
             nomeCompleto = "Rilevazione Incendi",
@@ -123,9 +123,8 @@ class ChallengerDomainStressTest {
         )
 
         val resRiEmpty = CrossPlantAttivitaResolver.resolveAttivita(riPlant, emptyList(), Periodo(TipoPeriodo.M, 6))
-        // 1 base activity (conditioned activities GE, PEM, CAB excluded)
-        assertEquals(1, resRiEmpty.size)
-        assertEquals("Base Centrale", resRiEmpty[0].descrizione)
+        assertEquals(13, resRiEmpty.size)
+        assertTrue(resRiEmpty.none { it.targetImpiantoCod != null })
         assertEquals(1, resRiEmpty[0].nAttivita)
     }
 
@@ -205,8 +204,8 @@ class ChallengerDomainStressTest {
         val results = jobs.awaitAll()
         assertEquals(50, results.size)
         for (res in results) {
-            assertEquals(10, res.first, "10 istituzionali senza iniezioni dinamiche")
-            assertTrue(res.second >= 1)
+            assertEquals(15, res.first, "15 attività semestrali preservate integralmente")
+            assertEquals(1, res.second, "Esclusivamente frequenza semestrale 6M")
             assertTrue(res.third)
         }
     }

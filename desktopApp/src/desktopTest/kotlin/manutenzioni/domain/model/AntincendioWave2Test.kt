@@ -43,30 +43,35 @@ class AntincendioWave2Test {
     )
 
     @Test
-    fun `RI - Con 0 impianti collegati genera esattamente le 10 attivita istituzionali senza iniezioni legacy`() {
+    fun `RI - Normalizza vecchie attivita 1M_2M_4M e cross-plant alle 13 attivita semestrali B2 UNI 11224_2026`() {
         val risolte = CrossPlantAttivitaResolver.resolveAttivita(
             impianto = impiantoRiBase,
             impiantiNelCantiere = emptyList(),
             frequenza = Periodo(TipoPeriodo.M, 6)
         )
 
-        assertEquals(10, risolte.size, "Deve contenere le 10 attività istituzionali di centrale e linee")
-        assertEquals((1..10).toList(), risolte.map { it.nAttivita })
+        assertEquals(13, risolte.size, "Deve normalizzare alle 13 attività B2 UNI 11224:2026")
+        assertEquals((1..13).toList(), risolte.map { it.nAttivita })
+        assertTrue(risolte.all { it.frequenza == Periodo(TipoPeriodo.M, 6) && it.targetImpiantoCod == null })
     }
 
     @Test
-    fun `RI - Con impianto GE presente nel cantiere include attivita cross-plant con numerazione sequenziale`() {
+    fun `RI - Espone esclusivamente la frequenza Semestrale 6 Mesi e commuta tra B2 (13) e A3 (17)`() {
         val ge = ImpiantoStandard(codIntervento = "GE", nomeCompleto = "Gruppo Elettrogeno")
-
-        val risolte = CrossPlantAttivitaResolver.resolveAttivita(
+        val freqs = CrossPlantAttivitaResolver.resolveFrequenze(
             impianto = impiantoRiBase,
-            impiantiNelCantiere = listOf(impiantoRiBase, ge),
+            impiantiNelCantiere = listOf(impiantoRiBase, ge)
+        )
+        assertEquals(listOf(Periodo(TipoPeriodo.M, 6)), freqs)
+
+        val riIniziale = impiantoRiBase.copy(tipoVerbale = TipoVerbaleRi.VERIFICA_INIZIALE_A)
+        val risolteA3 = CrossPlantAttivitaResolver.resolveAttivita(
+            impianto = riIniziale,
+            impiantiNelCantiere = listOf(riIniziale, ge),
             frequenza = Periodo(TipoPeriodo.M, 6)
         )
-
-        assertEquals(11, risolte.size, "10 istituzionali + 1 cross-plant GE = 11 attività")
-        assertEquals((1..11).toList(), risolte.map { it.nAttivita })
-        assertTrue(risolte.any { it.targetImpiantoCod == "GE" })
+        assertEquals(17, risolteA3.size, "In modalità Verifica Iniziale A deve risolvere le 17 attività A3")
+        assertEquals((1..17).toList(), risolteA3.map { it.nAttivita })
     }
 
     @Test
