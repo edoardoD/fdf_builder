@@ -169,4 +169,6 @@ prova.html
 *.pkg
 wave2Release/
 *.code-workspace
+**/bin/
+~$*
 

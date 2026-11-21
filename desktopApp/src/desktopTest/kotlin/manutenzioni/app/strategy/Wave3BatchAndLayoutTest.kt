@@ -468,18 +468,25 @@ class Wave3BatchAndLayoutTest {
 
                 PdfReader(tempPdf).use { reader ->
                     PdfDocument(reader).use { pdfDoc ->
-                        assertEquals(
-                            1,
-                            pdfDoc.numberOfPages,
-                            "Il Foglio 1 da 30 righe dell'impianto '${imp.codIntervento}' (${imp.listaAttivita.size} attività) deve restare su 1 unica pagina A4, ma ha generato ${pdfDoc.numberOfPages} pagine!"
-                        )
                         val form = PdfAcroForm.getAcroForm(pdfDoc, false)
                         assertNotNull(form)
                         val manutentoreField = form.getField("manutentore")
                         assertNotNull(manutentoreField, "Il campo manutentore deve esistere nel PDF")
-                        val rect = manutentoreField.widgets.firstOrNull()?.rectangle?.toRectangle()
-                        assertNotNull(rect)
-                        assertTrue(rect.height >= 20f, "Il riquadro Verificatore/Firma deve essere ampio (>= 20pt), trovato: ${rect.height}pt")
+                        if (imp is RilevazioneAntincendio) {
+                            assertTrue(
+                                pdfDoc.numberOfPages >= 5,
+                                "Il Libretto RI UNI 11224:2026 deve generare il fascicolo multipagina (>= 5 pagine), trovato: ${pdfDoc.numberOfPages}"
+                            )
+                        } else {
+                            assertEquals(
+                                1,
+                                pdfDoc.numberOfPages,
+                                "Il Foglio 1 da 30 righe dell'impianto '${imp.codIntervento}' (${imp.listaAttivita.size} attività) deve restare su 1 unica pagina A4, ma ha generato ${pdfDoc.numberOfPages} pagine!"
+                            )
+                            val rect = manutentoreField.widgets.firstOrNull()?.rectangle?.toRectangle()
+                            assertNotNull(rect)
+                            assertTrue(rect.height >= 20f, "Il riquadro Verificatore/Firma deve essere ampio (>= 20pt), trovato: ${rect.height}pt")
+                        }
                     }
                 }
             } finally {

@@ -181,15 +181,14 @@ class EndToEndWorkflowTest {
             val impiantiNelCantiere = viewModel.uiState.value.impiantiDelCantiere
             assertEquals(3, impiantiNelCantiere.size)
 
-            // 4. Verifica Cross-Plant Discovery per RI: Q è presente nel cantiere, CAB non è presente
+            // 4. Verifica risoluzione UNI 11224:2026 per RI: normalizza alle 13 attività semestrali B2 (06 Mesi)
             val riAttivita = CrossPlantAttivitaResolver.resolveAttivita(
                 impianto = riCantiere,
                 impiantiNelCantiere = impiantiNelCantiere,
-                frequenza = Periodo(TipoPeriodo.A, 1)
+                frequenza = Periodo(TipoPeriodo.M, 6)
             )
-            assertEquals(2, riAttivita.size, "Deve includere l'attività base + l'attività per Q, escludendo CAB")
-            assertTrue(riAttivita.any { it.targetImpiantoCod == "Q" })
-            assertFalse(riAttivita.any { it.targetImpiantoCod == "CAB" })
+            assertEquals(13, riAttivita.size, "Deve risolvere le 13 attività obbligatorie B2 UNI 11224:2026 a 6 Mesi")
+            assertTrue(riAttivita.all { it.frequenza == Periodo(TipoPeriodo.M, 6) && it.targetImpiantoCod == null })
 
             // 5. Genera HTML + PDF per ciascun impianto e verifica esistenza su disco
             val strategy = HtmlToPdfStrategy()

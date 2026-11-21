@@ -4,8 +4,10 @@ import manutenzioni.app.service.attachments.DefaultTechnicalAttachmentRegistry
 import manutenzioni.app.service.attachments.TechnicalSheetHtmlRenderer
 import manutenzioni.app.service.html.AttivitaTableHtmlBuilder
 import manutenzioni.app.service.html.HtmlTemplateLoader
+import manutenzioni.app.service.html.RiLibrettoHtmlBuilder
 import manutenzioni.app.service.html.SchedaHeaderFormatter
 import manutenzioni.app.service.html.SignatureImageRenderer
+import manutenzioni.domain.model.RilevazioneAntincendio
 import manutenzioni.domain.service.Html
 import manutenzioni.domain.service.HtmlRenderContext
 import manutenzioni.domain.service.attachments.TechnicalAttachmentRegistry
@@ -27,13 +29,17 @@ class HtmlService(
     private val tableBuilder: AttivitaTableHtmlBuilder = AttivitaTableHtmlBuilder(),
     private val signatureRenderer: SignatureImageRenderer = SignatureImageRenderer(),
     private val attachmentRegistry: TechnicalAttachmentRegistry = DefaultTechnicalAttachmentRegistry.shared,
-    private val sheetRenderer: TechnicalSheetHtmlRenderer = TechnicalSheetHtmlRenderer()
+    private val sheetRenderer: TechnicalSheetHtmlRenderer = TechnicalSheetHtmlRenderer(),
+    private val riLibrettoBuilder: RiLibrettoHtmlBuilder = RiLibrettoHtmlBuilder(signatureRenderer, sheetRenderer)
 ) : Html {
 
     /**
      * Genera l'HTML completo tramite l'oggetto di contesto unificato [HtmlRenderContext].
      */
     override fun buildHtml(context: HtmlRenderContext): String {
+        if (context.impianto is RilevazioneAntincendio && context.templateHtml == null) {
+            return riLibrettoBuilder.buildLibrettoHtml(context, attachmentRegistry)
+        }
         // 1. Caricamento del template HTML dalla cache (o override esplicito da context)
         val rawTemplate = context.templateHtml ?: templateLoader.loadTemplate(templatePath)
 

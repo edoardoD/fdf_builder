@@ -71,6 +71,22 @@ fun ImpiantoEditor(
     var dispositiviAntincendio by remember(impianto) {
         mutableStateOf((impianto as? RilevazioneAntincendio)?.listaDispositivi ?: emptyList())
     }
+    var antincendioConfig by remember(impianto) {
+        mutableStateOf(
+            (impianto as? RilevazioneAntincendio) ?: RilevazioneAntincendio(
+                id = impianto.id,
+                codIntervento = codIntervento.trim().ifBlank { "RI" },
+                nomeCompleto = nomeCompleto.trim().ifBlank { "Impianto rilevazione incendi" },
+                premessa = premessa.ifBlank { null },
+                listaAttivita = attivitaList,
+                listaNormative = impianto.listaNormative,
+                cantiereId = impianto.cantiereId,
+                quantita = 1,
+                noteSpecifiche = noteSpecifiche.ifBlank { null },
+                listaDispositivi = dispositiviAntincendio
+            )
+        )
+    }
     var showAddDispositivoDialog by remember { mutableStateOf(false) }
     var dispositivoToEdit by remember { mutableStateOf<DispositivoRilevazione?>(null) }
 
@@ -187,10 +203,10 @@ fun ImpiantoEditor(
         )
     }
 
-    val currentAntincendio = (impianto as? RilevazioneAntincendio) ?: RilevazioneAntincendio(
+    val currentAntincendio = antincendioConfig.copy(
         id = impianto.id,
         codIntervento = codIntervento.trim().ifBlank { "RI" },
-        nomeCompleto = nomeCompleto.trim().ifBlank { "Rilevazione incendi" },
+        nomeCompleto = nomeCompleto.trim().ifBlank { "Impianto rilevazione incendi" },
         premessa = premessa.ifBlank { null },
         listaAttivita = attivitaList,
         listaNormative = impianto.listaNormative,
@@ -336,18 +352,7 @@ fun ImpiantoEditor(
                                 ).withTipoInterruttore(tipoInterruttoreMQT)
                             }
                             isAntincendio -> {
-                                val baseRi = (impianto as? RilevazioneAntincendio) ?: RilevazioneAntincendio(
-                                    id = impianto.id,
-                                    codIntervento = savedCod,
-                                    nomeCompleto = savedNome,
-                                    premessa = savedPremessa,
-                                    listaAttivita = attivitaList,
-                                    listaNormative = impianto.listaNormative,
-                                    cantiereId = impianto.cantiereId,
-                                    quantita = 1,
-                                    noteSpecifiche = savedNote
-                                )
-                                baseRi.copy(
+                                currentAntincendio.copy(
                                     codIntervento = savedCod,
                                     nomeCompleto = savedNome,
                                     premessa = savedPremessa,
@@ -439,6 +444,19 @@ fun ImpiantoEditor(
         if (isAntincendio) {
             item {
                 AntincendioEditorSection(
+                    impianto = currentAntincendio,
+                    onImpiantoConfigChange = { updatedConfig ->
+                        val verbaleChanged = updatedConfig.tipoVerbale != antincendioConfig.tipoVerbale
+                        antincendioConfig = updatedConfig
+                        if (verbaleChanged) {
+                            attivitaList = when (updatedConfig.tipoVerbale) {
+                                TipoVerbaleRi.VERIFICA_INIZIALE_A ->
+                                    manutenzioni.domain.service.rules.Uni11224RiCatalog.LISTA_A3_CONTROLLI_SISTEMA
+                                TipoVerbaleRi.VERIFICA_PERIODICA_B ->
+                                    manutenzioni.domain.service.rules.Uni11224RiCatalog.LISTA_B2_VERIFICA_PERIODICA_SISTEMA
+                            }
+                        }
+                    },
                     dispositivi = dispositiviAntincendio,
                     onDispositiviChange = { dispositiviAntincendio = it },
                     onOpenAddDialog = {

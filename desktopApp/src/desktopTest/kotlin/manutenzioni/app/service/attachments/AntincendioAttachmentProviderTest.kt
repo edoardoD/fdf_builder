@@ -214,4 +214,130 @@ class AntincendioAttachmentProviderTest {
         assertFalse(html.contains("LOOP 2"))
         assertFalse(html.contains("LOOP 3"))
     }
+
+    @Test
+    fun `Libretto RI Periodica B - Incrocia anagrafica, Data inizio contratto, esclusivita Convenzionale_Indirizzato e Prospetto ASD opzionale`() {
+        val riSenzaAsd = RilevazioneAntincendio(
+            codIntervento = "RI",
+            nomeCompleto = "Impianto rilevazione incendi",
+            architettura = ArchitetturaImpiantoRi.CONVENZIONALE,
+            hasAsd = false,
+            hasRadio = true,
+            hasEvac = true,
+            tipoVerbale = TipoVerbaleRi.VERIFICA_PERIODICA_B,
+            estensioneProtezione = EstensioneProtezioneRi.PARZIALE,
+            localiProtetti = "Magazzino Centrale e Uffici P1",
+            tipoEsecuzione = TipoEsecuzioneRi.ATEX,
+            responsabileSistema = "Ing. Mario Rossi",
+            listaDispositivi = listOf(comune1, rivelatoreL1_2)
+        )
+
+        val htmlSenzaAsd = manutenzioni.app.service.HtmlService().buildHtml(
+            manutenzioni.domain.service.HtmlRenderContext(
+                impianto = riSenzaAsd,
+                frequenza = Periodo(TipoPeriodo.M, 6),
+                attivita = riSenzaAsd.listaAttivita,
+                clienteNome = "Industrie Meccaniche S.p.A.",
+                cantiereNome = "Stabilimento Forlì",
+                nomeManutentore = "Edoardo Desiderio",
+                dataInizioContratto = "01/03/2026",
+                dataInterventoPrecedente = "01/05/2026",
+                dataIntervento = "01/11/2026"
+            )
+        )
+
+        assertTrue(htmlSenzaAsd.contains("VERBALE VERIFICA PERIODICA E CHECKLIST DOCUMENTALE"))
+        assertTrue(htmlSenzaAsd.contains("B1-ANAGRAFICA E IDENTIFICAZIONE DEL SISTEMA"))
+        assertTrue(htmlSenzaAsd.contains("B2-Lista di Riscontro per Verifica sul Sistema"))
+        assertTrue(htmlSenzaAsd.contains("Data inizio contratto:"))
+        assertFalse(htmlSenzaAsd.contains("Data inizio periodo"))
+        assertTrue(htmlSenzaAsd.contains("01/03/2026"))
+        assertTrue(htmlSenzaAsd.contains("Ing. Mario Rossi"))
+        assertTrue(htmlSenzaAsd.contains("[X] Convenzionale"))
+        assertTrue(htmlSenzaAsd.contains("[  ] Indirizzato"))
+        assertTrue(htmlSenzaAsd.contains("[  ] ASD (Aspirazione)"))
+        assertTrue(htmlSenzaAsd.contains("[X] Radio"))
+        assertTrue(htmlSenzaAsd.contains("[X] EVAC"))
+        assertTrue(htmlSenzaAsd.contains("[X] Parziale (Locali protetti: Magazzino Centrale e Uffici P1 )"))
+        assertTrue(htmlSenzaAsd.contains("[X] Luogo a Rischio Esplosione (ATEX)"))
+        assertTrue(htmlSenzaAsd.contains("Allegato Elenco Componenti (2 disp.)"))
+        assertTrue(htmlSenzaAsd.contains("A campione scollegando un morsetto"))
+        assertTrue(htmlSenzaAsd.contains("Non barrare esito se presente lista di controllo"))
+        assertFalse(htmlSenzaAsd.contains("Prospetto B.3"), "Con hasAsd=false il Prospetto B.3 non deve essere presente")
+        assertTrue(htmlSenzaAsd.contains("2. ESITO DELLE VERIFICHE SU IMPIANTO RILEVAZIONE INCENDI (UNI 11224:2026)"))
+        assertTrue(htmlSenzaAsd.contains("REGISTRO DETTAGLIATO DELLE NON CONFORMITÀ"))
+        assertTrue(htmlSenzaAsd.contains("3. PROSPETTO SINTETICO SCADENZE E PERCENTUALI DI CONTROLLO PERIODICO"))
+        assertTrue(htmlSenzaAsd.contains("4. CLAUSOLE GENERALI DI MANUTENZIONE E RESPONSABILITÀ"))
+        assertTrue(htmlSenzaAsd.contains("5. SOTTOSCRIZIONE FORMALE E CONFERMA DI RICEVUTA"))
+
+        // Attivando hasAsd = true -> deve includere Prospetto B.3 con Classe Sensibilità e Tempo Max Trasporto
+        val riConAsd = riSenzaAsd.copy(
+            architettura = ArchitetturaImpiantoRi.INDIRIZZATO,
+            hasAsd = true,
+            classeSensibilitaAsd = ClasseSensibilitaAsd.CLASSE_B,
+            tempoMaxTrasportoAsd = TempoTrasportoAsd.MAX_60S
+        )
+        val htmlConAsd = manutenzioni.app.service.HtmlService().buildHtml(
+            manutenzioni.domain.service.HtmlRenderContext(
+                impianto = riConAsd,
+                frequenza = Periodo(TipoPeriodo.M, 6),
+                attivita = riConAsd.listaAttivita,
+                clienteNome = "Industrie Meccaniche S.p.A.",
+                cantiereNome = "Stabilimento Forlì"
+            )
+        )
+        assertTrue(htmlConAsd.contains("[  ] Convenzionale"))
+        assertTrue(htmlConAsd.contains("[X] Indirizzato"))
+        assertTrue(htmlConAsd.contains("[X] ASD (Aspirazione)"))
+        assertTrue(htmlConAsd.contains("Prospetto B.3 — Lista di Riscontro per Controlli Addizionali su Sistemi ASD (Aspirazione)"))
+        assertTrue(htmlConAsd.contains("[X] Classe B"))
+        assertTrue(htmlConAsd.contains("[X] ≤ 60 s"))
+    }
+
+    @Test
+    fun `Libretto RI Iniziale A - Genera A1, A2, A3, Prospetto A4 ASD, Fogli Loop e converte in PDF AcroForm`() {
+        val riIniziale = RilevazioneAntincendio(
+            codIntervento = "RI",
+            nomeCompleto = "Impianto rilevazione incendi",
+            architettura = ArchitetturaImpiantoRi.INDIRIZZATO,
+            hasAsd = true,
+            classeSensibilitaAsd = ClasseSensibilitaAsd.CLASSE_A,
+            tempoMaxTrasportoAsd = TempoTrasportoAsd.MAX_90S,
+            tipoVerbale = TipoVerbaleRi.VERIFICA_INIZIALE_A,
+            listaDispositivi = listOf(comune1, rivelatoreL1_2, moduloL1_1)
+        )
+
+        val html = manutenzioni.app.service.HtmlService().buildHtml(
+            manutenzioni.domain.service.HtmlRenderContext(
+                impianto = riIniziale,
+                frequenza = Periodo(TipoPeriodo.M, 6),
+                attivita = manutenzioni.domain.service.rules.Uni11224RiCatalog.LISTA_A3_CONTROLLI_SISTEMA,
+                clienteNome = "Logistica Adriatica S.r.l.",
+                cantiereNome = "Hub Cesena",
+                dataInizioContratto = "15/11/2026",
+                dataIntervento = "20/11/2026",
+                nomeManutentore = "Edoardo Desiderio"
+            )
+        )
+
+        assertTrue(html.contains("VERBALE VERIFICA INIZIALE E CHECKLIST DOCUMENTALE"))
+        assertTrue(html.contains("A1-ANAGRAFICA E IDENTIFICAZIONE DEL SISTEMA"))
+        assertTrue(html.contains("A2-Lista di Riscontro per Verifiche Preliminari sul Sistema"))
+        assertTrue(html.contains("A3-Lista di Riscontro per Controlli sul Sistema e Dispositivi"))
+        assertTrue(html.contains("Prospetto A.4 — Lista di Riscontro per Controlli Addizionali su Sistemi ASD (Aspirazione)"))
+        assertTrue(html.contains("ELENCO COMPONENTI COMUNI"))
+        assertTrue(html.contains("ELENCO RIVELATORI LOOP 1"))
+        assertTrue(html.contains("ELENCO MODULI LOOP 1"))
+
+        val tempHtml = File.createTempFile("test_libretto_ri_a_", ".html")
+        val tempPdf = File.createTempFile("test_libretto_ri_a_", ".pdf")
+        try {
+            tempHtml.writeText(html, Charsets.UTF_8)
+            Pdf().buildPdf(tempHtml.absolutePath, tempPdf.absolutePath)
+            assertTrue(tempPdf.exists() && tempPdf.length() > 5000L, "Il Libretto PDF RI completo deve essere generato")
+        } finally {
+            tempHtml.delete()
+            tempPdf.delete()
+        }
+    }
 }
