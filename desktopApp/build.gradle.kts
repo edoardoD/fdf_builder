@@ -20,7 +20,9 @@ kotlin {
 
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation(compose.material3)
                 implementation(compose.materialIconsExtended)
+                implementation(libs.compose.data.table)
 
                 // iText7 Core + html2pdf
                 implementation(libs.itext.kernel)

@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 sealed interface SpreadsheetColumn<Row> {
     val header: String
     val weight: Float
+    val isResizable: Boolean
 
     /**
      * Cella testuale editabile inline.
@@ -21,7 +22,8 @@ sealed interface SpreadsheetColumn<Row> {
         val uppercase: Boolean = false,
         val getter: (Row) -> String,
         val setter: (Row, String) -> Row,
-        val isError: (Row) -> Boolean = { false }
+        val isError: (Row) -> Boolean = { false },
+        override val isResizable: Boolean = true
     ) : SpreadsheetColumn<Row>
 
     /**
@@ -34,7 +36,8 @@ sealed interface SpreadsheetColumn<Row> {
         val placeholder: String = "",
         val getter: (Row) -> Int?,
         val setter: (Row, Int?) -> Row,
-        val isError: (Row) -> Boolean = { false }
+        val isError: (Row) -> Boolean = { false },
+        override val isResizable: Boolean = true
     ) : SpreadsheetColumn<Row>
 
     /**
@@ -46,7 +49,8 @@ sealed interface SpreadsheetColumn<Row> {
         val options: List<Option>,
         val optionLabel: (Option) -> String,
         val getter: (Row) -> Option,
-        val setter: (Row, Option) -> Row
+        val setter: (Row, Option) -> Row,
+        override val isResizable: Boolean = true
     ) : SpreadsheetColumn<Row>
 
     /**
@@ -55,6 +59,7 @@ sealed interface SpreadsheetColumn<Row> {
     data class Custom<Row>(
         override val header: String,
         override val weight: Float,
-        val content: @Composable (row: Row, onUpdate: (Row) -> Unit) -> Unit
+        val content: @Composable (row: Row, onUpdate: (Row) -> Unit) -> Unit,
+        override val isResizable: Boolean = true
     ) : SpreadsheetColumn<Row>
 }

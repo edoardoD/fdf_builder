@@ -1,6 +1,7 @@
 [versions]
-kotlin = "2.1.0"
-compose-plugin = "1.6.11"
+kotlin = "2.1.20"
+compose-plugin = "1.8.0"
+compose-data-table = "1.0.7"
 itext = "9.4.0"
 itext-html2pdf = "6.3.0"
 kotlinx-serialization-json = "1.9.0"
@@ -8,6 +9,7 @@ kotlinx-coroutines = "1.9.0"
 mongodb-driver = "5.1.0"
 
 [libraries]
+compose-data-table = { module = "com.ryinex.kotlin:compose-data-table", version.ref = "compose-data-table" }
 itext-kernel = { module = "com.itextpdf:kernel", version.ref = "itext" }
 itext-layout = { module = "com.itextpdf:layout", version.ref = "itext" }
 itext-forms = { module = "com.itextpdf:forms", version.ref = "itext" }
